@@ -49,6 +49,8 @@
   *::before,
   *::after { box-sizing: border-box; }
 
+  [hidden] { display: none !important; }
+
   html {
     background: var(--bg);
     /* prevent layout shift when the scrollbar disappears (lightbox open) */
@@ -98,6 +100,33 @@
 
   body.no-scroll { overflow: hidden; }
 
+  /* ================= Loading bar ================= */
+  .progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    height: 3px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .progress::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    border-radius: 3px;
+    background: var(--accent-gradient);
+    animation: progress-slide 1.1s ease-in-out infinite;
+  }
+
+  @keyframes progress-slide {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(250%); }
+  }
+
   /* ================= Gallery (masonry) ================= */
   #gallery {
     display: flex;
@@ -113,11 +142,6 @@
     flex-direction: column;
     gap: var(--gap);
     min-width: 0;
-  }
-
-  #sentinel {
-    width: 100%;
-    height: 1px;
   }
 
   /* ================= Tile ================= */
@@ -178,6 +202,76 @@
     }
   }
 
+  /* ================= Pagination ================= */
+  .pagination {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 28px var(--gap) calc(44px + env(safe-area-inset-bottom));
+  }
+
+  .page-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(21, 21, 31, .7);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    text-decoration: none;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a.page-btn:hover {
+    background: rgba(40, 40, 60, .85);
+    border-color: rgba(167, 139, 250, .6);
+  }
+
+  a.page-btn:active { transform: scale(.96); }
+  a.page-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .page-btn[aria-current="page"] {
+    border-color: transparent;
+    background: var(--accent-gradient);
+    color: #fff;
+  }
+
+  .page-btn[aria-disabled="true"] {
+    opacity: .35;
+    pointer-events: none;
+  }
+
+  .page-gap {
+    align-self: center;
+    min-width: 22px;
+    color: var(--ink-muted);
+    text-align: center;
+  }
+
+  .page-info {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
   /* ================= Lightbox ================= */
   #lightbox {
     position: fixed;
@@ -198,7 +292,10 @@
     container-type: size; /* lets the image use cqw/cqh units (see .lb-stage img) */
   }
 
-  #lightbox[hidden] { display: none; }
+  /* wide screens: reserve room on both sides so the arrows sit beside the image */
+  @media (min-width: 700px) {
+    #lightbox { padding-inline: 76px; }
+  }
 
   /* wrapper that shrink-wraps the image exactly */
   .lb-stage {
@@ -221,7 +318,7 @@
     box-shadow: 0 0 0 1px var(--line), 0 28px 80px rgba(0, 0, 0, .6);
   }
 
-  /* round buttons (download & close) */
+  /* round buttons (download, close, prev, next) */
   .lb-btn {
     z-index: 2;
     display: inline-flex;
@@ -268,6 +365,37 @@
     right: max(12px, env(safe-area-inset-right));
   }
 
+  /* prev / next: vertically centered on the left and right edges */
+  .lb-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .lb-nav:active { transform: translateY(-50%) scale(.94); }
+
+  .lb-prev { left: max(12px, env(safe-area-inset-left)); }
+  .lb-next { right: max(12px, env(safe-area-inset-right)); }
+
+  /* "3 / 30" counter, top-left corner */
+  .lb-counter {
+    position: absolute;
+    top: max(12px, env(safe-area-inset-top));
+    left: max(12px, env(safe-area-inset-left));
+    z-index: 2;
+    padding: 9px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--control-bg);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--ink);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    pointer-events: none;
+  }
+
   /* ================= Error / info message ================= */
   .message {
     width: min(560px, calc(100% - 2 * var(--gap)));
@@ -299,24 +427,48 @@
   @media (prefers-reduced-motion: reduce) {
     .tile,
     .tile::after,
+    .page-btn,
     .lb-btn { transition: none; }
 
     .tile { animation: none; }
+    .progress::before { animation-duration: 2.4s; }
   }
 </style>
 </head>
 <body>
 
-<main id="gallery" aria-label="Image gallery"></main>
-<div id="sentinel" aria-hidden="true"></div>
+<div id="progress" class="progress" aria-hidden="true" hidden></div>
+
+<main id="gallery" aria-label="Image gallery" aria-busy="false"></main>
+
+<nav id="pagination" class="pagination" aria-label="Pagination" hidden>
+  <div id="page-list" class="page-list"></div>
+  <p id="page-info" class="page-info"></p>
+</nav>
 
 <p id="message" class="message" role="alert" hidden></p>
 
 <div id="lightbox" role="dialog" aria-modal="true" aria-label="Image preview" tabindex="-1" hidden>
+  <div id="lb-counter" class="lb-counter" aria-live="polite"></div>
+
   <button id="lb-close" class="lb-btn lb-close" type="button" aria-label="Close preview" title="Close">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M6 6l12 12"/><path d="M18 6L6 18"/>
+    </svg>
+  </button>
+
+  <button id="lb-prev" class="lb-btn lb-nav lb-prev" type="button" aria-label="Previous image" title="Previous">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 5l-7 7 7 7"/>
+    </svg>
+  </button>
+
+  <button id="lb-next" class="lb-btn lb-nav lb-next" type="button" aria-label="Next image" title="Next">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 5l7 7-7 7"/>
     </svg>
   </button>
 
@@ -339,15 +491,15 @@
    * Configuration
    * ========================================================== */
   const CONFIG = Object.freeze({
-    urlListFile:    'url.txt',
-    minColWidth:    250,   // ideal column width (px), drives the column count
-    minCols:        2,
-    maxCols:        9,
-    batchSize:      30,    // images per batch
-    concurrency:    6,     // simultaneous image loads
-    fetchTimeout:   10000, // ms, for url.txt
-    imageTimeout:   15000, // ms, per preview image
-    prefetchMargin: 900    // px, start loading the next batch before reaching the bottom
+    urlListFile:  'url.txt',
+    perPage:      30,      // images per page; a new page is created when this is full
+    minColWidth:  250,     // ideal column width (px), drives the column count
+    minCols:      2,
+    maxCols:      9,
+    concurrency:  6,       // simultaneous image loads
+    fetchTimeout: 10000,   // ms, for url.txt
+    imageTimeout: 15000,   // ms, per preview image
+    swipeDistance: 50      // px, minimum horizontal swipe to change image
   });
 
   /* Static strings only (safe to render with innerHTML: no user input). */
@@ -363,7 +515,7 @@
       'Format: one entry per line &mdash; <code>preview_url download_url</code><br>' +
       'separated by a space or <code>|</code>. The download URL is optional.',
     allFailed:
-      'All images failed to load. Check <code>url.txt</code> &mdash; every preview URL must ' +
+      'All images on this page failed to load. Check <code>url.txt</code> &mdash; every preview URL must ' +
       'point directly to an image file (not a web page) and be publicly accessible.'
   });
 
@@ -377,48 +529,52 @@
     'image/svg+xml': 'svg'
   });
 
+  const PAGE_PARAM = 'page';
+  const BASE_TITLE = document.title;
+
   /* ==========================================================
    * DOM elements
    * ========================================================== */
   const gallery     = document.getElementById('gallery');
-  const sentinel    = document.getElementById('sentinel');
+  const progressBar = document.getElementById('progress');
   const messageEl   = document.getElementById('message');
+  const pagination  = document.getElementById('pagination');
+  const pageList    = document.getElementById('page-list');
+  const pageInfo    = document.getElementById('page-info');
   const lightbox    = document.getElementById('lightbox');
   const lightboxImg = lightbox.querySelector('.lb-stage img');
   const lbClose     = document.getElementById('lb-close');
+  const lbPrev      = document.getElementById('lb-prev');
+  const lbNext      = document.getElementById('lb-next');
+  const lbCounter   = document.getElementById('lb-counter');
   const lbDownload  = document.getElementById('lb-download');
 
   /* ==========================================================
    * State
    * ========================================================== */
   const state = {
-    entries: [],       // [{ preview, download }] (already shuffled)
-    nextEntry: 0,      // index of the next entry to load
-    loading: false,
-    done: false,       // true once every entry has been queued
+    entries: [],       // [{ preview, download }] in url.txt order
+    page: 0,           // current page (1-based); 0 = nothing rendered yet
+    totalPages: 1,
+    pageEntries: [],   // entries of the current page
+    loadToken: 0,      // bumped on every page render; results from older renders are discarded
 
-    items: [],         // { el, ratio, col } for every tile that loaded successfully
+    items: [],         // loaded tiles of the current page: { el, ratio, col, index, preview, download }
     columns: [],       // .col elements
     heights: [],       // estimated height of each column
     colWidth: 1,
     gap: 10,
     galleryWidth: 0,
 
-    downloadUrl: ''    // full-size URL for the image currently open in the lightbox
+    activeItem: null   // item currently shown in the lightbox
   };
+
+  const itemByElement = new WeakMap(); // tile element -> item
 
   /* ==========================================================
    * General utilities
    * ========================================================== */
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-
-  const shuffle = (list) => {
-    for (let i = list.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [list[i], list[j]] = [list[j], list[i]];
-    }
-    return list;
-  };
 
   const isHttpUrl = (value) => {
     try {
@@ -437,6 +593,7 @@
    * - The download URL is optional; if missing or invalid, the preview URL is used.
    * - Blank lines and lines starting with "#" are ignored.
    * - Duplicate preview URLs are dropped.
+   * - The order of the file is kept, so every page is stable across refreshes.
    */
   const parseEntries = (text) => {
     const entries = new Map();
@@ -488,6 +645,11 @@
     messageEl.hidden = false;
   };
 
+  const setLoading = (isLoading) => {
+    progressBar.hidden = !isLoading;
+    gallery.setAttribute('aria-busy', String(isLoading));
+  };
+
   /* ==========================================================
    * Masonry layout
    * ========================================================== */
@@ -527,7 +689,7 @@
     state.galleryWidth = gallery.clientWidth;
   };
 
-  /** Rebuilds every column and re-places all tiles (used when the column count changes). */
+  /** Rebuilds every column and re-places all tiles (used on a new page or when the column count changes). */
   const rebuildLayout = () => {
     const count = columnCountFor(gallery.clientWidth);
 
@@ -564,8 +726,6 @@
 
     if (columnCountFor(width) !== state.columns.length) rebuildLayout();
     else refreshMetrics();
-
-    loadMoreIfNeeded();
   };
 
   /* ==========================================================
@@ -595,7 +755,7 @@
     img.src = url;
   });
 
-  const createTile = (img, downloadUrl) => {
+  const createTile = (img, entry, index) => {
     // intrinsic width/height -> the browser derives the aspect ratio (no layout shift)
     img.width = img.naturalWidth;
     img.height = img.naturalHeight;
@@ -605,48 +765,175 @@
     el.tabIndex = 0;
     el.setAttribute('role', 'button');
     el.setAttribute('aria-label', 'Enlarge image');
-    el.dataset.download = downloadUrl;
     el.appendChild(img);
 
-    return { el, ratio: img.naturalWidth / img.naturalHeight, col: -1 };
+    const item = {
+      el,
+      ratio: img.naturalWidth / img.naturalHeight,
+      col: -1,
+      index,                      // position inside the page (url.txt order)
+      preview: entry.preview,
+      download: entry.download
+    };
+    itemByElement.set(el, item);
+    return item;
   };
 
-  const loadNextBatch = async () => {
-    if (state.loading || state.done || state.entries.length === 0) return;
-
-    state.loading = true;
-    try {
-      const batch = state.entries.slice(state.nextEntry, state.nextEntry + CONFIG.batchSize);
-      state.nextEntry += batch.length;
-      state.done = state.nextEntry >= state.entries.length;
-
-      await runPool(batch, CONFIG.concurrency, async (entry) => {
-        const img = await loadImage(entry.preview);
-        if (!img) return;
-
-        const item = createTile(img, entry.download);
-        state.items.push(item);
-        place(item);
-      });
-    } finally {
-      state.loading = false;
-    }
-
-    if (state.done && state.items.length === 0) {
-      gallery.replaceChildren();
-      showMessage(MESSAGES.allFailed);
-      return;
-    }
-
-    loadMoreIfNeeded();
+  /* ==========================================================
+   * Pages & URL (?page=N)
+   * ========================================================== */
+  const getPageFromUrl = () => {
+    const value = parseInt(new URLSearchParams(location.search).get(PAGE_PARAM), 10);
+    return Number.isFinite(value) ? value : 1;
   };
 
-  /** True when the end of the gallery is close to the visible area. */
-  const needsMore = () =>
-    sentinel.getBoundingClientRect().top < window.innerHeight + CONFIG.prefetchMargin;
+  /** Builds the URL for a page while keeping any other query parameters. Page 1 gets a clean URL. */
+  const buildPageUrl = (page) => {
+    const params = new URLSearchParams(location.search);
+    if (page <= 1) params.delete(PAGE_PARAM);
+    else params.set(PAGE_PARAM, String(page));
 
-  const loadMoreIfNeeded = () => {
-    if (needsMore()) loadNextBatch();
+    const query = params.toString();
+    return location.pathname + (query ? '?' + query : '') + location.hash;
+  };
+
+  /** Page numbers to display, with `null` marking a gap ("..."). Example: 1 2 ... 9 10 11 ... 19 20 */
+  const buildPageList = (current, total) => {
+    const wanted = new Set([1, 2, current - 1, current, current + 1, total - 1, total]);
+    const pages = [...wanted].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+
+    const result = [];
+    pages.forEach((page, i) => {
+      if (i > 0) {
+        const diff = page - pages[i - 1];
+        if (diff === 2) result.push(page - 1); // a single hidden page is shown instead of "..."
+        else if (diff > 2) result.push(null);
+      }
+      result.push(page);
+    });
+    return result;
+  };
+
+  const createPageControl = ({ page, text, label, current = false, disabled = false }) => {
+    const el = document.createElement(disabled ? 'span' : 'a');
+    el.className = 'page-btn';
+    el.textContent = text;
+    if (label) el.setAttribute('aria-label', label);
+
+    if (disabled) {
+      el.setAttribute('aria-disabled', 'true');
+      return el;
+    }
+
+    el.href = buildPageUrl(page); // real URL: middle-click / "open in new tab" works
+    el.dataset.page = String(page);
+    if (current) el.setAttribute('aria-current', 'page');
+    return el;
+  };
+
+  const renderPagination = () => {
+    const { page, totalPages } = state;
+
+    pagination.hidden = totalPages <= 1;
+    if (totalPages <= 1) return;
+
+    const controls = [
+      createPageControl({
+        page: page - 1, text: 'Prev', label: 'Previous page', disabled: page === 1
+      })
+    ];
+
+    for (const entry of buildPageList(page, totalPages)) {
+      if (entry === null) {
+        const gap = document.createElement('span');
+        gap.className = 'page-gap';
+        gap.setAttribute('aria-hidden', 'true');
+        gap.textContent = '…';
+        controls.push(gap);
+      } else {
+        controls.push(createPageControl({
+          page: entry, text: String(entry), label: 'Page ' + entry, current: entry === page
+        }));
+      }
+    }
+
+    controls.push(createPageControl({
+      page: page + 1, text: 'Next', label: 'Next page', disabled: page === totalPages
+    }));
+
+    pageList.replaceChildren(...controls);
+    pageInfo.textContent =
+      'Page ' + page + ' of ' + totalPages + ' · ' + state.entries.length + ' images';
+  };
+
+  const updateTitle = () => {
+    document.title = state.page > 1 ? BASE_TITLE + ' - Page ' + state.page : BASE_TITLE;
+  };
+
+  /** Clears the gallery and loads every image of the current page. */
+  const renderPage = async () => {
+    const token = ++state.loadToken;
+    if (isLightboxOpen()) closeLightbox();
+
+    const start = (state.page - 1) * CONFIG.perPage;
+    state.pageEntries = state.entries.slice(start, start + CONFIG.perPage);
+    state.items = [];
+
+    messageEl.hidden = true;
+    rebuildLayout();
+    renderPagination();
+    updateTitle();
+    window.scrollTo(0, 0);
+    setLoading(true);
+
+    const queue = state.pageEntries.map((entry, index) => ({ entry, index }));
+
+    await runPool(queue, CONFIG.concurrency, async ({ entry, index }) => {
+      if (token !== state.loadToken) return; // the user already moved to another page
+
+      const img = await loadImage(entry.preview);
+      if (!img || token !== state.loadToken) return;
+
+      const item = createTile(img, entry, index);
+      state.items.push(item);
+      place(item);
+    });
+
+    if (token !== state.loadToken) return;
+
+    setLoading(false);
+    if (state.items.length === 0) showMessage(MESSAGES.allFailed);
+  };
+
+  /**
+   * Switches to a page.
+   * mode: 'push'    -> add a history entry (normal navigation, Back button works)
+   *       'replace' -> rewrite the current history entry (fixing an invalid URL)
+   *       'none'    -> the URL is already correct (browser Back / Forward)
+   */
+  const goToPage = (requested, mode) => {
+    const page = clamp(requested, 1, state.totalPages);
+
+    if (mode === 'push') {
+      if (page === state.page) return;
+      history.pushState(null, '', buildPageUrl(page));
+    } else if (mode === 'replace') {
+      history.replaceState(null, '', buildPageUrl(page));
+    }
+
+    state.page = page;
+    renderPage();
+  };
+
+  /** Browser Back / Forward. */
+  const handlePopState = () => {
+    if (state.entries.length === 0) return;
+
+    const requested = getPageFromUrl();
+    const page = clamp(requested, 1, state.totalPages);
+    if (page === state.page) return;
+
+    goToPage(page, page === requested ? 'none' : 'replace');
   };
 
   /* ==========================================================
@@ -699,26 +986,59 @@
 
   const isLightboxOpen = () => !lightbox.hidden;
 
-  const openLightbox = (previewUrl, downloadUrl) => {
+  /** Loaded items of the current page in url.txt order (not in load-completion order). */
+  const orderedItems = () => state.items.slice().sort((a, b) => a.index - b.index);
+
+  const neighborOf = (item, offset) => {
+    const list = orderedItems();
+    return list[list.indexOf(item) + offset] || null;
+  };
+
+  const updateLightboxControls = () => {
+    const item = state.activeItem;
+    if (!item) return;
+
+    lbPrev.hidden = !neighborOf(item, -1);
+    lbNext.hidden = !neighborOf(item, 1);
+    lbCounter.textContent = (item.index + 1) + ' / ' + state.pageEntries.length;
+
+    // an arrow that just disappeared may have held the focus: keep it inside the dialog
+    if (!lightbox.contains(document.activeElement)) lightbox.focus();
+  };
+
+  const showItem = (item) => {
+    state.activeItem = item;
+    lightboxImg.src = item.preview;
+    updateLightboxControls();
+  };
+
+  const showNeighbor = (offset) => {
+    if (!state.activeItem) return;
+    const next = neighborOf(state.activeItem, offset);
+    if (next) showItem(next);
+  };
+
+  const openLightbox = (item) => {
     lastFocused = document.activeElement;
-    state.downloadUrl = downloadUrl || previewUrl;
-    lightboxImg.src = previewUrl;
     lightbox.hidden = false;
     gallery.inert = true; // keep keyboard focus out of the gallery behind the lightbox
     document.body.classList.add('no-scroll');
     lightbox.focus();
+    showItem(item);
   };
 
   const closeLightbox = () => {
+    const returnTo = state.activeItem && state.activeItem.el.isConnected
+      ? state.activeItem.el   // the tile of the image that was viewed last
+      : lastFocused;
+
     lightbox.hidden = true;
     lightboxImg.removeAttribute('src');
-    state.downloadUrl = '';
+    state.activeItem = null;
     gallery.inert = false;
     document.body.classList.remove('no-scroll');
 
-    if (lastFocused && typeof lastFocused.focus === 'function') {
-      lastFocused.focus({ preventScroll: true });
-    }
+    if (returnTo && typeof returnTo.focus === 'function') returnTo.focus();
     lastFocused = null;
   };
 
@@ -726,9 +1046,8 @@
     event.target instanceof Element ? event.target.closest('.tile') : null;
 
   const openTile = (tile) => {
-    const img = tile.querySelector('img');
-    const previewUrl = img && (img.currentSrc || img.src);
-    if (previewUrl) openLightbox(previewUrl, tile.dataset.download);
+    const item = itemByElement.get(tile);
+    if (item) openLightbox(item);
   };
 
   /* ==========================================================
@@ -749,33 +1068,71 @@
       openTile(tile);
     });
 
-    // dark area outside the image / close button / Escape -> close
+    // pagination links: navigate without a full reload (modified clicks keep the default behavior)
+    pagination.addEventListener('click', (event) => {
+      const link = event.target instanceof Element ? event.target.closest('a[data-page]') : null;
+      if (!link) return;
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      event.preventDefault();
+      goToPage(Number(link.dataset.page), 'push');
+    });
+
+    window.addEventListener('popstate', handlePopState);
+
+    // dark area outside the image / close button -> close
     lightbox.addEventListener('click', (event) => {
       if (event.target === lightbox) closeLightbox();
     });
     lbClose.addEventListener('click', closeLightbox);
 
+    // previous / next image
+    lbPrev.addEventListener('click', () => showNeighbor(-1));
+    lbNext.addEventListener('click', () => showNeighbor(1));
+
+    // keyboard: Escape closes, arrow keys navigate
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && isLightboxOpen()) closeLightbox();
+      if (!isLightboxOpen() || event.altKey || event.ctrlKey || event.metaKey) return;
+
+      if (event.key === 'Escape') closeLightbox();
+      else if (event.key === 'ArrowLeft') showNeighbor(-1);
+      else if (event.key === 'ArrowRight') showNeighbor(1);
     });
+
+    // touch: swipe left = next image, swipe right = previous image
+    let touchStart = null;
+
+    lightbox.addEventListener('touchstart', (event) => {
+      touchStart = event.touches.length === 1
+        ? { x: event.touches[0].clientX, y: event.touches[0].clientY }
+        : null;
+    }, { passive: true });
+
+    lightbox.addEventListener('touchend', (event) => {
+      if (!touchStart) return;
+
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - touchStart.x;
+      const dy = touch.clientY - touchStart.y;
+      touchStart = null;
+
+      if (Math.abs(dx) >= CONFIG.swipeDistance && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        showNeighbor(dx < 0 ? 1 : -1);
+      }
+    }, { passive: true });
 
     // download button (saves the full-size URL, not the preview)
     lbDownload.addEventListener('click', async () => {
-      const url = state.downloadUrl;
-      if (!url || lbDownload.getAttribute('aria-busy') === 'true') return;
+      const item = state.activeItem;
+      if (!item || lbDownload.getAttribute('aria-busy') === 'true') return;
 
       lbDownload.setAttribute('aria-busy', 'true');
       try {
-        await downloadImage(url);
+        await downloadImage(item.download);
       } finally {
         lbDownload.removeAttribute('aria-busy');
       }
     });
-
-    // infinite scroll
-    new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) loadNextBatch();
-    }, { rootMargin: CONFIG.prefetchMargin + 'px 0px' }).observe(sentinel);
 
     // responsive layout: watch the gallery width (also catches scrollbar changes)
     new ResizeObserver(handleResize).observe(gallery);
@@ -791,6 +1148,9 @@
   };
 
   const init = async () => {
+    // we restore the scroll position ourselves (always the top of a freshly loaded page)
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
     rebuildLayout();
     bindEvents();
 
@@ -807,8 +1167,11 @@
       return;
     }
 
-    state.entries = shuffle(entries);
-    loadNextBatch();
+    state.entries = entries;
+    state.totalPages = Math.max(1, Math.ceil(entries.length / CONFIG.perPage));
+
+    // open the page from the URL (?page=N); 'replace' also cleans up an invalid value
+    goToPage(getPageFromUrl(), 'replace');
   };
 
   init();
