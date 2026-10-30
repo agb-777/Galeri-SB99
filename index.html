@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0b0b12" />
+<title>Gallery</title>
+<link rel="icon" href="data:," />
+<style>
+  /* ================= Design tokens ================= */
+  :root {
+    color-scheme: dark;
+
+    --gap: 10px;
+    --radius: 10px;
+
+    --bg: #0b0b12;
+    --surface: #15151f;
+    --tile-bg: #1b1b28;
+    --ink: #ececf3;
+    --ink-muted: #a3a3b5;
+    --line: rgba(255, 255, 255, .07);
+
+    --accent: #a78bfa;
+    --accent-2: #f472b6;
+    --accent-gradient: linear-gradient(135deg, var(--accent), var(--accent-2));
+
+    --overlay: rgba(8, 8, 14, .92);
+    --control-bg: rgba(20, 20, 30, .72);
+    --control-bg-hover: rgba(32, 32, 48, .92);
+
+    --shadow-tile: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .25);
+    --shadow-tile-hover: 0 2px 4px rgba(0, 0, 0, .4), 0 14px 36px rgba(0, 0, 0, .4), 0 0 0 1px rgba(167, 139, 250, .55);
+
+    /* film-grain texture (inline SVG noise, no external file) */
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  @media (max-width: 600px) {
+    :root {
+      --gap: 8px;
+      --radius: 8px;
+    }
+  }
+
+  /* ================= Base ================= */
+  *,
+  *::before,
+  *::after { box-sizing: border-box; }
+
+  html {
+    background: var(--bg);
+    /* prevent layout shift when the scrollbar disappears (lightbox open) */
+    scrollbar-gutter: stable;
+    scrollbar-color: #3a3a4d transparent;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Background layer 1: soft colored glows */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+      radial-gradient(60vmax 50vmax at 8% -10%, rgba(139, 92, 246, .22), transparent 60%),
+      radial-gradient(55vmax 45vmax at 105% 10%, rgba(244, 114, 182, .14), transparent 60%),
+      radial-gradient(70vmax 50vmax at 50% 115%, rgba(56, 189, 248, .10), transparent 60%);
+  }
+
+  /* Background layer 2: grain texture */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: var(--grain);
+    background-size: 180px 180px;
+    opacity: .07;
+    mix-blend-mode: overlay;
+  }
+
+  body.no-scroll { overflow: hidden; }
+
+  /* ================= Gallery (masonry) ================= */
+  #gallery {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap);
+    width: 100%;
+    padding: var(--gap);
+  }
+
+  .col {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: var(--gap);
+    min-width: 0;
+  }
+
+  #sentinel {
+    width: 100%;
+    height: 1px;
+  }
+
+  /* ================= Tile ================= */
+  .tile {
+    position: relative;
+    display: block;
+    flex: 0 0 auto;
+    margin: 0;
+    overflow: hidden;
+    background: var(--tile-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-tile);
+    outline: none;
+    cursor: zoom-in;
+    animation: tile-in .45s cubic-bezier(.2, .7, .2, 1) both;
+    transition: transform .22s ease, box-shadow .22s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* subtle dark gradient + inner border that fade in on hover */
+  .tile::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(to top, rgba(8, 8, 14, .45), transparent 45%);
+    box-shadow: inset 0 0 0 1px var(--line);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .22s ease;
+  }
+
+  .tile img {
+    display: block;
+    width: 100%;
+    height: auto; /* aspect ratio comes from the img width/height attributes */
+    background: var(--tile-bg);
+    border-radius: inherit;
+  }
+
+  @media (hover: hover) {
+    .tile:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-tile-hover);
+    }
+
+    .tile:hover::after { opacity: 1; }
+  }
+
+  .tile:focus-visible {
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  }
+
+  @keyframes tile-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(.98);
+    }
+  }
+
+  /* ================= Lightbox ================= */
+  #lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(12px, 4vmin, 48px);
+    background:
+      radial-gradient(60vmax 50vmax at 50% 0%, rgba(139, 92, 246, .14), transparent 65%),
+      var(--overlay);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    outline: none;
+    cursor: zoom-out;
+    overscroll-behavior: contain;
+    container-type: size; /* lets the image use cqw/cqh units (see .lb-stage img) */
+  }
+
+  #lightbox[hidden] { display: none; }
+
+  /* wrapper that shrink-wraps the image exactly */
+  .lb-stage {
+    position: relative;
+    display: flex;
+    cursor: default;
+  }
+
+  .lb-stage img {
+    display: block;
+    width: auto;
+    height: auto;
+    /* limit = content box of the lightbox (inside its padding).
+       Percentages do not work here: the wrapper height is "auto",
+       so max-height: 100% would be ignored. */
+    max-width: 100cqw;
+    max-height: 100cqh;
+    object-fit: contain;
+    border-radius: 6px;
+    box-shadow: 0 0 0 1px var(--line), 0 28px 80px rgba(0, 0, 0, .6);
+  }
+
+  /* round buttons (download & close) */
+  .lb-btn {
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--control-bg);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: background .15s ease, transform .15s ease, filter .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .lb-btn:hover { background: var(--control-bg-hover); }
+  .lb-btn:active { transform: scale(.94); }
+  .lb-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .lb-btn[aria-busy="true"] { opacity: .55; cursor: progress; }
+
+  /* download: inside the image, bottom-right corner */
+  .lb-download {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    border-color: transparent;
+    background: var(--accent-gradient);
+  }
+
+  .lb-download:hover {
+    background: var(--accent-gradient);
+    filter: brightness(1.12);
+  }
+
+  /* close: top-right corner of the screen (important on mobile) */
+  .lb-close {
+    position: absolute;
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+  }
+
+  /* ================= Error / info message ================= */
+  .message {
+    width: min(560px, calc(100% - 2 * var(--gap)));
+    margin: 18vh auto 0;
+    padding: 22px 24px;
+    background: rgba(21, 21, 31, .8);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .4);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: var(--ink-muted);
+    font-size: 14px;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .message code {
+    display: inline-block;
+    padding: 2px 7px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--ink);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile,
+    .tile::after,
+    .lb-btn { transition: none; }
+
+    .tile { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<main id="gallery" aria-label="Image gallery"></main>
+<div id="sentinel" aria-hidden="true"></div>
+
+<p id="message" class="message" role="alert" hidden></p>
+
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Image preview" tabindex="-1" hidden>
+  <button id="lb-close" class="lb-btn lb-close" type="button" aria-label="Close preview" title="Close">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M6 6l12 12"/><path d="M18 6L6 18"/>
+    </svg>
+  </button>
+
+  <div class="lb-stage">
+    <img alt="" referrerpolicy="no-referrer" />
+    <button id="lb-download" class="lb-btn lb-download" type="button" aria-label="Download image" title="Download">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ==========================================================
+   * Configuration
+   * ========================================================== */
+  const CONFIG = Object.freeze({
+    urlListFile:    'url.txt',
+    minColWidth:    250,   // ideal column width (px), drives the column count
+    minCols:        2,
+    maxCols:        9,
+    batchSize:      30,    // images per batch
+    concurrency:    6,     // simultaneous image loads
+    fetchTimeout:   10000, // ms, for url.txt
+    imageTimeout:   15000, // ms, per preview image
+    prefetchMargin: 900    // px, start loading the next batch before reaching the bottom
+  });
+
+  /* Static strings only (safe to render with innerHTML: no user input). */
+  const MESSAGES = Object.freeze({
+    fetchFailed:
+      'Could not load <code>url.txt</code>.<br>' +
+      'If you opened this file via <code>file://</code> (double-click), ' +
+      'the browser blocks <code>fetch()</code>. Serve it from localhost instead:<br><br>' +
+      '<code>python3 -m http.server 8000</code><br>' +
+      'then open <code>http://localhost:8000</code>',
+    noUrls:
+      '<code>url.txt</code> contains no valid image URLs.<br>' +
+      'Format: one entry per line &mdash; <code>preview_url download_url</code><br>' +
+      'separated by a space or <code>|</code>. The download URL is optional.',
+    allFailed:
+      'All images failed to load. Check <code>url.txt</code> &mdash; every preview URL must ' +
+      'point directly to an image file (not a web page) and be publicly accessible.'
+  });
+
+  const EXTENSION_BY_MIME = Object.freeze({
+    'image/jpeg':    'jpg',
+    'image/png':     'png',
+    'image/webp':    'webp',
+    'image/gif':     'gif',
+    'image/avif':    'avif',
+    'image/bmp':     'bmp',
+    'image/svg+xml': 'svg'
+  });
+
+  /* ==========================================================
+   * DOM elements
+   * ========================================================== */
+  const gallery     = document.getElementById('gallery');
+  const sentinel    = document.getElementById('sentinel');
+  const messageEl   = document.getElementById('message');
+  const lightbox    = document.getElementById('lightbox');
+  const lightboxImg = lightbox.querySelector('.lb-stage img');
+  const lbClose     = document.getElementById('lb-close');
+  const lbDownload  = document.getElementById('lb-download');
+
+  /* ==========================================================
+   * State
+   * ========================================================== */
+  const state = {
+    entries: [],       // [{ preview, download }] (already shuffled)
+    nextEntry: 0,      // index of the next entry to load
+    loading: false,
+    done: false,       // true once every entry has been queued
+
+    items: [],         // { el, ratio, col } for every tile that loaded successfully
+    columns: [],       // .col elements
+    heights: [],       // estimated height of each column
+    colWidth: 1,
+    gap: 10,
+    galleryWidth: 0,
+
+    downloadUrl: ''    // full-size URL for the image currently open in the lightbox
+  };
+
+  /* ==========================================================
+   * General utilities
+   * ========================================================== */
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+  const shuffle = (list) => {
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list;
+  };
+
+  const isHttpUrl = (value) => {
+    try {
+      const { protocol } = new URL(value);
+      return protocol === 'http:' || protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
+  /**
+   * Parses url.txt. One entry per line:
+   *
+   *   <preview_url> <download_url>     (separated by whitespace or "|")
+   *
+   * - The download URL is optional; if missing or invalid, the preview URL is used.
+   * - Blank lines and lines starting with "#" are ignored.
+   * - Duplicate preview URLs are dropped.
+   */
+  const parseEntries = (text) => {
+    const entries = new Map();
+
+    for (const rawLine of text.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith('#')) continue;
+
+      const [preview, download] = line.split(/[\s|]+/).filter(Boolean);
+      if (!isHttpUrl(preview) || entries.has(preview)) continue;
+
+      entries.set(preview, {
+        preview,
+        download: isHttpUrl(download) ? download : preview
+      });
+    }
+
+    return [...entries.values()];
+  };
+
+  const fetchWithTimeout = async (url, timeoutMs) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { cache: 'no-cache', signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  /** Runs `worker` for every item with at most `limit` running in parallel. */
+  const runPool = async (list, limit, worker) => {
+    let cursor = 0;
+    const run = async () => {
+      while (cursor < list.length) {
+        const item = list[cursor++];
+        try {
+          await worker(item);
+        } catch {
+          /* one failing item must not stop the others */
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(limit, list.length) }, run));
+  };
+
+  const showMessage = (html) => {
+    messageEl.innerHTML = html;
+    messageEl.hidden = false;
+  };
+
+  /* ==========================================================
+   * Masonry layout
+   * ========================================================== */
+  const readGap = () => {
+    const value = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap'));
+    return Number.isFinite(value) ? value : 10;
+  };
+
+  const columnCountFor = (width) =>
+    clamp(Math.round(width / CONFIG.minColWidth), CONFIG.minCols, CONFIG.maxCols);
+
+  const measureColumnWidth = (count, gap) => {
+    const style = getComputedStyle(gallery);
+    const padding = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+    const inner = gallery.clientWidth - padding;
+    return Math.max(1, (inner - gap * (count - 1)) / count);
+  };
+
+  const itemHeight = (item) => state.colWidth / item.ratio;
+
+  const shortestColumnIndex = () => state.heights.indexOf(Math.min(...state.heights));
+
+  const addToColumn = (item, index) => {
+    const column = state.columns[index];
+    if (column.childElementCount > 0) state.heights[index] += state.gap;
+    state.heights[index] += itemHeight(item);
+    item.col = index;
+    column.appendChild(item.el);
+  };
+
+  const place = (item) => addToColumn(item, shortestColumnIndex());
+
+  /** Re-reads the gap, column width and gallery width. */
+  const syncMetrics = (columnCount) => {
+    state.gap = readGap();
+    state.colWidth = measureColumnWidth(columnCount, state.gap);
+    state.galleryWidth = gallery.clientWidth;
+  };
+
+  /** Rebuilds every column and re-places all tiles (used when the column count changes). */
+  const rebuildLayout = () => {
+    const count = columnCountFor(gallery.clientWidth);
+
+    state.columns = Array.from({ length: count }, () => {
+      const column = document.createElement('div');
+      column.className = 'col';
+      return column;
+    });
+    state.heights = new Array(count).fill(0);
+    syncMetrics(count);
+
+    state.items.forEach((item) => place(item));
+
+    // single replace -> no empty frame, scroll position stays intact
+    gallery.replaceChildren(...state.columns);
+  };
+
+  /** Same column count, only the width changed: recompute height estimates without moving tiles. */
+  const refreshMetrics = () => {
+    syncMetrics(state.columns.length);
+    state.heights.fill(0);
+
+    const hasItem = new Array(state.columns.length).fill(false);
+    for (const item of state.items) {
+      if (hasItem[item.col]) state.heights[item.col] += state.gap;
+      hasItem[item.col] = true;
+      state.heights[item.col] += itemHeight(item);
+    }
+  };
+
+  const handleResize = () => {
+    const width = gallery.clientWidth;
+    if (width === state.galleryWidth) return; // height-only changes (e.g. mobile address bar) are ignored
+
+    if (columnCountFor(width) !== state.columns.length) rebuildLayout();
+    else refreshMetrics();
+
+    loadMoreIfNeeded();
+  };
+
+  /* ==========================================================
+   * Image loading
+   * ========================================================== */
+  /** Loads one preview image. Resolves to the <img> element, or null on failure/timeout. */
+  const loadImage = (url) => new Promise((resolve) => {
+    const img = new Image();
+    img.alt = '';
+    img.decoding = 'async';
+    img.referrerPolicy = 'no-referrer';
+    img.draggable = false;
+
+    const settle = (loaded) => {
+      clearTimeout(timer);
+      img.onload = null;
+      img.onerror = null;
+
+      const valid = loaded && img.naturalWidth > 0 && img.naturalHeight > 0;
+      if (!valid) img.removeAttribute('src'); // cancel a download that is still running
+      resolve(valid ? img : null);
+    };
+
+    const timer = setTimeout(() => settle(false), CONFIG.imageTimeout);
+    img.onload = () => settle(true);
+    img.onerror = () => settle(false);
+    img.src = url;
+  });
+
+  const createTile = (img, downloadUrl) => {
+    // intrinsic width/height -> the browser derives the aspect ratio (no layout shift)
+    img.width = img.naturalWidth;
+    img.height = img.naturalHeight;
+
+    const el = document.createElement('figure');
+    el.className = 'tile';
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', 'Enlarge image');
+    el.dataset.download = downloadUrl;
+    el.appendChild(img);
+
+    return { el, ratio: img.naturalWidth / img.naturalHeight, col: -1 };
+  };
+
+  const loadNextBatch = async () => {
+    if (state.loading || state.done || state.entries.length === 0) return;
+
+    state.loading = true;
+    try {
+      const batch = state.entries.slice(state.nextEntry, state.nextEntry + CONFIG.batchSize);
+      state.nextEntry += batch.length;
+      state.done = state.nextEntry >= state.entries.length;
+
+      await runPool(batch, CONFIG.concurrency, async (entry) => {
+        const img = await loadImage(entry.preview);
+        if (!img) return;
+
+        const item = createTile(img, entry.download);
+        state.items.push(item);
+        place(item);
+      });
+    } finally {
+      state.loading = false;
+    }
+
+    if (state.done && state.items.length === 0) {
+      gallery.replaceChildren();
+      showMessage(MESSAGES.allFailed);
+      return;
+    }
+
+    loadMoreIfNeeded();
+  };
+
+  /** True when the end of the gallery is close to the visible area. */
+  const needsMore = () =>
+    sentinel.getBoundingClientRect().top < window.innerHeight + CONFIG.prefetchMargin;
+
+  const loadMoreIfNeeded = () => {
+    if (needsMore()) loadNextBatch();
+  };
+
+  /* ==========================================================
+   * Download
+   * ========================================================== */
+  const buildFilename = (url, mimeType) => {
+    let name = 'image';
+    try {
+      const last = new URL(url).pathname.split('/').filter(Boolean).pop();
+      if (last) name = decodeURIComponent(last);
+    } catch {
+      /* fall back to the default name */
+    }
+
+    name = name.replace(/[\\/:*?"<>|]+/g, '_');
+    if (!/\.[a-z0-9]{2,5}$/i.test(name)) {
+      name += '.' + (EXTENSION_BY_MIME[mimeType] || 'jpg');
+    }
+    return name;
+  };
+
+  const clickLink = (href, props) => {
+    const a = document.createElement('a');
+    Object.assign(a, props);
+    a.href = href;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  const downloadImage = async (url) => {
+    try {
+      const res = await fetch(url, { mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      clickLink(objectUrl, { download: buildFilename(url, blob.type), rel: 'noopener' });
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 15000);
+    } catch {
+      // CORS blocked / network error -> open the image in a new tab as a fallback
+      clickLink(url, { target: '_blank', rel: 'noopener noreferrer' });
+    }
+  };
+
+  /* ==========================================================
+   * Lightbox
+   * ========================================================== */
+  let lastFocused = null;
+
+  const isLightboxOpen = () => !lightbox.hidden;
+
+  const openLightbox = (previewUrl, downloadUrl) => {
+    lastFocused = document.activeElement;
+    state.downloadUrl = downloadUrl || previewUrl;
+    lightboxImg.src = previewUrl;
+    lightbox.hidden = false;
+    gallery.inert = true; // keep keyboard focus out of the gallery behind the lightbox
+    document.body.classList.add('no-scroll');
+    lightbox.focus();
+  };
+
+  const closeLightbox = () => {
+    lightbox.hidden = true;
+    lightboxImg.removeAttribute('src');
+    state.downloadUrl = '';
+    gallery.inert = false;
+    document.body.classList.remove('no-scroll');
+
+    if (lastFocused && typeof lastFocused.focus === 'function') {
+      lastFocused.focus({ preventScroll: true });
+    }
+    lastFocused = null;
+  };
+
+  const tileFromEvent = (event) =>
+    event.target instanceof Element ? event.target.closest('.tile') : null;
+
+  const openTile = (tile) => {
+    const img = tile.querySelector('img');
+    const previewUrl = img && (img.currentSrc || img.src);
+    if (previewUrl) openLightbox(previewUrl, tile.dataset.download);
+  };
+
+  /* ==========================================================
+   * Event binding
+   * ========================================================== */
+  const bindEvents = () => {
+    // click / keyboard on a tile -> open lightbox (event delegation)
+    gallery.addEventListener('click', (event) => {
+      const tile = tileFromEvent(event);
+      if (tile) openTile(tile);
+    });
+
+    gallery.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const tile = tileFromEvent(event);
+      if (!tile) return;
+      event.preventDefault();
+      openTile(tile);
+    });
+
+    // dark area outside the image / close button / Escape -> close
+    lightbox.addEventListener('click', (event) => {
+      if (event.target === lightbox) closeLightbox();
+    });
+    lbClose.addEventListener('click', closeLightbox);
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isLightboxOpen()) closeLightbox();
+    });
+
+    // download button (saves the full-size URL, not the preview)
+    lbDownload.addEventListener('click', async () => {
+      const url = state.downloadUrl;
+      if (!url || lbDownload.getAttribute('aria-busy') === 'true') return;
+
+      lbDownload.setAttribute('aria-busy', 'true');
+      try {
+        await downloadImage(url);
+      } finally {
+        lbDownload.removeAttribute('aria-busy');
+      }
+    });
+
+    // infinite scroll
+    new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) loadNextBatch();
+    }, { rootMargin: CONFIG.prefetchMargin + 'px 0px' }).observe(sentinel);
+
+    // responsive layout: watch the gallery width (also catches scrollbar changes)
+    new ResizeObserver(handleResize).observe(gallery);
+  };
+
+  /* ==========================================================
+   * Init
+   * ========================================================== */
+  const loadEntries = async () => {
+    const res = await fetchWithTimeout(CONFIG.urlListFile, CONFIG.fetchTimeout);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return parseEntries(await res.text());
+  };
+
+  const init = async () => {
+    rebuildLayout();
+    bindEvents();
+
+    let entries;
+    try {
+      entries = await loadEntries();
+    } catch {
+      showMessage(MESSAGES.fetchFailed);
+      return;
+    }
+
+    if (entries.length === 0) {
+      showMessage(MESSAGES.noUrls);
+      return;
+    }
+
+    state.entries = shuffle(entries);
+    loadNextBatch();
+  };
+
+  init();
+})();
+</script>
+</body>
+</html>
