@@ -27,7 +27,7 @@
   :root {
     color-scheme: light;
 
-    --gap: 16px;
+    --gap: 26px;            /* space between cards and from the screen edge */
     --radius: 14px;
 
     --cream:     #fff4f8;   /* page background */
@@ -43,6 +43,7 @@
     --backing:   #ff74a8;   /* hard offset "backing" shadow of every sticker */
     --frame:     #fff4f8;   /* ring around the lightbox image */
     --on-pink:   #4a0f2b;   /* text and icons on a pink fill (same in both themes) */
+    --stripe:    #ffe9f1;   /* page texture: wide soft diagonal stripes */
 
     --overlay:   rgba(52, 10, 32, .93);
 
@@ -71,13 +72,14 @@
     --bar:       #2a1421;
     --backing:   #b32a66;
     --frame:     #ffd6e5;
+    --stripe:    #25111c;
 
     --overlay:   rgba(12, 4, 9, .94);
   }
 
   @media (max-width: 600px) {
     :root {
-      --gap: 12px;
+      --gap: 22px;
       --radius: 12px;
       --nav-h: 54px;
       --footer-h: 40px;
@@ -116,18 +118,14 @@
     padding-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
   }
 
-  /* staggered polka dots, flat and quiet */
+  /* wide soft diagonal stripes: flat and quiet (no dots, no tiny repeating shapes) */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background-image:
-      radial-gradient(var(--pink-200) 2px, transparent 2.5px),
-      radial-gradient(var(--pink-200) 2px, transparent 2.5px);
-    background-size: 28px 28px;
-    background-position: 0 0, 14px 14px;
+    background-image: repeating-linear-gradient(135deg, var(--stripe) 0 22px, transparent 22px 44px);
   }
 
   ::selection {
@@ -162,7 +160,7 @@
   .nav-menu {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
   }
 
   .nav-link {
@@ -355,7 +353,8 @@
     align-items: flex-start;
     gap: var(--gap);
     width: 100%;
-    padding: var(--gap);
+    /* left/top: 3px outline ring | right/bottom: ring + 5-6px backing shadow */
+    padding: calc(var(--gap) + 3px) calc(var(--gap) + 8px) calc(var(--gap) + 9px) calc(var(--gap) + 3px);
   }
 
   .col {
@@ -468,9 +467,9 @@
   .filters {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    padding: 22px var(--gap) 6px;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: calc(var(--gap) + 10px) var(--gap) 8px;
   }
 
   .filter-btn {
@@ -525,20 +524,32 @@
 
   .filter-btn[aria-pressed="true"] .filter-count { background: var(--surface); }
 
+  /* small screens: slightly tighter buttons so All / Image / Video stay on one row */
+  @media (max-width: 600px) {
+    .filters { gap: 10px; }
+
+    .filter-btn {
+      gap: 6px;
+      height: 42px;
+      padding: 0 9px 0 14px;
+      font-size: 14px;
+    }
+  }
+
   /* ================= Pagination ================= */
   .pagination {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    padding: 28px var(--gap) 36px;
+    gap: 20px;
+    padding: 36px var(--gap) 48px;
   }
 
   .page-list {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
+    gap: 12px 10px;
   }
 
   .page-btn {
