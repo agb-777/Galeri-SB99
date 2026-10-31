@@ -17,6 +17,9 @@
   })();
 </script>
 <link rel="icon" href="data:," />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700&amp;display=swap&amp;text=Galeri%20SB99" />
 <style>
   /* ================= Design tokens =================
      Neutral gray palette with a single blue accent.
@@ -31,13 +34,14 @@
     --surface:       #ffffff;  /* cards, buttons */
     --bar:           #ffffff;  /* navbar + footer */
     --hover:         #f4f4f5;  /* hover / subtle fill */
-    --placeholder:   #e4e4e7;  /* behind an image or video until it has loaded */
+    --placeholder:   #e4e4e7;  /* behind a video cover until it has loaded */
     --border:        #e4e4e7;
     --border-strong: #d4d4d8;
     --ink:           #18181b;  /* text */
     --ink-muted:     #71717a;  /* secondary text */
 
-    --accent:        #2563eb;  /* active states, video badge, download button */
+    --accent:        #2563eb;  /* active states, focus rings */
+    --accent-text:   #2563eb;  /* accent used as text color (brand) */
     --on-accent:     #ffffff;
 
     --overlay:       rgba(9, 9, 11, .92);
@@ -63,6 +67,8 @@
     --border-strong: #3f3f46;
     --ink:           #fafafa;
     --ink-muted:     #a1a1aa;
+
+    --accent-text:   #60a5fa;
 
     --overlay:       rgba(0, 0, 0, .92);
 
@@ -135,6 +141,23 @@
     background: var(--bar);
     border-bottom: 1px solid var(--border);
   }
+
+  /* site title */
+  .brand {
+    flex: none;
+    color: var(--ink);
+    font-family: "Syne", var(--font);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .brand span { color: var(--accent-text); }
+  .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
 
   .nav-menu {
     display: flex;
@@ -340,7 +363,6 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .tile img,
   .tile video {
     display: block;
     width: 100%;
@@ -352,7 +374,7 @@
   /* the video cover is only a still frame: clicks go to the tile, not the <video> */
   .tile video { pointer-events: none; }
 
-  /* "Image" / "Video" label on every cover */
+  /* category label on every cover (from url.txt) */
   .badge {
     position: absolute;
     top: 10px;
@@ -367,10 +389,12 @@
     letter-spacing: .06em;
     line-height: 1;
     text-transform: uppercase;
+    max-width: calc(100% - 20px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     pointer-events: none;
   }
-
-  .badge-video { background: var(--accent); }
 
   /* play button in the middle of a video cover */
   .play {
@@ -411,61 +435,6 @@
       opacity: 0;
       transform: translateY(8px);
     }
-  }
-
-  /* ================= Category filter ================= */
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: calc(var(--gap) + 4px) var(--gap) 0;
-  }
-
-  .filter-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    height: 38px;
-    padding: 0 8px 0 14px;
-    border: 1px solid var(--border-strong);
-    border-radius: 999px;
-    background: var(--surface);
-    color: var(--ink);
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background .15s ease, border-color .15s ease, transform .1s ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .filter-btn:hover { background: var(--hover); }
-  .filter-btn:active { transform: scale(.97); }
-  .filter-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  /* selected category (declared after :hover so it wins) */
-  .filter-btn[aria-pressed="true"] {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--on-accent);
-  }
-
-  .filter-count {
-    min-width: 26px;
-    padding: 2px 7px;
-    border-radius: 999px;
-    background: var(--hover);
-    color: var(--ink-muted);
-    font-size: 12px;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.35;
-    text-align: center;
-  }
-
-  .filter-btn[aria-pressed="true"] .filter-count {
-    background: rgba(255, 255, 255, .22);
-    color: var(--on-accent);
   }
 
   /* ================= Pagination ================= */
@@ -546,22 +515,21 @@
     outline: none;
     cursor: zoom-out;
     overscroll-behavior: contain;
-    container-type: size; /* lets the media use cqw/cqh units (see .lb-stage img) */
+    container-type: size; /* lets the media use cqw/cqh units (see .lb-stage video) */
   }
 
-  /* wide screens: reserve room on both sides so the arrows sit beside the image */
+  /* wide screens: reserve room on both sides so the arrows sit beside the video */
   @media (min-width: 700px) {
     #lightbox { padding-inline: 84px; }
   }
 
-  /* wrapper that shrink-wraps the image / video exactly */
+  /* wrapper that shrink-wraps the video exactly */
   .lb-stage {
     position: relative;
     display: flex;
     cursor: default;
   }
 
-  .lb-stage img,
   .lb-stage video {
     display: block;
     width: auto;
@@ -578,13 +546,7 @@
 
   .lb-stage video { background: #000; }
 
-  /* videos have their own controls along the bottom, so the download button moves to the top */
-  .lb-stage.is-video .lb-download {
-    top: 12px;
-    bottom: auto;
-  }
-
-  /* round buttons (download, close, prev, next): same look in both themes, the overlay is always dark */
+  /* round buttons (close, prev, next): same look in both themes, the overlay is always dark */
   .lb-btn {
     z-index: 2;
     display: inline-flex;
@@ -606,17 +568,6 @@
   .lb-btn:active { transform: scale(.94); }
   .lb-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .lb-btn[aria-busy="true"] { opacity: .55; cursor: progress; }
-
-  /* download: inside the image, bottom-right corner */
-  .lb-download {
-    position: absolute;
-    right: 12px;
-    bottom: 12px;
-    border-color: transparent;
-    background: var(--accent);
-  }
-
-  .lb-download:hover { background: #1d4ed8; }
 
   /* close: top-right corner of the screen (important on mobile) */
   .lb-close {
@@ -683,7 +634,6 @@
   @media (prefers-reduced-motion: reduce) {
     .tile,
     .page-btn,
-    .filter-btn,
     .nav-btn,
     .nav-link,
     .lb-btn { transition: none; }
@@ -710,6 +660,8 @@
     </svg>
   </button>
 
+  <a class="brand" href="./" data-home aria-label="Galeri SB99 - home">Galeri <span>SB99</span></a>
+
   <nav id="nav-menu" class="nav-menu" aria-label="Main">
     <a class="nav-link" href="./" data-home aria-current="page">Home</a>
     <a class="nav-link" href="#">About</a>
@@ -731,20 +683,8 @@
 </header>
 <div id="progress" class="progress" aria-hidden="true" hidden></div>
 
-<nav id="filters" class="filters" aria-label="Filter by type" hidden>
-  <button class="filter-btn" type="button" data-type="all" aria-pressed="true">
-    <span>All</span><span class="filter-count">0</span>
-  </button>
-  <button class="filter-btn" type="button" data-type="image" aria-pressed="false">
-    <span>Image</span><span class="filter-count">0</span>
-  </button>
-  <button class="filter-btn" type="button" data-type="video" aria-pressed="false">
-    <span>Video</span><span class="filter-count">0</span>
-  </button>
-</nav>
-
 <h1 class="sr-only">Galeri SB99</h1>
-<main id="gallery" aria-label="Image gallery" aria-busy="false"></main>
+<main id="gallery" aria-label="Video gallery" aria-busy="false"></main>
 
 <nav id="pagination" class="pagination" aria-label="Pagination" hidden>
   <div id="page-list" class="page-list"></div>
@@ -753,24 +693,24 @@
 
 <p id="message" class="message" role="alert" hidden></p>
 
-<div id="lightbox" role="dialog" aria-modal="true" aria-label="Image preview" tabindex="-1" hidden>
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Video player" tabindex="-1" hidden>
   <div id="lb-counter" class="lb-counter" aria-live="polite"></div>
 
-  <button id="lb-close" class="lb-btn lb-close" type="button" aria-label="Close preview" title="Close">
+  <button id="lb-close" class="lb-btn lb-close" type="button" aria-label="Close player" title="Close">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M6 6l12 12"/><path d="M18 6L6 18"/>
     </svg>
   </button>
 
-  <button id="lb-prev" class="lb-btn lb-nav lb-prev" type="button" aria-label="Previous image" title="Previous">
+  <button id="lb-prev" class="lb-btn lb-nav lb-prev" type="button" aria-label="Previous video" title="Previous">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M15 5l-7 7 7 7"/>
     </svg>
   </button>
 
-  <button id="lb-next" class="lb-btn lb-nav lb-next" type="button" aria-label="Next image" title="Next">
+  <button id="lb-next" class="lb-btn lb-nav lb-next" type="button" aria-label="Next video" title="Next">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M9 5l7 7-7 7"/>
@@ -778,14 +718,7 @@
   </button>
 
   <div class="lb-stage">
-    <img alt="" referrerpolicy="no-referrer" />
-    <video id="lb-video" controls playsinline preload="auto" hidden></video>
-    <button id="lb-download" class="lb-btn lb-download" type="button" aria-label="Download image" title="Download">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/>
-      </svg>
-    </button>
+    <video id="lb-video" controls playsinline preload="auto"></video>
   </div>
 </div>
 
@@ -801,17 +734,16 @@
    * Configuration
    * ========================================================== */
   const CONFIG = Object.freeze({
-    urlListFile:  'url.txt',
-    perPage:      30,      // items (images + videos) per page; when a page is full, the next page is created
-    minColWidth:  250,     // ideal column width (px), drives the column count
-    minCols:      2,
-    maxCols:      9,
-    concurrency:  6,       // simultaneous image loads
-    fetchTimeout: 10000,   // ms, for url.txt
-    imageTimeout: 15000,   // ms, per preview image
-    videoTimeout: 20000,   // ms, per video (waiting for its first frame)
-    maxVideoBlob: 150 * 1024 * 1024, // bytes; larger videos open in a new tab instead of downloading through memory
-    swipeDistance: 50      // px, minimum horizontal swipe to change image
+    urlListFile:     'url.txt',
+    perPage:         30,       // videos per page; when a page is full, the next page is created
+    defaultCategory: 'Video',  // label shown on a video that has no category in url.txt
+    minColWidth:     250,      // ideal column width (px), drives the column count
+    minCols:         2,
+    maxCols:         9,
+    concurrency:     6,        // simultaneous video loads
+    fetchTimeout:    10000,    // ms, for url.txt
+    videoTimeout:    20000,    // ms, per video (waiting for its first frame)
+    swipeDistance:   50        // px, minimum horizontal swipe to change video
   });
 
   /* Static strings only (safe to render with innerHTML: no user input). */
@@ -823,83 +755,52 @@
       '<code>python3 -m http.server 8000</code><br>' +
       'then open <code>http://localhost:8000</code>',
     noUrls:
-      '<code>url.txt</code> contains no valid URLs.<br>' +
-      'One entry per line:<br>' +
-      '<code>image_preview_url download_url</code> for an image<br>' +
-      '<code>video_url</code> for a video (.mp4, .webm, .mov &hellip;)',
-    emptyType:
-      'Nothing in this category yet.',
+      '<code>url.txt</code> contains no valid video URLs.<br>' +
+      'One video per line:<br>' +
+      '<code>https://example.com/video.mp4 | Category</code><br>' +
+      'The category is optional.',
     allFailed:
-      'All items on this page failed to load. Check <code>url.txt</code> &mdash; every URL must ' +
-      'point directly to an image or video file (not a web page) and be publicly accessible.'
+      'All videos on this page failed to load. Check <code>url.txt</code> &mdash; every URL must ' +
+      'point directly to a video file (not a web page) and be publicly accessible.'
   });
-
-  const EXTENSION_BY_MIME = Object.freeze({
-    'image/jpeg':    'jpg',
-    'image/png':     'png',
-    'image/webp':    'webp',
-    'image/gif':     'gif',
-    'image/avif':    'avif',
-    'image/bmp':     'bmp',
-    'image/svg+xml': 'svg',
-    'video/mp4':     'mp4',
-    'video/webm':    'webm',
-    'video/ogg':     'ogv',
-    'video/quicktime': 'mov',
-    'video/x-matroska': 'mkv'
-  });
-
-  /* A URL whose path ends like this is treated as a video (query string and #hash are ignored). */
-  const VIDEO_PATH = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
-
-  const FILTERS = Object.freeze(['all', 'image', 'video']);
 
   const PAGE_PARAM = 'page';
-  const TYPE_PARAM = 'type';
+  const LEGACY_PARAMS = ['type']; // old links like ?type=video are cleaned up
   const BASE_TITLE = document.title;
 
   /* ==========================================================
    * DOM elements
    * ========================================================== */
+  const siteNav     = document.getElementById('site-nav');
+  const navToggle   = document.getElementById('nav-toggle');
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
   const gallery     = document.getElementById('gallery');
   const progressBar = document.getElementById('progress');
   const messageEl   = document.getElementById('message');
   const pagination  = document.getElementById('pagination');
   const pageList    = document.getElementById('page-list');
   const pageInfo    = document.getElementById('page-info');
+  const siteFooter  = document.querySelector('.site-footer');
   const yearEl      = document.getElementById('year');
   const lightbox    = document.getElementById('lightbox');
-  const lightboxImg = lightbox.querySelector('.lb-stage img');
+  const lightboxVideo = document.getElementById('lb-video');
   const lbClose     = document.getElementById('lb-close');
   const lbPrev      = document.getElementById('lb-prev');
   const lbNext      = document.getElementById('lb-next');
   const lbCounter   = document.getElementById('lb-counter');
-  const lbDownload  = document.getElementById('lb-download');
-  const siteNav     = document.getElementById('site-nav');
-  const navToggle   = document.getElementById('nav-toggle');
-  const navMenu     = document.getElementById('nav-menu');
-  const themeToggle = document.getElementById('theme-toggle');
-  const siteFooter  = document.querySelector('.site-footer');
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-  const filterBar   = document.getElementById('filters');
-  const filterButtons = [...filterBar.querySelectorAll('.filter-btn')];
-  const lbStage     = lightbox.querySelector('.lb-stage');
-  const lightboxVideo = document.getElementById('lb-video');
 
   /* ==========================================================
    * State
    * ========================================================== */
   const state = {
-    allEntries: [],    // every entry of url.txt, in file order: { type, preview, download }
-    entries: [],       // entries of the selected category (this is what gets paginated)
-    filter: 'all',     // 'all' | 'image' | 'video'
-    counts: { all: 0, image: 0, video: 0 },
+    entries: [],       // every video of url.txt, in file order: { url, category }
     page: 0,           // current page (1-based); 0 = nothing rendered yet
     totalPages: 1,
     pageEntries: [],   // entries of the current page
     loadToken: 0,      // bumped on every page render; results from older renders are discarded
 
-    items: [],         // loaded tiles of the current page: { el, ratio, col, index, preview, download }
+    items: [],         // loaded tiles of the current page: { el, ratio, col, index, url, category }
     columns: [],       // .col elements
     heights: [],       // estimated height of each column
     colWidth: 1,
@@ -925,26 +826,17 @@
     }
   };
 
-  const isVideoUrl = (value) => {
-    try {
-      return VIDEO_PATH.test(new URL(value).pathname);
-    } catch {
-      return false;
-    }
-  };
-
   /**
-   * Parses url.txt. One entry per line.
+   * Parses url.txt. One video per line:
    *
-   *   image:  <preview_url> <download_url>     (separated by whitespace or "|")
-   *   video:  <video_url>                      (a single URL, used for cover, player and download)
+   *   <video_url> | <category>
    *
-   * - A video is recognised by its file extension (.mp4, .webm, .mov ...).
-   *   For a URL without an extension, start the line with the word "video" or "image":
-   *       video https://cdn.example.com/stream/123
-   * - The image download URL is optional; if missing or invalid, the preview URL is used.
+   * - The category is optional. Without one, the label is CONFIG.defaultCategory.
+   * - It may have several words ("Short Film"), so "|" is the separator.
+   *   The category can also come first: "Entertainment | <video_url>".
+   *   Without any "|", everything after the URL (separated by a space) is the category.
    * - Blank lines and lines starting with "#" are ignored.
-   * - Duplicate first URLs are dropped.
+   * - Duplicate URLs are dropped (the first one wins).
    * - The order of the file is kept, so every page is stable across refreshes.
    */
   const parseEntries = (text) => {
@@ -954,18 +846,18 @@
       const line = rawLine.trim();
       if (!line || line.startsWith('#')) continue;
 
-      const tokens = line.split(/[\s|]+/).filter(Boolean);
-      const forced = /^(image|video)$/i.test(tokens[0]) ? tokens.shift().toLowerCase() : null;
-      const [first, second] = tokens;
-      if (!isHttpUrl(first) || entries.has(first)) continue;
+      const parts = (line.includes('|') ? line.split('|') : line.split(/\s+/))
+        .map((part) => part.trim())
+        .filter(Boolean);
 
-      const type = forced || (isVideoUrl(first) ? 'video' : 'image');
+      const urlIndex = parts.findIndex(isHttpUrl);
+      if (urlIndex === -1) continue;
 
-      entries.set(first, {
-        type,
-        preview: first,
-        download: type === 'video' || !isHttpUrl(second) ? first : second
-      });
+      const url = parts[urlIndex];
+      if (entries.has(url)) continue;
+
+      const category = parts.filter((_, i) => i !== urlIndex).join(' ');
+      entries.set(url, { url, category: category || CONFIG.defaultCategory });
     }
 
     return [...entries.values()];
@@ -1086,63 +978,51 @@
   };
 
   /* ==========================================================
-   * Media loading (images and videos)
+   * Video covers
    * ========================================================== */
   /**
-   * Loads the cover of one entry: the image itself, or the first frame of a video.
-   * Resolves to the <img> / <video> element, or null on failure/timeout.
+   * Loads the cover of one video (its first frame).
+   * Resolves to the <video> element, or null on failure/timeout.
    */
-  const loadMedia = (entry) => new Promise((resolve) => {
-    const isVideo = entry.type === 'video';
-    const el = isVideo ? document.createElement('video') : new Image();
-    const dimensions = () => (isVideo
-      ? { width: el.videoWidth, height: el.videoHeight }
-      : { width: el.naturalWidth, height: el.naturalHeight });
-
+  const loadVideo = (entry) => new Promise((resolve) => {
+    const video = document.createElement('video');
     let frameTimer = 0;
 
     const settle = (loaded) => {
       clearTimeout(timer);
       clearTimeout(frameTimer);
-      el.onload = el.onerror = el.onloadedmetadata = el.onloadeddata = null;
+      video.onerror = video.onloadedmetadata = video.onloadeddata = null;
 
-      const { width, height } = dimensions();
-      const valid = loaded && width > 0 && height > 0;
+      const valid = loaded && video.videoWidth > 0 && video.videoHeight > 0;
       if (!valid) {
-        el.removeAttribute('src'); // cancel a download that is still running
-        if (isVideo) el.load();
+        video.removeAttribute('src'); // cancel a download that is still running
+        video.load();
       }
-      resolve(valid ? el : null);
+      resolve(valid ? video : null);
     };
 
-    const timer = setTimeout(() => settle(false), isVideo ? CONFIG.videoTimeout : CONFIG.imageTimeout);
-    el.onerror = () => settle(false);
-    el.draggable = false;
+    const timer = setTimeout(() => settle(false), CONFIG.videoTimeout);
 
-    if (isVideo) {
-      el.muted = true;
-      el.setAttribute('muted', '');
-      el.playsInline = true;
-      el.preload = 'metadata';
-      el.disablePictureInPicture = true;
-      // some browsers never fire "loadeddata" without playback: accept the metadata after a short wait
-      el.onloadedmetadata = () => { frameTimer = setTimeout(() => settle(true), 1500); };
-      el.onloadeddata = () => settle(true);
-      // "#t=0.1" makes the browser show a real frame instead of a black rectangle
-      el.src = entry.preview + (entry.preview.includes('#') ? '' : '#t=0.1');
-    } else {
-      el.alt = '';
-      el.decoding = 'async';
-      el.referrerPolicy = 'no-referrer';
-      el.onload = () => settle(true);
-      el.src = entry.preview;
-    }
+    video.muted = true;
+    video.setAttribute('muted', '');
+    video.playsInline = true;
+    video.preload = 'metadata';
+    video.disablePictureInPicture = true;
+    video.draggable = false;
+
+    video.onerror = () => settle(false);
+    // some browsers never fire "loadeddata" without playback: accept the metadata after a short wait
+    video.onloadedmetadata = () => { frameTimer = setTimeout(() => settle(true), 1500); };
+    video.onloadeddata = () => settle(true);
+
+    // "#t=0.1" makes the browser show a real frame instead of a black rectangle
+    video.src = entry.url + (entry.url.includes('#') ? '' : '#t=0.1');
   });
 
-  const createBadge = (isVideo) => {
+  const createBadge = (text) => {
     const badge = document.createElement('span');
-    badge.className = 'badge' + (isVideo ? ' badge-video' : '');
-    badge.textContent = isVideo ? 'Video' : 'Image';
+    badge.className = 'badge';
+    badge.textContent = text;
     return badge;
   };
 
@@ -1156,57 +1036,44 @@
     return icon;
   };
 
-  const createTile = (media, entry, index) => {
-    const isVideo = entry.type === 'video';
-    const width = isVideo ? media.videoWidth : media.naturalWidth;
-    const height = isVideo ? media.videoHeight : media.naturalHeight;
-
+  const createTile = (video, entry, index) => {
     // intrinsic width/height -> the browser derives the aspect ratio (no layout shift)
-    media.width = width;
-    media.height = height;
+    video.width = video.videoWidth;
+    video.height = video.videoHeight;
 
     const el = document.createElement('figure');
     el.className = 'tile';
     el.tabIndex = 0;
     el.setAttribute('role', 'button');
-    el.setAttribute('aria-label', isVideo ? 'Play video' : 'Enlarge image');
-    el.appendChild(media);
-    el.appendChild(createBadge(isVideo));
-    if (isVideo) el.appendChild(createPlayIcon());
+    el.setAttribute('aria-label', 'Play video: ' + entry.category);
+    el.append(video, createBadge(entry.category), createPlayIcon());
 
     const item = {
       el,
-      type: entry.type,
-      ratio: width / height,
+      ratio: video.videoWidth / video.videoHeight,
       col: -1,
       index,                      // position inside the page (url.txt order)
-      preview: entry.preview,
-      download: entry.download
+      url: entry.url,
+      category: entry.category
     };
     itemByElement.set(el, item);
     return item;
   };
 
   /* ==========================================================
-   * Category, pages & URL (?type=video&page=N)
+   * Pages & URL (?page=N)
    * ========================================================== */
   const getPageFromUrl = () => {
     const value = parseInt(new URLSearchParams(location.search).get(PAGE_PARAM), 10);
     return Number.isFinite(value) ? value : 1;
   };
 
-  const getFilterFromUrl = () => {
-    const value = new URLSearchParams(location.search).get(TYPE_PARAM);
-    return FILTERS.includes(value) ? value : 'all';
-  };
-
-  /** Builds the URL for a view while keeping any other query parameters. Defaults get a clean URL. */
-  const buildPageUrl = (page, filter = state.filter) => {
+  /** Builds the URL for a page while keeping any other query parameters. Page 1 gets a clean URL. */
+  const buildPageUrl = (page) => {
     const params = new URLSearchParams(location.search);
+    LEGACY_PARAMS.forEach((name) => params.delete(name));
     if (page <= 1) params.delete(PAGE_PARAM);
     else params.set(PAGE_PARAM, String(page));
-    if (filter === 'all') params.delete(TYPE_PARAM);
-    else params.set(TYPE_PARAM, filter);
 
     const query = params.toString();
     return location.pathname + (query ? '?' + query : '') + location.hash;
@@ -1278,14 +1145,14 @@
 
     pageList.replaceChildren(...controls);
     pageInfo.textContent =
-      'Page ' + page + ' of ' + totalPages + ' · ' + state.entries.length + ' items';
+      'Page ' + page + ' of ' + totalPages + ' · ' + state.entries.length + ' videos';
   };
 
   const updateTitle = () => {
     document.title = state.page > 1 ? BASE_TITLE + ' - Page ' + state.page : BASE_TITLE;
   };
 
-  /** Clears the gallery and loads every image of the current page. */
+  /** Clears the gallery and loads every video cover of the current page. */
   const renderPage = async () => {
     const token = ++state.loadToken;
     if (isLightboxOpen()) closeLightbox();
@@ -1299,13 +1166,6 @@
     renderPagination();
     updateTitle();
     window.scrollTo(0, 0);
-
-    if (state.entries.length === 0) {
-      setLoading(false);
-      showMessage(MESSAGES.emptyType);
-      return;
-    }
-
     setLoading(true);
 
     const queue = state.pageEntries.map((entry, index) => ({ entry, index }));
@@ -1313,10 +1173,10 @@
     await runPool(queue, CONFIG.concurrency, async ({ entry, index }) => {
       if (token !== state.loadToken) return; // the user already moved to another page
 
-      const media = await loadMedia(entry);
-      if (!media || token !== state.loadToken) return;
+      const video = await loadVideo(entry);
+      if (!video || token !== state.loadToken) return;
 
-      const item = createTile(media, entry, index);
+      const item = createTile(video, entry, index);
       state.items.push(item);
       place(item);
     });
@@ -1327,95 +1187,29 @@
     if (state.items.length === 0) showMessage(MESSAGES.allFailed);
   };
 
-  const updateFilters = () => {
-    for (const button of filterButtons) {
-      const type = button.dataset.type;
-      button.setAttribute('aria-pressed', String(type === state.filter));
-      button.querySelector('.filter-count').textContent = String(state.counts[type]);
-    }
-  };
-
   /**
-   * Shows one page of one category.
+   * Shows a page.
    * mode: 'push'    -> add a history entry (normal navigation, Back button works)
    *       'replace' -> rewrite the current history entry (first load: also fixes an invalid URL)
    *       'pop'     -> browser Back / Forward: the URL is already set, only normalise it
    */
-  const showView = (filter, requestedPage, mode) => {
-    const entries = state.allEntries.filter((entry) => filter === 'all' || entry.type === filter);
-    const totalPages = Math.max(1, Math.ceil(entries.length / CONFIG.perPage));
-    const page = clamp(requestedPage, 1, totalPages);
+  const showPage = (requested, mode) => {
+    const page = clamp(requested, 1, state.totalPages);
+    if (mode !== 'replace' && page === state.page) return;
 
-    if (mode !== 'replace' && filter === state.filter && page === state.page) return;
-
-    state.filter = filter;
-    state.entries = entries;
-    state.totalPages = totalPages;
     state.page = page;
 
-    const url = buildPageUrl(page, filter);
+    const url = buildPageUrl(page);
     if (mode === 'push') history.pushState(null, '', url);
     else history.replaceState(null, '', url);
 
-    updateFilters();
     renderPage();
   };
 
-  const goToPage = (page, mode) => showView(state.filter, page, mode);
-
   /** Browser Back / Forward. */
   const handlePopState = () => {
-    if (state.allEntries.length === 0) return;
-    showView(getFilterFromUrl(), getPageFromUrl(), 'pop');
-  };
-
-  /* ==========================================================
-   * Download
-   * ========================================================== */
-  const buildFilename = (url, mimeType, type) => {
-    let name = 'image';
-    try {
-      const last = new URL(url).pathname.split('/').filter(Boolean).pop();
-      if (last) name = decodeURIComponent(last);
-    } catch {
-      /* fall back to the default name */
-    }
-
-    name = name.replace(/[\\/:*?"<>|]+/g, '_');
-    if (!/\.[a-z0-9]{2,5}$/i.test(name)) {
-      name += '.' + (EXTENSION_BY_MIME[mimeType] || (type === 'video' ? 'mp4' : 'jpg'));
-    }
-    return name;
-  };
-
-  const clickLink = (href, props) => {
-    const a = document.createElement('a');
-    Object.assign(a, props);
-    a.href = href;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  };
-
-  const downloadFile = async (url, type) => {
-    try {
-      const res = await fetch(url, { mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-
-      // a huge video would have to sit in memory: let the browser handle it in a new tab instead
-      if (type === 'video' && Number(res.headers.get('content-length')) > CONFIG.maxVideoBlob) {
-        if (res.body) res.body.cancel();
-        throw new Error('too large');
-      }
-
-      const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      clickLink(objectUrl, { download: buildFilename(url, blob.type, type), rel: 'noopener' });
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 15000);
-    } catch {
-      // CORS blocked / network error / too large -> open the file in a new tab as a fallback
-      clickLink(url, { target: '_blank', rel: 'noopener noreferrer' });
-    }
+    if (state.entries.length === 0) return;
+    showPage(getPageFromUrl(), 'pop');
   };
 
   /* ==========================================================
@@ -1457,7 +1251,8 @@
     navToggle.addEventListener('click', () => setMenuOpen(!isMenuOpen()));
     themeToggle.addEventListener('click', () => setTheme(currentTheme() === 'dark' ? 'light' : 'dark'));
 
-    navMenu.addEventListener('click', (event) => {
+    // links: the title and "Home" go back to page 1; "#" links are placeholders
+    siteNav.addEventListener('click', (event) => {
       const link = event.target instanceof Element ? event.target.closest('a') : null;
       if (!link) return;
 
@@ -1465,10 +1260,10 @@
 
       if (link.getAttribute('href') === '#') {
         event.preventDefault(); // placeholder page (About, Support Me): stay where we are
-      } else if (link.hasAttribute('data-home') && plainClick && state.allEntries.length > 0) {
-        event.preventDefault(); // Home: back to page 1 without a full reload
-        if (state.filter === 'all' && state.page === 1) window.scrollTo({ top: 0, behavior: 'smooth' });
-        else showView('all', 1, 'push');
+      } else if (link.hasAttribute('data-home') && plainClick && state.entries.length > 0) {
+        event.preventDefault(); // back to page 1 without a full reload
+        if (state.page === 1) window.scrollTo({ top: 0, behavior: 'smooth' });
+        else showPage(1, 'push');
       }
 
       setMenuOpen(false);
@@ -1476,7 +1271,7 @@
 
     // tap outside the navbar / Escape closes the dropdown; leaving the small layout resets it.
     // Capture phase + stopPropagation: the outside tap only dismisses the menu, it does not
-    // also open the image underneath.
+    // also open the video underneath.
     document.addEventListener('click', (event) => {
       if (!isMenuOpen() || siteNav.contains(event.target)) return;
       event.preventDefault();
@@ -1495,15 +1290,15 @@
   };
 
   /* ==========================================================
-   * Lightbox
+   * Lightbox (video player)
    * ========================================================== */
-  /** Everything behind the lightbox: keep keyboard focus and screen readers out of it. */
-  const backgroundEls = [siteNav, filterBar, gallery, pagination, siteFooter];
-  const setBackgroundInert = (inert) => backgroundEls.forEach((el) => { el.inert = inert; });
-
   let lastFocused = null;
 
   const isLightboxOpen = () => !lightbox.hidden;
+
+  /** Everything behind the lightbox: keep keyboard focus and screen readers out of it. */
+  const backgroundEls = [siteNav, gallery, pagination, siteFooter];
+  const setBackgroundInert = (inert) => backgroundEls.forEach((el) => { el.inert = inert; });
 
   /** Loaded items of the current page in url.txt order (not in load-completion order). */
   const orderedItems = () => state.items.slice().sort((a, b) => a.index - b.index);
@@ -1532,22 +1327,11 @@
   };
 
   const showItem = (item) => {
-    const isVideo = item.type === 'video';
-
     state.activeItem = item;
-    lbStage.classList.toggle('is-video', isVideo);
-    lightboxImg.hidden = isVideo;
-    lightboxVideo.hidden = !isVideo;
+    lightboxVideo.src = item.url;
 
-    if (isVideo) {
-      lightboxImg.removeAttribute('src');
-      lightboxVideo.src = item.preview;
-      const playing = lightboxVideo.play();
-      if (playing) playing.catch(() => { /* autoplay blocked: the controls still work */ });
-    } else {
-      stopVideo();
-      lightboxImg.src = item.preview;
-    }
+    const playing = lightboxVideo.play();
+    if (playing) playing.catch(() => { /* autoplay blocked: the controls still work */ });
 
     updateLightboxControls();
   };
@@ -1570,11 +1354,10 @@
 
   const closeLightbox = () => {
     const returnTo = state.activeItem && state.activeItem.el.isConnected
-      ? state.activeItem.el   // the tile of the image that was viewed last
+      ? state.activeItem.el   // the tile of the video that was watched last
       : lastFocused;
 
     lightbox.hidden = true;
-    lightboxImg.removeAttribute('src');
     stopVideo();
     state.activeItem = null;
     setBackgroundInert(false);
@@ -1619,32 +1402,26 @@
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
       event.preventDefault();
-      goToPage(Number(link.dataset.page), 'push');
-    });
-
-    // category buttons
-    filterBar.addEventListener('click', (event) => {
-      const button = event.target instanceof Element ? event.target.closest('.filter-btn') : null;
-      if (button) showView(button.dataset.type, 1, 'push');
+      showPage(Number(link.dataset.page), 'push');
     });
 
     window.addEventListener('popstate', handlePopState);
 
-    // dark area outside the image / close button -> close
+    // dark area outside the video / close button -> close
     lightbox.addEventListener('click', (event) => {
       if (event.target === lightbox) closeLightbox();
     });
     lbClose.addEventListener('click', closeLightbox);
 
-    // previous / next image
+    // previous / next video
     lbPrev.addEventListener('click', () => showNeighbor(-1));
     lbNext.addEventListener('click', () => showNeighbor(1));
 
-    // keyboard: Escape closes, arrow keys navigate
+    // keyboard: Escape closes, arrow keys switch video
     document.addEventListener('keydown', (event) => {
       if (!isLightboxOpen() || event.altKey || event.ctrlKey || event.metaKey) return;
 
-      // while the video player has focus, the arrow keys seek inside the video
+      // while the player has focus, the arrow keys seek inside the video
       const onPlayer = event.target === lightboxVideo;
 
       if (event.key === 'Escape') closeLightbox();
@@ -1652,11 +1429,11 @@
       else if (event.key === 'ArrowRight' && !onPlayer) showNeighbor(1);
     });
 
-    // touch: swipe left = next image, swipe right = previous image
+    // touch: swipe left = next video, swipe right = previous video
     let touchStart = null;
 
     lightbox.addEventListener('touchstart', (event) => {
-      // a drag on the video's seek bar must not change the item
+      // a drag on the player's seek bar must not change the video
       touchStart = event.touches.length === 1 && event.target !== lightboxVideo
         ? { x: event.touches[0].clientX, y: event.touches[0].clientY }
         : null;
@@ -1674,19 +1451,6 @@
         showNeighbor(dx < 0 ? 1 : -1);
       }
     }, { passive: true });
-
-    // download button (saves the full-size URL, not the preview)
-    lbDownload.addEventListener('click', async () => {
-      const item = state.activeItem;
-      if (!item || lbDownload.getAttribute('aria-busy') === 'true') return;
-
-      lbDownload.setAttribute('aria-busy', 'true');
-      try {
-        await downloadFile(item.download, item.type);
-      } finally {
-        lbDownload.removeAttribute('aria-busy');
-      }
-    });
 
     // responsive layout: watch the gallery width (also catches scrollbar changes)
     new ResizeObserver(handleResize).observe(gallery);
@@ -1724,16 +1488,11 @@
       return;
     }
 
-    state.allEntries = entries;
-    state.counts = {
-      all: entries.length,
-      image: entries.filter((entry) => entry.type === 'image').length,
-      video: entries.filter((entry) => entry.type === 'video').length
-    };
-    filterBar.hidden = false;
+    state.entries = entries;
+    state.totalPages = Math.max(1, Math.ceil(entries.length / CONFIG.perPage));
 
-    // open the view from the URL (?type=video&page=N); 'replace' also cleans up invalid values
-    showView(getFilterFromUrl(), getPageFromUrl(), 'replace');
+    // open the page from the URL (?page=N); 'replace' also cleans up an invalid value
+    showPage(getPageFromUrl(), 'replace');
   };
 
   init();
