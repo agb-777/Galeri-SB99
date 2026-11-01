@@ -586,7 +586,7 @@
     color: #fff;
   }
 
-  .badge[data-genre="jepang"] {
+  .badge[data-genre="korea"] {
     background: #2563eb;
     color: #fff;
   }
@@ -1133,7 +1133,7 @@
   const PAGE_PARAM = 'page';
   const VIDEO_PARAM = 'video';
   const QUERY_PARAM = 'q';
-  const GENRES = Object.freeze({ indo: 'Indo', jepang: 'Jepang', barat: 'Barat', china: 'China' });
+  const GENRES = Object.freeze({ indo: 'Indo', korea: 'Korea', barat: 'Barat', china: 'China' });
   const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
   const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
@@ -1151,9 +1151,10 @@
     noVideos:
       '<code>url.json</code> contains no valid videos.<br>' +
       'It must be a list of objects. Required: <code>url</code>, <code>title</code>, ' +
-      '<code>cover</code>, <code>genre</code> (Indo, Jepang, Barat or China) and <code>category</code>:<br><br>' +
+      '<code>genre</code> (Indo, Korea, Barat or China) and <code>category</code>. ' +
+      'Embeds also need <code>cover</code>:<br><br>' +
       '<code>{ "url": "https://example.com/video.mp4", "title": "Title", ' +
-      '"cover": "https://example.com/cover.jpg", "genre": "Indo", "category": ["Drama"] }</code>',
+      '"genre": "Indo", "category": ["Drama"] }</code>',
     allFailed:
       'All videos on this page failed to load. Check <code>url.json</code> &mdash; every URL must ' +
       'point directly to a video file (not a web page) and be publicly accessible.'
@@ -1272,11 +1273,11 @@
 
   const normalizeQuery = (value) => value.trim().replace(/\s+/g, ' ');
 
-  const findMissingKeys = (raw, genre, categories) => {
+  const findMissingKeys = (raw, type, genre, categories) => {
     const checks = {
-      url: isHttpUrl(toText(raw.url)),
+      url: type !== null,
       title: toText(raw.title) !== '',
-      cover: isHttpUrl(toText(raw.cover)),
+      cover: type !== 'embed' || isHttpUrl(toText(raw.cover)),
       genre: genre !== '',
       category: categories.length > 0
     };
@@ -1292,23 +1293,24 @@
       const item = raw && typeof raw === 'object' ? raw : {};
       const genre = GENRES[toText(item.genre).toLowerCase()] || '';
       const categories = uniqueList(toList(item.category));
-      const missing = findMissingKeys(item, genre, categories);
+      const url = toText(item.url);
+      const type = isHttpUrl(url) ? detectType(url, toText(item.type).toLowerCase()) : null;
+      const missing = findMissingKeys(item, type, genre, categories);
 
       if (missing.length > 0) {
         console.warn('url.json item ' + (index + 1) + ' skipped, missing or invalid: ' + missing.join(', '));
         return;
       }
 
-      const url = toText(item.url);
       const title = toText(item.title);
       const cast = toList(item.cast);
       const shownCategories = categories.filter((name) => name.toLowerCase() !== genre.toLowerCase());
 
       entries.push({
         number: entries.length + 1,
-        type: detectType(url, toText(item.type).toLowerCase()),
+        type,
         url,
-        cover: toText(item.cover),
+        cover: type === 'embed' ? toText(item.cover) : '',
         title,
         genre,
         categories: shownCategories,
@@ -1438,10 +1440,9 @@
   };
 
   const loadCover = async (entry) => {
-    const image = entry.cover ? await loadImage(entry.cover) : null;
-    if (image) return image;
+    if (entry.type === 'video') return loadVideo(entry);
 
-    return entry.type === 'video' ? loadVideo(entry) : createCoverFallback();
+    return (await loadImage(entry.cover)) || createCoverFallback();
   };
 
   const createBadge = (text) => {
@@ -1700,20 +1701,16 @@
   };
 
   const createRecommendationCover = (entry) => {
-    const fallbackCover = () => {
-      if (entry.type !== 'video') return createCoverFallback();
-
+    if (entry.type === 'video') {
       const video = createCoverVideo();
       video.src = coverSource(entry.url);
       return video;
-    };
-
-    if (!entry.cover) return fallbackCover();
+    }
 
     const image = new Image();
     image.alt = '';
     image.draggable = false;
-    image.onerror = () => image.replaceWith(fallbackCover());
+    image.onerror = () => image.replaceWith(createCoverFallback());
     image.src = entry.cover;
     return image;
   };
