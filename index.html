@@ -586,7 +586,7 @@
     color: #fff;
   }
 
-  .badge[data-genre="korea"] {
+  .badge[data-genre="jepang"] {
     background: #2563eb;
     color: #fff;
   }
@@ -1120,7 +1120,7 @@
     singleColumnQuery: '(max-width: 600px)',
     watchColumnsQuery: '(min-width: 1001px)',
     mobileNavQuery: '(max-width: 720px)',
-    defaultUploader: 'Admin',
+    uploader: 'Admin',
     dateLocale: 'en-GB',
     concurrency: 6,
     fetchTimeout: 10000,
@@ -1133,7 +1133,7 @@
   const PAGE_PARAM = 'page';
   const VIDEO_PARAM = 'video';
   const QUERY_PARAM = 'q';
-  const GENRES = Object.freeze({ indo: 'Indo', korea: 'Korea', barat: 'Barat', china: 'China' });
+  const GENRES = Object.freeze({ indo: 'Indo', jepang: 'Jepang', barat: 'Barat', china: 'China' });
   const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
   const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
@@ -1150,10 +1150,10 @@
       '<code>url.json</code> is not valid JSON. Check for a missing comma, quote or bracket.',
     noVideos:
       '<code>url.json</code> contains no valid videos.<br>' +
-      'It must be a list of objects. Only <code>url</code> is required:<br><br>' +
+      'It must be a list of objects. Required: <code>url</code>, <code>title</code>, ' +
+      '<code>cover</code>, <code>genre</code> (Indo, Jepang, Barat or China) and <code>category</code>:<br><br>' +
       '<code>{ "url": "https://example.com/video.mp4", "title": "Title", ' +
-      '"genre": "Genre", "category": ["Category One", "Category Two"], ' +
-      '"cast": ["Name One", "Name Two"] }</code>',
+      '"cover": "https://example.com/cover.jpg", "genre": "Indo", "category": ["Drama"] }</code>',
     allFailed:
       'All videos on this page failed to load. Check <code>url.json</code> &mdash; every URL must ' +
       'point directly to a video file (not a web page) and be publicly accessible.'
@@ -1231,10 +1231,10 @@
 
   const toText = (value) => (typeof value === 'string' ? value.trim() : '');
 
-  const formatUploaded = (uploader, value) => {
+  const formatUploaded = (value) => {
     const text = toText(value);
     const date = text ? new Date(text) : null;
-    if (!date || Number.isNaN(date.getTime())) return 'by ' + uploader;
+    if (!date || Number.isNaN(date.getTime())) return 'by ' + CONFIG.uploader;
 
     const dateOnly = DATE_ONLY_PATTERN.test(text);
     const label = new Intl.DateTimeFormat(CONFIG.dateLocale, {
@@ -1244,7 +1244,7 @@
       ...(dateOnly ? { timeZone: 'UTC' } : { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
     }).format(date);
 
-    return 'by ' + uploader + ' on ' + label;
+    return 'by ' + CONFIG.uploader + ' on ' + label;
   };
 
   const detectType = (url, declared) => {
@@ -1272,35 +1272,51 @@
 
   const normalizeQuery = (value) => value.trim().replace(/\s+/g, ' ');
 
+  const findMissingKeys = (raw, genre, categories) => {
+    const checks = {
+      url: isHttpUrl(toText(raw.url)),
+      title: toText(raw.title) !== '',
+      cover: isHttpUrl(toText(raw.cover)),
+      genre: genre !== '',
+      category: categories.length > 0
+    };
+
+    return Object.keys(checks).filter((key) => !checks[key]);
+  };
+
   const parseEntries = (data) => {
     const list = Array.isArray(data) ? data : data && Array.isArray(data.videos) ? data.videos : [];
     const entries = [];
 
-    for (const raw of list) {
-      const url = raw ? toText(raw.url) : '';
-      if (!isHttpUrl(url)) continue;
+    list.forEach((raw, index) => {
+      const item = raw && typeof raw === 'object' ? raw : {};
+      const genre = GENRES[toText(item.genre).toLowerCase()] || '';
+      const categories = uniqueList(toList(item.category));
+      const missing = findMissingKeys(item, genre, categories);
 
-      const number = entries.length + 1;
-      const title = toText(raw.title) || 'Video ' + number;
-      const genre = GENRES[toText(raw.genre).toLowerCase()] || '';
-      const categories = uniqueList(toList(raw.category))
-        .filter((name) => name.toLowerCase() !== genre.toLowerCase());
-      const uploader = toText(raw.uploader) || CONFIG.defaultUploader;
-      const cast = toList(raw.cast);
+      if (missing.length > 0) {
+        console.warn('url.json item ' + (index + 1) + ' skipped, missing or invalid: ' + missing.join(', '));
+        return;
+      }
+
+      const url = toText(item.url);
+      const title = toText(item.title);
+      const cast = toList(item.cast);
+      const shownCategories = categories.filter((name) => name.toLowerCase() !== genre.toLowerCase());
 
       entries.push({
-        number,
-        type: detectType(url, toText(raw.type).toLowerCase()),
+        number: entries.length + 1,
+        type: detectType(url, toText(item.type).toLowerCase()),
         url,
-        cover: isHttpUrl(toText(raw.cover)) ? toText(raw.cover) : '',
+        cover: toText(item.cover),
         title,
         genre,
-        categories,
-        uploaded: formatUploaded(uploader, raw.date),
+        categories: shownCategories,
+        uploaded: formatUploaded(item.date),
         cast,
-        searchText: normalizeText([title, genre, ...categories, ...cast].join(' '))
+        searchText: normalizeText([title, genre, ...shownCategories, ...cast].join(' '))
       });
-    }
+    });
 
     return entries.reverse();
   };
