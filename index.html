@@ -35,7 +35,6 @@
     --ink: #131313;
     --ink-muted: #6b6b67;
     --on-ink: #ececea;
-    --overlay: rgba(8, 8, 8, .94);
 
     --nav-h: 60px;
     --footer-h: 42px;
@@ -55,7 +54,6 @@
     --ink: #f1f1ee;
     --ink-muted: #9a9a95;
     --on-ink: #0e0e0e;
-    --overlay: rgba(0, 0, 0, .95);
   }
 
   @media (max-width: 600px) {
@@ -513,68 +511,147 @@
     text-align: center;
   }
 
-  #lightbox {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 68px clamp(12px, 4vmin, 48px) clamp(12px, 4vmin, 48px);
-    background: var(--overlay);
-    outline: none;
-    cursor: zoom-out;
-    overscroll-behavior: contain;
-    container-type: size;
+  .scroller:not(.is-watching) .watch {
+    display: none;
   }
 
-  .lb-stage {
-    display: flex;
-    cursor: default;
+  .scroller.is-watching :is(#gallery, #pagination, #message) {
+    display: none;
   }
 
-  .lb-stage video {
-    display: block;
-    width: auto;
-    height: auto;
-    max-width: 100cqw;
-    max-height: 100cqh;
-    object-fit: contain;
+  .watch {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 28px;
+    align-items: start;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: var(--gap) var(--gap) 40px;
+  }
+
+  .watch-main {
+    min-width: 0;
+  }
+
+  .watch-player {
+    width: 100%;
+    max-height: calc(100dvh - var(--nav-h) - var(--footer-h) - 2 * var(--gap) - 90px);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
     background: #000;
     border-radius: var(--radius);
   }
 
-  .lb-close {
-    position: absolute;
-    top: max(14px, env(safe-area-inset-top));
-    right: max(14px, env(safe-area-inset-right));
-    z-index: 2;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
+  .watch-player video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+  }
+
+  .watch-title {
+    margin: 16px 0 0;
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+    outline: none;
+    overflow-wrap: anywhere;
+  }
+
+  .recommendations-title {
+    margin: 0 0 14px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .recommendation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
     padding: 0;
-    border: 1px solid rgba(255, 255, 255, .22);
-    border-radius: 50%;
-    background: rgba(0, 0, 0, .5);
-    color: #f1f1ee;
-    cursor: pointer;
-    transition: background .15s ease, transform .1s ease;
+    list-style: none;
+  }
+
+  .rec {
+    display: flex;
+    gap: 12px;
+    color: var(--ink);
+    text-decoration: none;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .lb-close:hover {
-    background: rgba(255, 255, 255, .16);
+  .rec:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 4px;
   }
 
-  .lb-close:active {
-    transform: scale(.94);
+  .rec-thumb {
+    flex: none;
+    width: 168px;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--placeholder);
+    border-radius: var(--radius);
   }
 
-  .lb-close:focus-visible {
-    outline: 2px solid #f1f1ee;
-    outline-offset: 3px;
+  .rec-thumb video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    transition: filter .2s ease;
+  }
+
+  .rec-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding-top: 2px;
+  }
+
+  .rec-category {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .rec-number {
+    color: var(--ink-muted);
+    font-size: 13px;
+  }
+
+  @media (hover: hover) {
+    .rec:hover .rec-thumb video {
+      filter: brightness(.82);
+    }
+
+    .rec:hover .rec-category {
+      text-decoration: underline;
+    }
+  }
+
+  @media (max-width: 1000px) {
+    .watch {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .watch-title {
+      font-size: 20px;
+    }
+
+    .rec-thumb {
+      width: 44%;
+    }
   }
 
   .message {
@@ -599,11 +676,11 @@
 
   @media (prefers-reduced-motion: reduce) {
     .tile video,
+    .rec-thumb video,
     .play,
     .page-btn,
     .nav-btn,
-    .nav-link,
-    .lb-close {
+    .nav-link {
       transition: none;
     }
 
@@ -665,19 +742,20 @@
   </nav>
 
   <p id="message" class="message" role="alert" hidden></p>
-</div>
 
-<div id="lightbox" role="dialog" aria-modal="true" aria-label="Video player" tabindex="-1" hidden>
-  <button id="lb-close" class="lb-close" type="button" aria-label="Close player" title="Close">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M6 6l12 12" /><path d="M18 6L6 18" />
-    </svg>
-  </button>
+  <section class="watch" aria-label="Video player">
+    <div class="watch-main">
+      <div id="watch-player" class="watch-player">
+        <video id="watch-video" controls controlsList="nodownload" playsinline preload="auto"></video>
+      </div>
+      <h2 id="watch-title" class="watch-title" tabindex="-1"></h2>
+    </div>
 
-  <div class="lb-stage">
-    <video id="lb-video" controls controlsList="nodownload" playsinline preload="auto"></video>
-  </div>
+    <aside id="recommendations" class="recommendations" aria-label="More videos" hidden>
+      <h3 class="recommendations-title">More videos</h3>
+      <ul id="recommendation-list" class="recommendation-list"></ul>
+    </aside>
+  </section>
 </div>
 
 <footer class="site-footer">
@@ -691,6 +769,7 @@
   const CONFIG = Object.freeze({
     urlListFile: 'url.txt',
     perPage: 30,
+    recommendations: 20,
     defaultCategory: 'Video',
     rowHeightRatio: 0.2,
     minRowHeight: 200,
@@ -710,6 +789,7 @@
   const THEME_COLORS = Object.freeze({ light: '#ececea', dark: '#0e0e0e' });
   const PAGE_PARAM = 'page';
   const VIDEO_PARAM = 'video';
+  const DEFAULT_PLAYER_RATIO = '16 / 9';
   const BASE_TITLE = document.title;
 
   const MESSAGES = Object.freeze({
@@ -740,11 +820,12 @@
     pagination: document.getElementById('pagination'),
     pageList: document.getElementById('page-list'),
     message: document.getElementById('message'),
-    footer: document.querySelector('.site-footer'),
-    year: document.getElementById('year'),
-    lightbox: document.getElementById('lightbox'),
-    lightboxVideo: document.getElementById('lb-video'),
-    lightboxClose: document.getElementById('lb-close')
+    watchPlayer: document.getElementById('watch-player'),
+    watchVideo: document.getElementById('watch-video'),
+    watchTitle: document.getElementById('watch-title'),
+    recommendations: document.getElementById('recommendations'),
+    recommendationList: document.getElementById('recommendation-list'),
+    year: document.getElementById('year')
   };
 
   const state = {
@@ -754,10 +835,8 @@
     items: [],
     loadToken: 0,
     loading: false,
-    pendingIndex: null,
     galleryWidth: 0,
-    activeItem: null,
-    lastFocused: null,
+    gridScroll: 0,
     layoutQueued: false
   };
 
@@ -825,10 +904,16 @@
     dom.message.hidden = false;
   };
 
+  const isWatching = () => dom.scroller.classList.contains('is-watching');
+
+  const syncProgress = () => {
+    dom.progress.hidden = !state.loading || isWatching();
+  };
+
   const setLoading = (loading) => {
     state.loading = loading;
-    dom.progress.hidden = !loading;
     dom.gallery.setAttribute('aria-busy', String(loading));
+    syncProgress();
   };
 
   const readGap = () => {
@@ -879,18 +964,18 @@
 
   const layoutRows = () => {
     state.layoutQueued = false;
+    state.galleryWidth = dom.gallery.clientWidth;
+    if (state.galleryWidth === 0) return;
 
     const items = orderedItems();
     const style = getComputedStyle(dom.gallery);
     const paddingX = parseFloat(style.paddingLeft) || 0;
     const paddingY = parseFloat(style.paddingTop) || 0;
-    const width = Math.max(1, dom.gallery.clientWidth - paddingX - (parseFloat(style.paddingRight) || 0));
+    const width = Math.max(1, state.galleryWidth - paddingX - (parseFloat(style.paddingRight) || 0));
     const gap = readGap();
     const target = targetRowHeight(width);
     const singleColumn = isSingleColumn();
     const rows = breakRows(items.map((item) => item.ratio), width, gap, target, maxPerRow(width));
-
-    state.galleryWidth = dom.gallery.clientWidth;
 
     let top = 0;
 
@@ -936,8 +1021,21 @@
     if (dom.gallery.clientWidth !== state.galleryWidth) layoutRows();
   };
 
-  const loadVideo = (entry) => new Promise((resolve) => {
+  const createCoverVideo = () => {
     const video = document.createElement('video');
+    video.muted = true;
+    video.setAttribute('muted', '');
+    video.playsInline = true;
+    video.preload = 'metadata';
+    video.disablePictureInPicture = true;
+    video.draggable = false;
+    return video;
+  };
+
+  const coverSource = (url) => url + (url.includes('#') ? '' : '#t=0.1');
+
+  const loadVideo = (entry) => new Promise((resolve) => {
+    const video = createCoverVideo();
     let graceTimer = 0;
 
     const settle = (loaded) => {
@@ -957,20 +1055,12 @@
 
     const timeoutTimer = setTimeout(() => settle(false), CONFIG.videoTimeout);
 
-    video.muted = true;
-    video.setAttribute('muted', '');
-    video.playsInline = true;
-    video.preload = 'metadata';
-    video.disablePictureInPicture = true;
-    video.draggable = false;
-
     video.onerror = () => settle(false);
     video.onloadedmetadata = () => {
       graceTimer = setTimeout(() => settle(true), CONFIG.metadataGraceMs);
     };
     video.onloadeddata = () => settle(true);
-
-    video.src = entry.url + (entry.url.includes('#') ? '' : '#t=0.1');
+    video.src = coverSource(entry.url);
   });
 
   const createBadge = (text) => {
@@ -1002,7 +1092,6 @@
       element,
       index,
       ratio: video.videoWidth / video.videoHeight,
-      url: entry.url,
       category: entry.category
     };
 
@@ -1022,8 +1111,6 @@
 
   const pageOfVideo = (number) => Math.ceil(number / CONFIG.perPage);
 
-  const videoNumber = (item) => (state.page - 1) * CONFIG.perPage + item.index + 1;
-
   const buildUrl = (page, video = null) => {
     const params = new URLSearchParams(location.search);
 
@@ -1036,6 +1123,8 @@
     const query = params.toString();
     return location.pathname + (query ? '?' + query : '') + location.hash;
   };
+
+  const buildVideoUrl = (number) => buildUrl(pageOfVideo(number), number);
 
   const buildPageList = (current, total) => {
     const wanted = new Set([1, 2, current - 1, current, current + 1, total - 1, total]);
@@ -1102,14 +1191,12 @@
     dom.pageList.replaceChildren(...controls);
   };
 
-  const updateTitle = () => {
-    document.title = state.page > 1 ? BASE_TITLE + ' - Page ' + state.page : BASE_TITLE;
+  const setTitle = (prefix = '') => {
+    document.title = prefix ? prefix + ' - ' + BASE_TITLE : BASE_TITLE;
   };
 
   const renderPage = async () => {
     const token = ++state.loadToken;
-    if (isLightboxOpen()) closeLightbox();
-
     const start = (state.page - 1) * CONFIG.perPage;
     const queue = state.entries
       .slice(start, start + CONFIG.perPage)
@@ -1120,7 +1207,6 @@
     dom.gallery.replaceChildren();
     layoutRows();
     renderPagination();
-    updateTitle();
     dom.scroller.scrollTo(0, 0);
     setLoading(true);
 
@@ -1134,65 +1220,132 @@
       state.items.push(item);
       dom.gallery.appendChild(item.element);
       scheduleLayout();
-
-      if (state.pendingIndex === index) {
-        state.pendingIndex = null;
-        openLightbox(item, false);
-      }
     });
 
     if (token !== state.loadToken) return;
 
     layoutRows();
-
-    if (state.pendingIndex !== null) {
-      state.pendingIndex = null;
-      history.replaceState(history.state, '', buildUrl(state.page));
-    }
-
     setLoading(false);
     if (state.items.length === 0) showMessage(MESSAGES.allFailed);
   };
 
-  const showPage = (requested, mode, video = null) => {
-    const page = clamp(requested, 1, state.totalPages);
-    if (mode !== 'replace' && page === state.page) return;
-
-    state.page = page;
-    state.pendingIndex = video ? (video - 1) % CONFIG.perPage : null;
-
-    const url = buildUrl(page, video);
-    if (mode === 'push') history.pushState(null, '', url);
-    else history.replaceState(mode === 'pop' ? history.state : null, '', url);
-
-    renderPage();
+  const stopWatchVideo = () => {
+    dom.watchVideo.pause();
+    dom.watchVideo.removeAttribute('src');
+    dom.watchVideo.load();
   };
 
-  const handlePopState = () => {
-    if (state.entries.length === 0) return;
+  const buildRecommendations = (number) => {
+    const total = state.entries.length;
+    const current = state.entries[number - 1];
+    const others = [];
 
+    for (let step = 1; step < total; step++) {
+      const index = (number - 1 + step) % total;
+      others.push({ entry: state.entries[index], number: index + 1 });
+    }
+
+    const sameCategory = others.filter(({ entry }) => entry.category === current.category);
+    const otherCategories = others.filter(({ entry }) => entry.category !== current.category);
+
+    return [...sameCategory, ...otherCategories].slice(0, CONFIG.recommendations);
+  };
+
+  const createRecommendation = ({ entry, number }) => {
+    const thumbnail = document.createElement('span');
+    thumbnail.className = 'rec-thumb';
+    const cover = createCoverVideo();
+    cover.src = coverSource(entry.url);
+    thumbnail.append(cover);
+
+    const category = document.createElement('span');
+    category.className = 'rec-category';
+    category.textContent = entry.category;
+
+    const label = document.createElement('span');
+    label.className = 'rec-number';
+    label.textContent = 'Video ' + number;
+
+    const info = document.createElement('span');
+    info.className = 'rec-info';
+    info.append(category, label);
+
+    const link = document.createElement('a');
+    link.className = 'rec';
+    link.href = buildVideoUrl(number);
+    link.dataset.video = String(number);
+    link.append(thumbnail, info);
+
+    const item = document.createElement('li');
+    item.append(link);
+    return item;
+  };
+
+  const renderRecommendations = (number) => {
+    const list = buildRecommendations(number);
+
+    dom.recommendationList.replaceChildren(...list.map(createRecommendation));
+    dom.recommendations.hidden = list.length === 0;
+  };
+
+  const showWatch = (number) => {
+    if (!isWatching()) state.gridScroll = dom.scroller.scrollTop;
+
+    const entry = state.entries[number - 1];
+
+    dom.scroller.classList.add('is-watching');
+    syncProgress();
+
+    dom.watchPlayer.style.aspectRatio = DEFAULT_PLAYER_RATIO;
+    dom.watchVideo.src = entry.url;
+    dom.watchVideo.play().catch(() => {});
+
+    dom.watchTitle.textContent = entry.category;
+    renderRecommendations(number);
+    setTitle(entry.category);
+
+    dom.scroller.scrollTo(0, 0);
+    dom.watchTitle.focus({ preventScroll: true });
+  };
+
+  const showGrid = (page) => {
+    const wasWatching = isWatching();
+
+    stopWatchVideo();
+    dom.recommendationList.replaceChildren();
+    dom.scroller.classList.remove('is-watching');
+    syncProgress();
+    setTitle(page > 1 ? 'Page ' + page : '');
+
+    if (state.page !== page) {
+      state.page = page;
+      renderPage();
+      return;
+    }
+
+    layoutRows();
+    if (wasWatching) dom.scroller.scrollTo(0, state.gridScroll);
+  };
+
+  const applyRoute = () => {
     const video = getVideoFromUrl();
-    const page = clamp(video ? pageOfVideo(video) : getPageFromUrl(), 1, state.totalPages);
 
-    if (page !== state.page) {
-      showPage(page, 'pop', video);
-      return;
-    }
+    if (video) showWatch(video);
+    else showGrid(clamp(getPageFromUrl(), 1, state.totalPages));
+  };
 
-    if (!video) {
-      if (isLightboxOpen()) closeLightbox();
-      return;
-    }
+  const navigate = (page, video, mode) => {
+    const url = buildUrl(page, video);
 
-    const index = (video - 1) % CONFIG.perPage;
-    const item = state.items.find((candidate) => candidate.index === index);
+    if (mode === 'push') history.pushState(null, '', url);
+    else history.replaceState(null, '', url);
 
-    if (item) {
-      if (!isLightboxOpen()) openLightbox(item, false);
-      else if (state.activeItem !== item) showItem(item);
-    } else if (state.loading) {
-      state.pendingIndex = index;
-    }
+    applyRoute();
+  };
+
+  const goHome = () => {
+    if (!isWatching() && state.page === 1) dom.scroller.scrollTo({ top: 0, behavior: 'smooth' });
+    else navigate(1, null, 'push');
   };
 
   const currentTheme = () =>
@@ -1234,8 +1387,7 @@
       event.preventDefault();
     } else if (link.hasAttribute('data-home') && !isModifiedClick(event) && state.entries.length > 0) {
       event.preventDefault();
-      if (state.page === 1) dom.scroller.scrollTo({ top: 0, behavior: 'smooth' });
-      else showPage(1, 'push');
+      goHome();
     }
 
     setMenuOpen(false);
@@ -1257,63 +1409,12 @@
     window.matchMedia(CONFIG.mobileNavQuery).addEventListener('change', () => setMenuOpen(false));
   };
 
-  const isLightboxOpen = () => !dom.lightbox.hidden;
-
-  const setBackgroundInert = (inert) => {
-    [dom.nav, dom.scroller, dom.footer].forEach((element) => {
-      element.inert = inert;
-    });
-  };
-
-  const stopVideo = () => {
-    dom.lightboxVideo.pause();
-    dom.lightboxVideo.removeAttribute('src');
-    dom.lightboxVideo.load();
-  };
-
-  const showItem = (item) => {
-    state.activeItem = item;
-    dom.lightboxVideo.src = item.url;
-
-    const playing = dom.lightboxVideo.play();
-    if (playing) playing.catch(() => {});
-  };
-
-  const openLightbox = (item, push = true) => {
-    if (push) history.pushState({ player: true }, '', buildUrl(state.page, videoNumber(item)));
-
-    state.lastFocused = document.activeElement;
-    dom.lightbox.hidden = false;
-    setMenuOpen(false);
-    setBackgroundInert(true);
-    dom.lightbox.focus();
-    showItem(item);
-  };
-
-  const closeLightbox = () => {
-    const returnTo = state.activeItem && state.activeItem.element.isConnected
-      ? state.activeItem.element
-      : state.lastFocused;
-
-    dom.lightbox.hidden = true;
-    stopVideo();
-    state.activeItem = null;
-    state.lastFocused = null;
-    setBackgroundInert(false);
-
-    if (returnTo && typeof returnTo.focus === 'function') returnTo.focus();
-  };
-
-  const dismissLightbox = () => {
-    closeLightbox();
-
-    if (history.state && history.state.player) history.back();
-    else history.replaceState(history.state, '', buildUrl(state.page));
-  };
-
   const openTile = (tile) => {
     const item = itemByElement.get(tile);
-    if (item) openLightbox(item);
+    if (!item) return;
+
+    const number = (state.page - 1) * CONFIG.perPage + item.index + 1;
+    navigate(pageOfVideo(number), number, 'push');
   };
 
   const handleGalleryClick = (event) => {
@@ -1336,18 +1437,31 @@
     if (!link || isModifiedClick(event)) return;
 
     event.preventDefault();
-    showPage(Number(link.dataset.page), 'push');
+
+    const page = Number(link.dataset.page);
+    if (page !== state.page) navigate(page, null, 'push');
+  };
+
+  const handleRecommendationClick = (event) => {
+    const link = closestFromEvent(event, 'a[data-video]');
+    if (!link || isModifiedClick(event)) return;
+
+    event.preventDefault();
+
+    const number = Number(link.dataset.video);
+    navigate(pageOfVideo(number), number, 'push');
   };
 
   const handleEscape = (event) => {
-    if (event.key !== 'Escape') return;
+    if (event.key !== 'Escape' || !isMenuOpen()) return;
 
-    if (isMenuOpen()) {
-      setMenuOpen(false);
-      dom.navToggle.focus();
-    } else if (isLightboxOpen()) {
-      dismissLightbox();
-    }
+    setMenuOpen(false);
+    dom.navToggle.focus();
+  };
+
+  const handleMetadata = () => {
+    const { videoWidth, videoHeight } = dom.watchVideo;
+    if (videoWidth > 0 && videoHeight > 0) dom.watchPlayer.style.aspectRatio = videoWidth + ' / ' + videoHeight;
   };
 
   const bindEvents = () => {
@@ -1356,15 +1470,15 @@
     dom.gallery.addEventListener('click', handleGalleryClick);
     dom.gallery.addEventListener('keydown', handleGalleryKeydown);
     dom.pagination.addEventListener('click', handlePaginationClick);
+    dom.recommendationList.addEventListener('click', handleRecommendationClick);
 
-    dom.lightbox.addEventListener('click', (event) => {
-      if (event.target === dom.lightbox) dismissLightbox();
-    });
-    dom.lightboxClose.addEventListener('click', dismissLightbox);
-    dom.lightboxVideo.addEventListener('contextmenu', (event) => event.preventDefault());
+    dom.watchVideo.addEventListener('loadedmetadata', handleMetadata);
+    dom.watchVideo.addEventListener('contextmenu', (event) => event.preventDefault());
 
     document.addEventListener('keydown', handleEscape);
-    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('popstate', () => {
+      if (state.entries.length > 0) applyRoute();
+    });
     new ResizeObserver(handleResize).observe(dom.gallery);
   };
 
@@ -1397,7 +1511,8 @@
     state.totalPages = Math.max(1, Math.ceil(entries.length / CONFIG.perPage));
 
     const video = getVideoFromUrl();
-    showPage(video ? pageOfVideo(video) : getPageFromUrl(), 'replace', video);
+    const page = video ? pageOfVideo(video) : clamp(getPageFromUrl(), 1, state.totalPages);
+    navigate(page, video, 'replace');
   };
 
   init();
