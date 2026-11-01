@@ -1,4 +1,26 @@
-JEPANG | https://files.catbox.moe/o600ns.mp4
-JEPANG | https://files.catbox.moe/acaz8t.mp4
-JEPANG | https://cdn.aceimg.com/nch6hjeD7.mp4
-https://cdn.aceimg.com/t4ktlaxDY.mp4
+[
+  {
+    "url": "https://files.catbox.moe/o600ns.mp4",
+    "title": "Yui Hatano",
+    "category": "Jepang",
+    "cast": ["Yui Hatano"]
+  },
+  {
+    "url": "https://files.catbox.moe/acaz8t.mp4",
+    "title": "Kaho Hanamori",
+    "category": "Jepang",
+    "cast": ["Kaho Hanamori"]
+  },
+  {
+    "url": "https://cdn.aceimg.com/nch6hjeD7.mp4",
+    "title": "Kaho Hanamori",
+    "category": "Jepang",
+    "cast": ["Kaho Hanamori"]
+  },
+  {
+    "url": "https://cdn.aceimg.com/t4ktlaxDY.mp4",
+    "title": "Yui Hatano",
+    "category": "Jepang",
+    "cast": ["Yui Hatano"]
+  }
+]
