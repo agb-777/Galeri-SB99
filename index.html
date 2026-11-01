@@ -586,7 +586,7 @@
     color: #fff;
   }
 
-  .badge[data-genre="korea"] {
+  .badge[data-genre="jepang"] {
     background: #2563eb;
     color: #fff;
   }
@@ -1133,7 +1133,7 @@
   const PAGE_PARAM = 'page';
   const VIDEO_PARAM = 'video';
   const QUERY_PARAM = 'q';
-  const GENRES = Object.freeze({ indo: 'Indo', korea: 'Korea', barat: 'Barat', china: 'China' });
+  const GENRES = Object.freeze({ indo: 'Indo', jepang: 'Jepang', barat: 'Barat', china: 'China' });
   const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
   const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
@@ -1151,7 +1151,7 @@
     noVideos:
       '<code>url.json</code> contains no valid videos.<br>' +
       'It must be a list of objects. Required: <code>url</code>, <code>title</code>, ' +
-      '<code>genre</code> (Indo, Korea, Barat or China) and <code>category</code>. ' +
+      '<code>genre</code> (Indo, Jepang, Barat or China) and <code>category</code>. ' +
       'Embeds also need <code>cover</code>:<br><br>' +
       '<code>{ "url": "https://example.com/video.mp4", "title": "Title", ' +
       '"genre": "Indo", "category": ["Drama"] }</code>',
