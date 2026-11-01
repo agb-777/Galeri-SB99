@@ -155,6 +155,9 @@
 
   .brand:focus-visible,
   .nav-link:focus-visible,
+  .search-clear:focus-visible,
+  .search-close:focus-visible,
+  .meta-link:focus-visible,
   .nav-btn:focus-visible,
   a.page-btn:focus-visible,
   .tile:focus-visible {
@@ -235,8 +238,97 @@
     display: block;
   }
 
-  .theme-toggle {
+  .search {
+    display: flex;
+    flex: 0 1 440px;
+    align-items: center;
+    min-width: 0;
     margin-left: auto;
+  }
+
+  .search-box {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    height: 40px;
+    padding: 0 6px 0 14px;
+    background: var(--hover);
+    border: 1px solid transparent;
+    border-radius: 20px;
+    transition: border-color .15s ease;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--ink);
+  }
+
+  .search-icon {
+    flex: none;
+    color: var(--ink-muted);
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 8px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 15px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .search-input::placeholder {
+    color: var(--ink-muted);
+  }
+
+  .search-input::-webkit-search-cancel-button {
+    display: none;
+    -webkit-appearance: none;
+  }
+
+  .search-clear {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink-muted);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .search-clear:hover {
+    background: var(--line);
+    color: var(--ink);
+  }
+
+  .search-toggle,
+  .search-close {
+    display: none;
+  }
+
+  .search-close {
+    height: 40px;
+    padding: 0 4px 0 12px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 
   :root[data-theme="dark"] .theme-toggle .icon-moon {
@@ -259,6 +351,42 @@
 
     .brand {
       font-size: 23px;
+    }
+
+    .search {
+      flex: none;
+    }
+
+    .search-box {
+      display: none;
+    }
+
+    .search-input {
+      font-size: 16px;
+    }
+
+    .search-toggle {
+      display: inline-flex;
+    }
+
+    .site-nav.is-searching {
+      gap: 8px;
+    }
+
+    .site-nav.is-searching :is(.nav-toggle, .brand, .theme-toggle, .search-toggle) {
+      display: none;
+    }
+
+    .site-nav.is-searching .search {
+      flex: 1;
+    }
+
+    .site-nav.is-searching .search-box {
+      display: flex;
+    }
+
+    .site-nav.is-searching .search-close {
+      display: inline-flex;
     }
 
     .nav-menu {
@@ -515,8 +643,17 @@
     display: none;
   }
 
-  .scroller.is-watching :is(#gallery, #pagination, #message) {
+  .scroller.is-watching :is(#gallery, #pagination, #message, #search-status) {
     display: none;
+  }
+
+  .search-status {
+    margin: 0;
+    padding: calc(var(--gap) + 6px) var(--gap) 0;
+    color: var(--ink-muted);
+    font-size: 15px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
   }
 
   .watch {
@@ -559,6 +696,43 @@
     line-height: 1.2;
     outline: none;
     overflow-wrap: anywhere;
+  }
+
+  .watch-meta {
+    display: grid;
+    gap: 8px;
+    margin: 14px 0 0;
+  }
+
+  .watch-meta-row {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 12px;
+    align-items: baseline;
+  }
+
+  .watch-meta dt {
+    color: var(--ink-muted);
+    font-size: 14px;
+  }
+
+  .watch-meta dd {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .meta-link {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--line);
+    text-underline-offset: 3px;
+    transition: text-decoration-color .15s ease;
+  }
+
+  .meta-link:hover {
+    text-decoration-color: var(--ink);
   }
 
   .recommendations-title {
@@ -615,14 +789,18 @@
     padding-top: 2px;
   }
 
-  .rec-category {
+  .rec-title {
+    display: -webkit-box;
+    overflow: hidden;
     font-size: 15px;
     font-weight: 600;
     line-height: 1.3;
     overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
-  .rec-number {
+  .rec-meta {
     color: var(--ink-muted);
     font-size: 13px;
   }
@@ -632,7 +810,7 @@
       filter: brightness(.82);
     }
 
-    .rec:hover .rec-category {
+    .rec:hover .rec-title {
       text-decoration: underline;
     }
   }
@@ -680,7 +858,9 @@
     .play,
     .page-btn,
     .nav-btn,
-    .nav-link {
+    .nav-link,
+    .search-box,
+    .meta-link {
       transition: none;
     }
 
@@ -717,6 +897,33 @@
     <a class="nav-link" href="#">Support Me</a>
   </nav>
 
+  <form id="search-form" class="search" role="search">
+    <button id="search-toggle" class="nav-btn search-toggle" type="button" aria-label="Open search">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
+      </svg>
+    </button>
+
+    <div class="search-box">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
+      </svg>
+      <input id="search-input" class="search-input" type="search" name="q"
+             placeholder="Search title, cast or category" aria-label="Search videos"
+             autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
+      <button id="search-clear" class="search-clear" type="button" aria-label="Clear search" hidden>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 6l12 12" /><path d="M18 6L6 18" />
+        </svg>
+      </button>
+    </div>
+
+    <button id="search-close" class="search-close" type="button">Cancel</button>
+  </form>
+
   <button id="theme-toggle" class="nav-btn theme-toggle" type="button"
           aria-label="Switch to dark theme" title="Switch theme">
     <svg class="icon-moon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -735,6 +942,7 @@
 
 <div id="scroller" class="scroller">
   <h1 class="sr-only">Galeri SB99</h1>
+  <p id="search-status" class="search-status" role="status" hidden></p>
   <main id="gallery" aria-label="Video gallery" aria-busy="false"></main>
 
   <nav id="pagination" class="pagination" aria-label="Pagination" hidden>
@@ -749,6 +957,17 @@
         <video id="watch-video" controls controlsList="nodownload" playsinline preload="auto"></video>
       </div>
       <h2 id="watch-title" class="watch-title" tabindex="-1"></h2>
+
+      <dl id="watch-meta" class="watch-meta">
+        <div class="watch-meta-row">
+          <dt>Category</dt>
+          <dd id="watch-category"></dd>
+        </div>
+        <div id="watch-cast-row" class="watch-meta-row" hidden>
+          <dt>Cast</dt>
+          <dd id="watch-cast"></dd>
+        </div>
+      </dl>
     </div>
 
     <aside id="recommendations" class="recommendations" aria-label="More videos" hidden>
@@ -767,10 +986,11 @@
   'use strict';
 
   const CONFIG = Object.freeze({
-    urlListFile: 'url.txt',
+    dataFile: 'url.json',
     perPage: 30,
     recommendations: 20,
     defaultCategory: 'Video',
+    searchDelayMs: 250,
     rowHeightRatio: 0.2,
     minRowHeight: 200,
     maxRowHeight: 300,
@@ -789,23 +1009,26 @@
   const THEME_COLORS = Object.freeze({ light: '#ececea', dark: '#0e0e0e' });
   const PAGE_PARAM = 'page';
   const VIDEO_PARAM = 'video';
+  const QUERY_PARAM = 'q';
   const DEFAULT_PLAYER_RATIO = '16 / 9';
   const BASE_TITLE = document.title;
 
   const MESSAGES = Object.freeze({
     fetchFailed:
-      'Could not load <code>url.txt</code>.<br>' +
+      'Could not load <code>url.json</code>.<br>' +
       'If you opened this file via <code>file://</code> (double-click), ' +
       'the browser blocks <code>fetch()</code>. Serve it from localhost instead:<br><br>' +
       '<code>python3 -m http.server 8000</code><br>' +
       'then open <code>http://localhost:8000</code>',
-    noUrls:
-      '<code>url.txt</code> contains no valid video URLs.<br>' +
-      'One video per line:<br>' +
-      '<code>https://example.com/video.mp4 | Category</code><br>' +
-      'The category is optional.',
+    invalidJson:
+      '<code>url.json</code> is not valid JSON. Check for a missing comma, quote or bracket.',
+    noVideos:
+      '<code>url.json</code> contains no valid videos.<br>' +
+      'It must be a list of objects. Only <code>url</code> is required:<br><br>' +
+      '<code>{ "url": "https://example.com/video.mp4", "title": "Title", ' +
+      '"category": "Category", "cast": ["Name One", "Name Two"] }</code>',
     allFailed:
-      'All videos on this page failed to load. Check <code>url.txt</code> &mdash; every URL must ' +
+      'All videos on this page failed to load. Check <code>url.json</code> &mdash; every URL must ' +
       'point directly to a video file (not a web page) and be publicly accessible.'
   });
 
@@ -814,6 +1037,12 @@
     navToggle: document.getElementById('nav-toggle'),
     themeToggle: document.getElementById('theme-toggle'),
     themeColorMeta: document.querySelector('meta[name="theme-color"]'),
+    searchForm: document.getElementById('search-form'),
+    searchInput: document.getElementById('search-input'),
+    searchClear: document.getElementById('search-clear'),
+    searchToggle: document.getElementById('search-toggle'),
+    searchClose: document.getElementById('search-close'),
+    searchStatus: document.getElementById('search-status'),
     progress: document.getElementById('progress'),
     scroller: document.getElementById('scroller'),
     gallery: document.getElementById('gallery'),
@@ -823,6 +1052,10 @@
     watchPlayer: document.getElementById('watch-player'),
     watchVideo: document.getElementById('watch-video'),
     watchTitle: document.getElementById('watch-title'),
+    watchMeta: document.getElementById('watch-meta'),
+    watchCategory: document.getElementById('watch-category'),
+    watchCastRow: document.getElementById('watch-cast-row'),
+    watchCast: document.getElementById('watch-cast'),
     recommendations: document.getElementById('recommendations'),
     recommendationList: document.getElementById('recommendation-list'),
     year: document.getElementById('year')
@@ -830,6 +1063,8 @@
 
   const state = {
     entries: [],
+    query: '',
+    results: null,
     page: 0,
     totalPages: 1,
     items: [],
@@ -837,7 +1072,8 @@
     loading: false,
     galleryWidth: 0,
     gridScroll: 0,
-    layoutQueued: false
+    layoutQueued: false,
+    searchTimer: 0
   };
 
   const itemByElement = new WeakMap();
@@ -859,24 +1095,49 @@
     }
   };
 
-  const parseEntries = (text) => {
+  const toText = (value) => (typeof value === 'string' ? value.trim() : '');
+
+  const toCastList = (value) => {
+    const names = Array.isArray(value) ? value : typeof value === 'string' ? value.split(',') : [];
+    return names.map(toText).filter(Boolean);
+  };
+
+  const normalizeText = (value) =>
+    value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  const normalizeQuery = (value) => value.trim().replace(/\s+/g, ' ');
+
+  const parseEntries = (data) => {
+    const list = Array.isArray(data) ? data : data && Array.isArray(data.videos) ? data.videos : [];
     const entries = [];
 
-    for (const rawLine of text.split(/\r?\n/)) {
-      const line = rawLine.trim();
-      if (!line || line.startsWith('#')) continue;
+    for (const raw of list) {
+      const url = raw ? toText(raw.url) : '';
+      if (!isHttpUrl(url)) continue;
 
-      const hasSeparator = line.includes('|');
-      const parts = (hasSeparator ? line.split('|') : line.split(/\s+/)).map((part) => part.trim());
-      const urlIndex = parts.findIndex(isHttpUrl);
-      if (urlIndex === -1) continue;
+      const number = entries.length + 1;
+      const title = toText(raw.title) || 'Video ' + number;
+      const category = toText(raw.category) || CONFIG.defaultCategory;
+      const cast = toCastList(raw.cast);
 
-      const rest = parts.filter((_, index) => index !== urlIndex);
-      const category = hasSeparator ? rest[0] : rest.join(' ');
-      entries.push({ url: parts[urlIndex], category: category || CONFIG.defaultCategory });
+      entries.push({
+        number,
+        url,
+        title,
+        category,
+        cast,
+        searchText: normalizeText([title, category, ...cast].join(' '))
+      });
     }
 
     return entries;
+  };
+
+  const filterEntries = (query) => {
+    if (!query) return state.entries;
+
+    const terms = normalizeText(query).split(' ');
+    return state.entries.filter((entry) => terms.every((term) => entry.searchText.includes(term)));
   };
 
   const fetchWithTimeout = async (url, timeoutMs) => {
@@ -1021,6 +1282,8 @@
     if (dom.gallery.clientWidth !== state.galleryWidth) layoutRows();
   };
 
+  const coverSource = (url) => url + (url.includes('#') ? '' : '#t=0.1');
+
   const createCoverVideo = () => {
     const video = document.createElement('video');
     video.muted = true;
@@ -1031,8 +1294,6 @@
     video.draggable = false;
     return video;
   };
-
-  const coverSource = (url) => url + (url.includes('#') ? '' : '#t=0.1');
 
   const loadVideo = (entry) => new Promise((resolve) => {
     const video = createCoverVideo();
@@ -1085,15 +1346,10 @@
     element.className = 'tile';
     element.tabIndex = 0;
     element.setAttribute('role', 'button');
-    element.setAttribute('aria-label', 'Play video: ' + entry.category);
+    element.setAttribute('aria-label', 'Play video: ' + entry.title);
     element.append(video, createBadge(entry.category), createPlayIcon());
 
-    const item = {
-      element,
-      index,
-      ratio: video.videoWidth / video.videoHeight,
-      category: entry.category
-    };
+    const item = { element, index, entry, ratio: video.videoWidth / video.videoHeight };
 
     itemByElement.set(element, item);
     return item;
@@ -1109,9 +1365,10 @@
     return Number.isInteger(value) && value >= 1 && value <= state.entries.length ? value : null;
   };
 
-  const pageOfVideo = (number) => Math.ceil(number / CONFIG.perPage);
+  const getQueryFromUrl = () =>
+    normalizeQuery(new URLSearchParams(location.search).get(QUERY_PARAM) || '');
 
-  const buildUrl = (page, video = null) => {
+  const buildUrl = (page, video, query) => {
     const params = new URLSearchParams(location.search);
 
     if (page <= 1) params.delete(PAGE_PARAM);
@@ -1120,11 +1377,17 @@
     if (video) params.set(VIDEO_PARAM, String(video));
     else params.delete(VIDEO_PARAM);
 
-    const query = params.toString();
-    return location.pathname + (query ? '?' + query : '') + location.hash;
+    if (query) params.set(QUERY_PARAM, query);
+    else params.delete(QUERY_PARAM);
+
+    const search = params.toString();
+    return location.pathname + (search ? '?' + search : '') + location.hash;
   };
 
-  const buildVideoUrl = (number) => buildUrl(pageOfVideo(number), number);
+  const normalizeUrl = (url) => {
+    const current = location.pathname + location.search + location.hash;
+    if (current !== url) history.replaceState(history.state, '', url);
+  };
 
   const buildPageList = (current, total) => {
     const wanted = new Set([1, 2, current - 1, current, current + 1, total - 1, total]);
@@ -1154,7 +1417,7 @@
       return element;
     }
 
-    element.href = buildUrl(page);
+    element.href = buildUrl(page, null, state.query);
     element.dataset.page = String(page);
     if (current) element.setAttribute('aria-current', 'page');
     return element;
@@ -1191,14 +1454,26 @@
     dom.pageList.replaceChildren(...controls);
   };
 
-  const setTitle = (prefix = '') => {
-    document.title = prefix ? prefix + ' - ' + BASE_TITLE : BASE_TITLE;
+  const renderSearchStatus = () => {
+    const { query, results } = state;
+
+    dom.searchStatus.hidden = !query;
+    if (!query) return;
+
+    const count = results.length;
+    dom.searchStatus.textContent = count === 0
+      ? 'No videos found for “' + query + '”. Try a title, a name from the cast or a category.'
+      : count + (count === 1 ? ' video' : ' videos') + ' found for “' + query + '”';
+  };
+
+  const setTitle = (label = '') => {
+    document.title = label ? label + ' - ' + BASE_TITLE : BASE_TITLE;
   };
 
   const renderPage = async () => {
     const token = ++state.loadToken;
     const start = (state.page - 1) * CONFIG.perPage;
-    const queue = state.entries
+    const queue = state.results
       .slice(start, start + CONFIG.perPage)
       .map((entry, index) => ({ entry, index }));
 
@@ -1208,7 +1483,7 @@
     layoutRows();
     renderPagination();
     dom.scroller.scrollTo(0, 0);
-    setLoading(true);
+    setLoading(queue.length > 0);
 
     await runPool(queue, CONFIG.concurrency, async ({ entry, index }) => {
       if (token !== state.loadToken) return;
@@ -1226,7 +1501,7 @@
 
     layoutRows();
     setLoading(false);
-    if (state.items.length === 0) showMessage(MESSAGES.allFailed);
+    if (queue.length > 0 && state.items.length === 0) showMessage(MESSAGES.allFailed);
   };
 
   const stopWatchVideo = () => {
@@ -1235,45 +1510,56 @@
     dom.watchVideo.load();
   };
 
-  const buildRecommendations = (number) => {
+  const createMetaLink = (text) => {
+    const link = document.createElement('a');
+    link.className = 'meta-link';
+    link.href = buildUrl(1, null, text);
+    link.dataset.query = text;
+    link.textContent = text;
+    return link;
+  };
+
+  const joinWithCommas = (nodes) =>
+    nodes.flatMap((node, index) => (index === 0 ? [node] : [', ', node]));
+
+  const buildRecommendations = (entry) => {
     const total = state.entries.length;
-    const current = state.entries[number - 1];
     const others = [];
 
     for (let step = 1; step < total; step++) {
-      const index = (number - 1 + step) % total;
-      others.push({ entry: state.entries[index], number: index + 1 });
+      others.push(state.entries[(entry.number - 1 + step) % total]);
     }
 
-    const sameCategory = others.filter(({ entry }) => entry.category === current.category);
-    const otherCategories = others.filter(({ entry }) => entry.category !== current.category);
+    const sameCategory = others.filter((other) => other.category === entry.category);
+    const otherCategories = others.filter((other) => other.category !== entry.category);
 
     return [...sameCategory, ...otherCategories].slice(0, CONFIG.recommendations);
   };
 
-  const createRecommendation = ({ entry, number }) => {
-    const thumbnail = document.createElement('span');
-    thumbnail.className = 'rec-thumb';
+  const createRecommendation = (entry) => {
     const cover = createCoverVideo();
     cover.src = coverSource(entry.url);
+
+    const thumbnail = document.createElement('span');
+    thumbnail.className = 'rec-thumb';
     thumbnail.append(cover);
 
-    const category = document.createElement('span');
-    category.className = 'rec-category';
-    category.textContent = entry.category;
+    const title = document.createElement('span');
+    title.className = 'rec-title';
+    title.textContent = entry.title;
 
-    const label = document.createElement('span');
-    label.className = 'rec-number';
-    label.textContent = 'Video ' + number;
+    const category = document.createElement('span');
+    category.className = 'rec-meta';
+    category.textContent = entry.category;
 
     const info = document.createElement('span');
     info.className = 'rec-info';
-    info.append(category, label);
+    info.append(title, category);
 
     const link = document.createElement('a');
     link.className = 'rec';
-    link.href = buildVideoUrl(number);
-    link.dataset.video = String(number);
+    link.href = buildUrl(1, entry.number, getQueryFromUrl());
+    link.dataset.video = String(entry.number);
     link.append(thumbnail, info);
 
     const item = document.createElement('li');
@@ -1281,18 +1567,26 @@
     return item;
   };
 
-  const renderRecommendations = (number) => {
-    const list = buildRecommendations(number);
+  const renderRecommendations = (entry) => {
+    const list = buildRecommendations(entry);
 
     dom.recommendationList.replaceChildren(...list.map(createRecommendation));
     dom.recommendations.hidden = list.length === 0;
   };
 
-  const showWatch = (number) => {
+  const renderWatchDetails = (entry) => {
+    dom.watchTitle.textContent = entry.title;
+    dom.watchCategory.replaceChildren(createMetaLink(entry.category));
+    dom.watchCastRow.hidden = entry.cast.length === 0;
+    dom.watchCast.replaceChildren(...joinWithCommas(entry.cast.map(createMetaLink)));
+  };
+
+  const showWatch = (number, query) => {
     if (!isWatching()) state.gridScroll = dom.scroller.scrollTop;
 
     const entry = state.entries[number - 1];
 
+    normalizeUrl(buildUrl(1, number, query));
     dom.scroller.classList.add('is-watching');
     syncProgress();
 
@@ -1300,22 +1594,35 @@
     dom.watchVideo.src = entry.url;
     dom.watchVideo.play().catch(() => {});
 
-    dom.watchTitle.textContent = entry.category;
-    renderRecommendations(number);
-    setTitle(entry.category);
+    renderWatchDetails(entry);
+    renderRecommendations(entry);
+    setTitle(entry.title);
 
     dom.scroller.scrollTo(0, 0);
     dom.watchTitle.focus({ preventScroll: true });
   };
 
-  const showGrid = (page) => {
+  const showGrid = (query, requestedPage) => {
     const wasWatching = isWatching();
 
     stopWatchVideo();
     dom.recommendationList.replaceChildren();
     dom.scroller.classList.remove('is-watching');
     syncProgress();
-    setTitle(page > 1 ? 'Page ' + page : '');
+
+    if (state.results === null || query !== state.query) {
+      state.query = query;
+      state.results = filterEntries(query);
+      state.totalPages = Math.max(1, Math.ceil(state.results.length / CONFIG.perPage));
+      state.page = 0;
+      renderSearchStatus();
+    }
+
+    const page = clamp(requestedPage, 1, state.totalPages);
+    const titleParts = [query && 'Search: ' + query, page > 1 && 'Page ' + page];
+
+    normalizeUrl(buildUrl(page, null, query));
+    setTitle(titleParts.filter(Boolean).join(' - '));
 
     if (state.page !== page) {
       state.page = page;
@@ -1327,15 +1634,23 @@
     if (wasWatching) dom.scroller.scrollTo(0, state.gridScroll);
   };
 
-  const applyRoute = () => {
-    const video = getVideoFromUrl();
-
-    if (video) showWatch(video);
-    else showGrid(clamp(getPageFromUrl(), 1, state.totalPages));
+  const syncSearchInput = (query) => {
+    if (normalizeQuery(dom.searchInput.value) !== query) dom.searchInput.value = query;
+    dom.searchClear.hidden = dom.searchInput.value === '';
   };
 
-  const navigate = (page, video, mode) => {
-    const url = buildUrl(page, video);
+  const applyRoute = () => {
+    const video = getVideoFromUrl();
+    const query = getQueryFromUrl();
+
+    syncSearchInput(query);
+
+    if (video) showWatch(video, query);
+    else showGrid(query, getPageFromUrl());
+  };
+
+  const navigate = (page, video, query, mode) => {
+    const url = buildUrl(page, video, query);
 
     if (mode === 'push') history.pushState(null, '', url);
     else history.replaceState(null, '', url);
@@ -1344,8 +1659,60 @@
   };
 
   const goHome = () => {
-    if (!isWatching() && state.page === 1) dom.scroller.scrollTo({ top: 0, behavior: 'smooth' });
-    else navigate(1, null, 'push');
+    if (!isWatching() && state.page === 1 && state.query === '') {
+      dom.scroller.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate(1, null, '', 'push');
+    }
+  };
+
+  const submitSearch = (value) => {
+    const query = normalizeQuery(value);
+    const currentQuery = getQueryFromUrl();
+    const searchingInGrid = !isWatching() && currentQuery !== '';
+
+    if (!isWatching() && query === currentQuery) return;
+
+    navigate(1, null, query, searchingInGrid ? 'replace' : 'push');
+  };
+
+  const setSearching = (searching) => {
+    dom.nav.classList.toggle('is-searching', searching);
+    if (!searching) return;
+
+    setMenuOpen(false);
+    requestAnimationFrame(() => dom.searchInput.focus());
+  };
+
+  const handleSearchInput = () => {
+    dom.searchClear.hidden = dom.searchInput.value === '';
+
+    clearTimeout(state.searchTimer);
+    state.searchTimer = setTimeout(() => submitSearch(dom.searchInput.value), CONFIG.searchDelayMs);
+  };
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+
+    clearTimeout(state.searchTimer);
+    submitSearch(dom.searchInput.value);
+    dom.searchInput.blur();
+  };
+
+  const handleSearchClear = () => {
+    clearTimeout(state.searchTimer);
+    dom.searchInput.value = '';
+    dom.searchClear.hidden = true;
+    submitSearch('');
+    dom.searchInput.focus();
+  };
+
+  const bindSearch = () => {
+    dom.searchInput.addEventListener('input', handleSearchInput);
+    dom.searchForm.addEventListener('submit', handleSearchSubmit);
+    dom.searchClear.addEventListener('click', handleSearchClear);
+    dom.searchToggle.addEventListener('click', () => setSearching(true));
+    dom.searchClose.addEventListener('click', () => setSearching(false));
   };
 
   const currentTheme = () =>
@@ -1406,15 +1773,15 @@
     dom.themeToggle.addEventListener('click', () => setTheme(currentTheme() === 'dark' ? 'light' : 'dark'));
     dom.nav.addEventListener('click', handleNavClick);
     document.addEventListener('click', handleOutsideClick, true);
-    window.matchMedia(CONFIG.mobileNavQuery).addEventListener('change', () => setMenuOpen(false));
+    window.matchMedia(CONFIG.mobileNavQuery).addEventListener('change', () => {
+      setMenuOpen(false);
+      setSearching(false);
+    });
   };
 
   const openTile = (tile) => {
     const item = itemByElement.get(tile);
-    if (!item) return;
-
-    const number = (state.page - 1) * CONFIG.perPage + item.index + 1;
-    navigate(pageOfVideo(number), number, 'push');
+    if (item) navigate(1, item.entry.number, state.query, 'push');
   };
 
   const handleGalleryClick = (event) => {
@@ -1439,7 +1806,7 @@
     event.preventDefault();
 
     const page = Number(link.dataset.page);
-    if (page !== state.page) navigate(page, null, 'push');
+    if (page !== state.page) navigate(page, null, state.query, 'push');
   };
 
   const handleRecommendationClick = (event) => {
@@ -1447,16 +1814,26 @@
     if (!link || isModifiedClick(event)) return;
 
     event.preventDefault();
+    navigate(1, Number(link.dataset.video), getQueryFromUrl(), 'push');
+  };
 
-    const number = Number(link.dataset.video);
-    navigate(pageOfVideo(number), number, 'push');
+  const handleMetaClick = (event) => {
+    const link = closestFromEvent(event, 'a[data-query]');
+    if (!link || isModifiedClick(event)) return;
+
+    event.preventDefault();
+    navigate(1, null, link.dataset.query, 'push');
   };
 
   const handleEscape = (event) => {
-    if (event.key !== 'Escape' || !isMenuOpen()) return;
+    if (event.key !== 'Escape') return;
 
-    setMenuOpen(false);
-    dom.navToggle.focus();
+    if (isMenuOpen()) {
+      setMenuOpen(false);
+      dom.navToggle.focus();
+    } else if (dom.nav.classList.contains('is-searching')) {
+      setSearching(false);
+    }
   };
 
   const handleMetadata = () => {
@@ -1466,11 +1843,13 @@
 
   const bindEvents = () => {
     bindNavbar();
+    bindSearch();
 
     dom.gallery.addEventListener('click', handleGalleryClick);
     dom.gallery.addEventListener('keydown', handleGalleryKeydown);
     dom.pagination.addEventListener('click', handlePaginationClick);
     dom.recommendationList.addEventListener('click', handleRecommendationClick);
+    dom.watchMeta.addEventListener('click', handleMetaClick);
 
     dom.watchVideo.addEventListener('loadedmetadata', handleMetadata);
     dom.watchVideo.addEventListener('contextmenu', (event) => event.preventDefault());
@@ -1483,9 +1862,9 @@
   };
 
   const loadEntries = async () => {
-    const response = await fetchWithTimeout(CONFIG.urlListFile, CONFIG.fetchTimeout);
+    const response = await fetchWithTimeout(CONFIG.dataFile, CONFIG.fetchTimeout);
     if (!response.ok) throw new Error('HTTP ' + response.status);
-    return parseEntries(await response.text());
+    return parseEntries(await response.json());
   };
 
   const init = async () => {
@@ -1493,26 +1872,19 @@
     syncThemeControls();
     bindEvents();
 
-    let entries;
-
     try {
-      entries = await loadEntries();
-    } catch {
-      showMessage(MESSAGES.fetchFailed);
+      state.entries = await loadEntries();
+    } catch (error) {
+      showMessage(error instanceof SyntaxError ? MESSAGES.invalidJson : MESSAGES.fetchFailed);
       return;
     }
 
-    if (entries.length === 0) {
-      showMessage(MESSAGES.noUrls);
+    if (state.entries.length === 0) {
+      showMessage(MESSAGES.noVideos);
       return;
     }
 
-    state.entries = entries;
-    state.totalPages = Math.max(1, Math.ceil(entries.length / CONFIG.perPage));
-
-    const video = getVideoFromUrl();
-    const page = video ? pageOfVideo(video) : clamp(getPageFromUrl(), 1, state.totalPages);
-    navigate(page, video, 'replace');
+    applyRoute();
   };
 
   init();
