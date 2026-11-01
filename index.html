@@ -586,7 +586,7 @@
     color: #fff;
   }
 
-  .badge[data-genre="jepang"] {
+  .badge[data-genre="korea"] {
     background: #2563eb;
     color: #fff;
   }
@@ -1114,7 +1114,7 @@
 
   const CONFIG = Object.freeze({
     dataFile: 'url.json',
-    perPage: 30,
+    perPageByColumns: [10, 12, 15, 20, 20, 24],
     recommendations: 20,
     mobileRecommendations: 5,
     singleColumnQuery: '(max-width: 600px)',
@@ -1133,7 +1133,7 @@
   const PAGE_PARAM = 'page';
   const VIDEO_PARAM = 'video';
   const QUERY_PARAM = 'q';
-  const GENRES = Object.freeze({ indo: 'Indo', jepang: 'Jepang', barat: 'Barat', china: 'China' });
+  const GENRES = Object.freeze({ indo: 'Indo', korea: 'Korea', barat: 'Barat', china: 'China' });
   const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
   const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
@@ -1201,6 +1201,7 @@
     results: null,
     page: 0,
     totalPages: 1,
+    perPage: 0,
     items: [],
     loadToken: 0,
     loading: false,
@@ -1235,11 +1236,12 @@
     const date = text ? new Date(text) : null;
     if (!date || Number.isNaN(date.getTime())) return 'by ' + uploader;
 
+    const dateOnly = DATE_ONLY_PATTERN.test(text);
     const label = new Intl.DateTimeFormat(CONFIG.dateLocale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
-      timeZone: DATE_ONLY_PATTERN.test(text) ? 'UTC' : undefined
+      ...(dateOnly ? { timeZone: 'UTC' } : { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
     }).format(date);
 
     return 'by ' + uploader + ' on ' + label;
@@ -1583,9 +1585,9 @@
 
   const renderPage = async () => {
     const token = ++state.loadToken;
-    const start = (state.page - 1) * CONFIG.perPage;
+    const start = (state.page - 1) * state.perPage;
     const queue = state.results
-      .slice(start, start + CONFIG.perPage)
+      .slice(start, start + state.perPage)
       .map((entry, index) => ({ entry, index }));
 
     state.items = [];
@@ -1812,6 +1814,37 @@
     dom.watchTitle.focus({ preventScroll: true });
   };
 
+  const countPages = () => Math.max(1, Math.ceil(state.results.length / state.perPage));
+
+  const measurePerPage = () => {
+    const tracks = getComputedStyle(dom.gallery).gridTemplateColumns.split(' ');
+    const columns = tracks.filter((track) => track.endsWith('px')).length;
+    if (columns === 0) return state.perPage || CONFIG.perPageByColumns[0];
+
+    return CONFIG.perPageByColumns[Math.min(columns, CONFIG.perPageByColumns.length) - 1];
+  };
+
+  const syncPerPage = () => {
+    const perPage = measurePerPage();
+    if (perPage === state.perPage) return false;
+
+    state.perPage = perPage;
+    if (state.results !== null) {
+      state.totalPages = countPages();
+      state.page = 0;
+    }
+    return true;
+  };
+
+  const handleGalleryResize = () => {
+    if (isWatching() || state.results === null) return;
+
+    const firstIndex = (state.page - 1) * state.perPage;
+    if (!syncPerPage()) return;
+
+    navigate(Math.floor(firstIndex / state.perPage) + 1, null, state.query, 'replace');
+  };
+
   const showGrid = (query, requestedPage) => {
     const wasWatching = isWatching();
 
@@ -1821,11 +1854,12 @@
     state.recommended = [];
     dom.scroller.classList.remove('is-watching');
     syncProgress();
+    syncPerPage();
 
     if (state.results === null || query !== state.query) {
       state.query = query;
       state.results = filterEntries(query);
-      state.totalPages = Math.max(1, Math.ceil(state.results.length / CONFIG.perPage));
+      state.totalPages = countPages();
       state.page = 0;
       renderSearchStatus();
     }
@@ -2071,6 +2105,7 @@
       if (state.entries.length > 0) applyRoute();
     });
     new ResizeObserver(distributeRecommendations).observe(dom.watchMain);
+    new ResizeObserver(handleGalleryResize).observe(dom.gallery);
   };
 
   const loadEntries = async () => {
