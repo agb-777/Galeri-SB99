@@ -384,7 +384,7 @@
     bottom: 8px;
     left: 8px;
     z-index: 1;
-    max-width: calc(100% - 52px);
+    max-width: calc(100% - 16px);
     padding: 5px 8px 6px;
     border-radius: 3px;
     background: var(--bg);
@@ -399,31 +399,32 @@
     pointer-events: none;
   }
 
-  /* play mark, bottom-right: always visible on touch screens, grows on hover for a mouse */
+  /* play button in the middle of the cover */
   .play {
     position: absolute;
-    right: 8px;
-    bottom: 8px;
+    top: 50%;
+    left: 50%;
     z-index: 1;
     display: grid;
     place-items: center;
-    width: 28px;
-    height: 28px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: var(--bg);
     color: var(--ink);
+    transform: translate(-50%, -50%);
     pointer-events: none;
     transition: transform .2s ease;
   }
 
-  .play svg { width: 12px; height: 12px; margin-left: 1px; } /* a triangle looks centered when nudged right */
+  .play svg { width: 20px; height: 20px; margin-left: 2px; } /* a triangle looks centered when nudged right */
 
   @media (hover: hover) {
     .tile:hover video { filter: brightness(.82); }
-    .tile:hover .play { transform: scale(1.18); }
+    .tile:hover .play { transform: translate(-50%, -50%) scale(1.12); }
   }
 
-  .tile:active .play { transform: scale(.94); }
+  .tile:active .play { transform: translate(-50%, -50%) scale(.95); }
 
   @keyframes tile-in {
     from { opacity: 0; }
@@ -564,6 +565,52 @@
   .lb-btn:active { transform: scale(.94); }
   .lb-btn:focus-visible { outline: 2px solid #f1f1ee; outline-offset: 3px; }
 
+  /* info button: top-left corner of the video; opens the cast list */
+  .lb-info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .lb-info[aria-expanded="true"] {
+    background: #f1f1ee;
+    border-color: #f1f1ee;
+    color: #131313;
+  }
+
+  .lb-cast {
+    position: absolute;
+    top: 54px;
+    left: 10px;
+    z-index: 2;
+    width: max-content;
+    max-width: calc(100% - 20px);
+    max-height: calc(100% - 64px);
+    padding: 12px 16px 14px;
+    overflow-y: auto;
+    border-radius: var(--radius);
+    background: rgba(0, 0, 0, .82);
+    color: #f1f1ee;
+  }
+
+  .lb-cast-title {
+    margin: 0 0 6px;
+    color: rgba(241, 241, 238, .6);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .lb-cast-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.6;
+  }
+
   /* close: top-right corner of the screen (important on mobile) */
   .lb-close {
     position: absolute;
@@ -690,7 +737,18 @@
   </button>
 
   <div class="lb-stage">
-    <video id="lb-video" controls playsinline preload="auto"></video>
+    <video id="lb-video" controls controlsList="nodownload" playsinline preload="auto"></video>
+    <button id="lb-info" class="lb-btn lb-info" type="button" aria-label="Show cast" aria-expanded="false"
+            aria-controls="lb-cast" title="Cast" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 11v6"/><path d="M12 6.5v.01"/>
+      </svg>
+    </button>
+    <div id="lb-cast" class="lb-cast" hidden>
+      <p class="lb-cast-title">Cast</p>
+      <ul id="lb-cast-list" class="lb-cast-list"></ul>
+    </div>
   </div>
 </div>
 
@@ -729,8 +787,8 @@
     noUrls:
       '<code>url.txt</code> contains no valid video URLs.<br>' +
       'One video per line:<br>' +
-      '<code>https://example.com/video.mp4 | Category</code><br>' +
-      'The category is optional.',
+      '<code>https://example.com/video.mp4 | Category | Name One, Name Two</code><br>' +
+      'The category and the cast are optional.',
     allFailed:
       'All videos on this page failed to load. Check <code>url.txt</code> &mdash; every URL must ' +
       'point directly to a video file (not a web page) and be publicly accessible.'
@@ -760,6 +818,9 @@
   const lbClose     = document.getElementById('lb-close');
   const lbPrev      = document.getElementById('lb-prev');
   const lbNext      = document.getElementById('lb-next');
+  const lbInfo      = document.getElementById('lb-info');
+  const lbCast      = document.getElementById('lb-cast');
+  const lbCastList  = document.getElementById('lb-cast-list');
 
   /* ==========================================================
    * State
@@ -800,38 +861,40 @@
   /**
    * Parses url.txt. One video per line:
    *
-   *   <video_url> | <category>
+   *   <video_url> | <category> | <cast>
    *
-   * - The category is optional. Without one, the label is CONFIG.defaultCategory.
-   * - It may have several words ("Short Film"), so "|" is the separator.
-   *   The category can also come first: "Entertainment | <video_url>".
-   *   Without any "|", everything after the URL (separated by a space) is the category.
+   * - Category and cast are optional. Without a category, the label is CONFIG.defaultCategory.
+   * - Cast is a comma-separated list of names ("Name One, Name Two"). To give a cast
+   *   without a category, leave the category empty: "<video_url> | | Name One".
+   * - The URL may also come last: "Category | Cast | <video_url>".
+   * - Without any "|", everything after the URL (separated by a space) is the category.
    * - Blank lines and lines starting with "#" are ignored.
-   * - Duplicate URLs are dropped (the first one wins).
+   * - The same URL may appear more than once (handy for dummy data and testing).
    * - The order of the file is kept, so every page is stable across refreshes.
    */
   const parseEntries = (text) => {
-    const entries = new Map();
+    const entries = [];
 
     for (const rawLine of text.split(/\r?\n/)) {
       const line = rawLine.trim();
       if (!line || line.startsWith('#')) continue;
 
-      const parts = (line.includes('|') ? line.split('|') : line.split(/\s+/))
-        .map((part) => part.trim())
-        .filter(Boolean);
+      const hasPipe = line.includes('|');
+      const parts = (hasPipe ? line.split('|') : line.split(/\s+/)).map((part) => part.trim());
 
       const urlIndex = parts.findIndex(isHttpUrl);
       if (urlIndex === -1) continue;
 
-      const url = parts[urlIndex];
-      if (entries.has(url)) continue;
+      const rest = parts.filter((_, i) => i !== urlIndex);
+      const category = hasPipe ? rest[0] : rest.join(' ');
+      const cast = hasPipe && rest[1]
+        ? rest[1].split(',').map((name) => name.trim()).filter(Boolean)
+        : [];
 
-      const category = parts.filter((_, i) => i !== urlIndex).join(' ');
-      entries.set(url, { url, category: category || CONFIG.defaultCategory });
+      entries.push({ url: parts[urlIndex], category: category || CONFIG.defaultCategory, cast });
     }
 
-    return [...entries.values()];
+    return entries;
   };
 
   const fetchWithTimeout = async (url, timeoutMs) => {
@@ -1025,7 +1088,8 @@
       col: -1,
       index,                      // position inside the page (url.txt order)
       url: entry.url,
-      category: entry.category
+      category: entry.category,
+      cast: entry.cast
     };
     itemByElement.set(el, item);
     return item;
@@ -1296,9 +1360,29 @@
     lightboxVideo.load();
   };
 
+  const isCastOpen = () => !lbCast.hidden;
+
+  const setCastOpen = (open) => {
+    lbCast.hidden = !open;
+    lbInfo.setAttribute('aria-expanded', String(open));
+    lbInfo.setAttribute('aria-label', open ? 'Hide cast' : 'Show cast');
+  };
+
+  /** The info button only exists for videos that have a cast in url.txt. */
+  const updateCast = (item) => {
+    lbCastList.replaceChildren(...item.cast.map((name) => {
+      const li = document.createElement('li');
+      li.textContent = name;
+      return li;
+    }));
+    lbInfo.hidden = item.cast.length === 0;
+    setCastOpen(false);
+  };
+
   const showItem = (item) => {
     state.activeItem = item;
     lightboxVideo.src = item.url;
+    updateCast(item);
 
     const playing = lightboxVideo.play();
     if (playing) playing.catch(() => { /* autoplay blocked: the controls still work */ });
@@ -1383,6 +1467,12 @@
     });
     lbClose.addEventListener('click', closeLightbox);
 
+    // cast list; a second click on the button closes it
+    lbInfo.addEventListener('click', () => setCastOpen(!isCastOpen()));
+
+    // no "Save video as..." in the right-click menu either
+    lightboxVideo.addEventListener('contextmenu', (event) => event.preventDefault());
+
     // previous / next video
     lbPrev.addEventListener('click', () => showNeighbor(-1));
     lbNext.addEventListener('click', () => showNeighbor(1));
@@ -1394,7 +1484,14 @@
       // while the player has focus, the arrow keys seek inside the video
       const onPlayer = event.target === lightboxVideo;
 
-      if (event.key === 'Escape') closeLightbox();
+      if (event.key === 'Escape') {
+        if (isCastOpen()) {
+          setCastOpen(false); // first Escape closes the cast list, the second one the player
+          lbInfo.focus();
+        } else {
+          closeLightbox();
+        }
+      }
       else if (event.key === 'ArrowLeft' && !onPlayer) showNeighbor(-1);
       else if (event.key === 'ArrowRight' && !onPlayer) showNeighbor(1);
     });
@@ -1470,3 +1567,4 @@
 </script>
 </body>
 </html>
+  
