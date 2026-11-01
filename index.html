@@ -501,6 +501,11 @@
     padding: var(--gap);
   }
 
+  a.tile {
+    color: inherit;
+    text-decoration: none;
+  }
+
   .tile {
     display: flex;
     flex-direction: column;
@@ -574,6 +579,26 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     pointer-events: none;
+  }
+
+  .badge[data-genre="indo"] {
+    background: #d92d2d;
+    color: #fff;
+  }
+
+  .badge[data-genre="jepang"] {
+    background: #2563eb;
+    color: #fff;
+  }
+
+  .badge[data-genre="barat"] {
+    background: #1f9d55;
+    color: #fff;
+  }
+
+  .badge[data-genre="china"] {
+    background: #f5c518;
+    color: #111;
   }
 
   .play {
@@ -816,8 +841,8 @@
 
   .recommendation-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 14px 24px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 22px var(--gap);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -1060,6 +1085,10 @@
           <dt>Category</dt>
           <dd id="watch-category"></dd>
         </div>
+        <div class="watch-meta-row">
+          <dt>Uploaded</dt>
+          <dd id="watch-uploaded"></dd>
+        </div>
       </dl>
     </div>
 
@@ -1091,6 +1120,8 @@
     singleColumnQuery: '(max-width: 600px)',
     watchColumnsQuery: '(min-width: 1001px)',
     mobileNavQuery: '(max-width: 720px)',
+    defaultUploader: 'Admin',
+    dateLocale: 'en-GB',
     concurrency: 6,
     fetchTimeout: 10000,
     videoTimeout: 20000,
@@ -1102,6 +1133,8 @@
   const PAGE_PARAM = 'page';
   const VIDEO_PARAM = 'video';
   const QUERY_PARAM = 'q';
+  const GENRES = Object.freeze({ indo: 'Indo', jepang: 'Jepang', barat: 'Barat', china: 'China' });
+  const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
   const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
   const BASE_TITLE = document.title;
@@ -1151,6 +1184,7 @@
     watchGenre: document.getElementById('watch-genre'),
     watchCategoryRow: document.getElementById('watch-category-row'),
     watchCategory: document.getElementById('watch-category'),
+    watchUploaded: document.getElementById('watch-uploaded'),
     watchCastRow: document.getElementById('watch-cast-row'),
     watchCast: document.getElementById('watch-cast'),
     recommendations: document.getElementById('recommendations'),
@@ -1171,7 +1205,8 @@
     loadToken: 0,
     loading: false,
     gridScroll: 0,
-    watching: null
+    watching: null,
+    recommended: []
   };
 
   const itemByElement = new WeakMap();
@@ -1195,9 +1230,34 @@
 
   const toText = (value) => (typeof value === 'string' ? value.trim() : '');
 
+  const formatUploaded = (uploader, value) => {
+    const text = toText(value);
+    const date = text ? new Date(text) : null;
+    if (!date || Number.isNaN(date.getTime())) return 'by ' + uploader;
+
+    const label = new Intl.DateTimeFormat(CONFIG.dateLocale, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: DATE_ONLY_PATTERN.test(text) ? 'UTC' : undefined
+    }).format(date);
+
+    return 'by ' + uploader + ' on ' + label;
+  };
+
   const detectType = (url, declared) => {
     if (declared === 'video' || declared === 'embed') return declared;
     return VIDEO_FILE_PATTERN.test(new URL(url).pathname) ? 'video' : 'embed';
+  };
+
+  const uniqueList = (names) => {
+    const seen = new Set();
+    return names.filter((name) => {
+      const key = name.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   };
 
   const toList = (value) => {
@@ -1220,8 +1280,10 @@
 
       const number = entries.length + 1;
       const title = toText(raw.title) || 'Video ' + number;
-      const genre = toText(raw.genre);
-      const categories = toList(raw.category);
+      const genre = GENRES[toText(raw.genre).toLowerCase()] || '';
+      const categories = uniqueList(toList(raw.category))
+        .filter((name) => name.toLowerCase() !== genre.toLowerCase());
+      const uploader = toText(raw.uploader) || CONFIG.defaultUploader;
       const cast = toList(raw.cast);
 
       entries.push({
@@ -1232,6 +1294,7 @@
         title,
         genre,
         categories,
+        uploaded: formatUploaded(uploader, raw.date),
         cast,
         searchText: normalizeText([title, genre, ...categories, ...cast].join(' '))
       });
@@ -1367,6 +1430,7 @@
     const badge = document.createElement('span');
     badge.className = 'badge';
     badge.textContent = text;
+    badge.dataset.genre = text.toLowerCase();
     return badge;
   };
 
@@ -1665,27 +1729,54 @@
     return item;
   };
 
+  const createMoreCard = (entry) => {
+    const cover = document.createElement('div');
+    cover.className = 'tile-cover';
+    cover.append(
+      createRecommendationCover(entry),
+      ...(entry.genre ? [createBadge(entry.genre)] : []),
+      createPlayIcon()
+    );
+
+    const title = document.createElement('span');
+    title.className = 'tile-title';
+    title.textContent = entry.title;
+
+    const link = document.createElement('a');
+    link.className = 'tile';
+    link.href = buildUrl(1, entry.number, getQueryFromUrl());
+    link.dataset.video = String(entry.number);
+    link.append(cover, title);
+
+    const item = document.createElement('li');
+    item.append(link);
+    return item;
+  };
+
   const distributeRecommendations = () => {
-    const items = [...dom.recommendationList.children, ...dom.recommendationMoreList.children];
-    dom.recommendationList.replaceChildren(...items);
+    const items = state.recommended;
+    dom.recommendationList.replaceChildren(...items.map((item) => item.row));
     dom.recommendationMoreList.replaceChildren();
     dom.recommendationMore.hidden = true;
 
     if (!isWatching() || !window.matchMedia(CONFIG.watchColumnsQuery).matches) return;
 
     const limit = dom.recommendations.getBoundingClientRect().bottom;
-    const overflowIndex = items.findIndex((item) => item.getBoundingClientRect().bottom > limit);
+    const overflowIndex = items.findIndex((item) => item.row.getBoundingClientRect().bottom > limit);
     if (overflowIndex === -1) return;
 
-    dom.recommendationMoreList.replaceChildren(...items.slice(overflowIndex));
+    const overflow = items.slice(overflowIndex);
+    dom.recommendationList.replaceChildren(...items.slice(0, overflowIndex).map((item) => item.row));
+    dom.recommendationMoreList.replaceChildren(
+      ...overflow.map((item) => (item.card ??= createMoreCard(item.entry)))
+    );
     dom.recommendationMore.hidden = false;
   };
 
   const renderRecommendations = (entry) => {
     const list = buildRecommendations(entry);
 
-    dom.recommendationList.replaceChildren(...list.map(createRecommendation));
-    dom.recommendationMoreList.replaceChildren();
+    state.recommended = list.map((other) => ({ entry: other, row: createRecommendation(other), card: null }));
     dom.recommendations.hidden = list.length === 0;
     distributeRecommendations();
   };
@@ -1696,6 +1787,7 @@
     dom.watchGenre.replaceChildren(...(entry.genre ? [createMetaLink(entry.genre)] : []));
     dom.watchCategoryRow.hidden = entry.categories.length === 0;
     dom.watchCategory.replaceChildren(...joinWithCommas(entry.categories.map(createMetaLink)));
+    dom.watchUploaded.textContent = entry.uploaded;
     dom.watchCastRow.hidden = entry.cast.length === 0;
     dom.watchCast.replaceChildren(...joinWithCommas(entry.cast.map(createMetaLink)));
   };
@@ -1726,6 +1818,7 @@
     stopWatchVideo();
     dom.recommendationList.replaceChildren();
     dom.recommendationMoreList.replaceChildren();
+    state.recommended = [];
     dom.scroller.classList.remove('is-watching');
     syncProgress();
 
