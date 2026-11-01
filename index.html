@@ -541,8 +541,8 @@
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    background: var(--placeholder);
+    object-fit: contain;
+    background: #000;
     border-radius: inherit;
     pointer-events: none;
     transition: filter .2s ease;
@@ -732,7 +732,6 @@
 
   .watch-player {
     width: 100%;
-    max-height: calc(100dvh - var(--nav-h) - var(--footer-h) - 2 * var(--gap) - 90px);
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: #000;
@@ -850,7 +849,8 @@
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    background: #000;
     pointer-events: none;
     transition: filter .2s ease;
   }
@@ -995,7 +995,7 @@
         </svg>
       </button>
       <input id="search-input" class="search-input" type="search" name="q"
-             placeholder="Search title, cast or category" aria-label="Search videos"
+             placeholder="Search title, cast, genre, category" aria-label="Search videos"
              autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
       <button id="search-clear" class="search-clear" type="button" aria-label="Clear search" hidden>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1052,7 +1052,11 @@
           <dt>Cast</dt>
           <dd id="watch-cast"></dd>
         </div>
-        <div class="watch-meta-row">
+        <div id="watch-genre-row" class="watch-meta-row" hidden>
+          <dt>Genre</dt>
+          <dd id="watch-genre"></dd>
+        </div>
+        <div id="watch-category-row" class="watch-meta-row" hidden>
           <dt>Category</dt>
           <dd id="watch-category"></dd>
         </div>
@@ -1084,7 +1088,6 @@
     perPage: 30,
     recommendations: 20,
     mobileRecommendations: 5,
-    defaultCategory: 'Video',
     singleColumnQuery: '(max-width: 600px)',
     watchColumnsQuery: '(min-width: 1001px)',
     mobileNavQuery: '(max-width: 720px)',
@@ -1099,8 +1102,6 @@
   const PAGE_PARAM = 'page';
   const VIDEO_PARAM = 'video';
   const QUERY_PARAM = 'q';
-  const DEFAULT_PLAYER_RATIO = '16 / 9';
-  const DEFAULT_EMBED_RATIO = 16 / 9;
   const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
   const BASE_TITLE = document.title;
@@ -1118,7 +1119,8 @@
       '<code>url.json</code> contains no valid videos.<br>' +
       'It must be a list of objects. Only <code>url</code> is required:<br><br>' +
       '<code>{ "url": "https://example.com/video.mp4", "title": "Title", ' +
-      '"category": "Category", "cast": ["Name One", "Name Two"] }</code>',
+      '"genre": "Genre", "category": ["Category One", "Category Two"], ' +
+      '"cast": ["Name One", "Name Two"] }</code>',
     allFailed:
       'All videos on this page failed to load. Check <code>url.json</code> &mdash; every URL must ' +
       'point directly to a video file (not a web page) and be publicly accessible.'
@@ -1145,6 +1147,9 @@
     watchVideo: document.getElementById('watch-video'),
     watchTitle: document.getElementById('watch-title'),
     watchMeta: document.getElementById('watch-meta'),
+    watchGenreRow: document.getElementById('watch-genre-row'),
+    watchGenre: document.getElementById('watch-genre'),
+    watchCategoryRow: document.getElementById('watch-category-row'),
     watchCategory: document.getElementById('watch-category'),
     watchCastRow: document.getElementById('watch-cast-row'),
     watchCast: document.getElementById('watch-cast'),
@@ -1195,13 +1200,7 @@
     return VIDEO_FILE_PATTERN.test(new URL(url).pathname) ? 'video' : 'embed';
   };
 
-  const toRatio = (value) => {
-    const parts = String(value ?? '').split(/[:/x]/).map(Number);
-    const ratio = parts.length === 2 ? parts[0] / parts[1] : parts[0];
-    return Number.isFinite(ratio) && ratio > 0 ? ratio : 0;
-  };
-
-  const toCastList = (value) => {
+  const toList = (value) => {
     const names = Array.isArray(value) ? value : typeof value === 'string' ? value.split(',') : [];
     return names.map(toText).filter(Boolean);
   };
@@ -1221,19 +1220,20 @@
 
       const number = entries.length + 1;
       const title = toText(raw.title) || 'Video ' + number;
-      const category = toText(raw.category) || CONFIG.defaultCategory;
-      const cast = toCastList(raw.cast);
+      const genre = toText(raw.genre);
+      const categories = toList(raw.category);
+      const cast = toList(raw.cast);
 
       entries.push({
         number,
         type: detectType(url, toText(raw.type).toLowerCase()),
         url,
         cover: isHttpUrl(toText(raw.cover)) ? toText(raw.cover) : '',
-        ratio: toRatio(raw.ratio),
         title,
-        category,
+        genre,
+        categories,
         cast,
-        searchText: normalizeText([title, category, ...cast].join(' '))
+        searchText: normalizeText([title, genre, ...categories, ...cast].join(' '))
       });
     }
 
@@ -1383,7 +1383,7 @@
   const createTile = (media, entry, index) => {
     const cover = document.createElement('div');
     cover.className = 'tile-cover';
-    cover.append(media, createBadge(entry.category), createPlayIcon());
+    cover.append(media, ...(entry.genre ? [createBadge(entry.genre)] : []), createPlayIcon());
 
     const title = document.createElement('figcaption');
     title.className = 'tile-title';
@@ -1509,7 +1509,7 @@
 
     const count = results.length;
     dom.searchStatus.textContent = count === 0
-      ? 'No videos found for “' + query + '”. Try a title, a name from the cast or a category.'
+      ? 'No videos found for “' + query + '”. Try a title, a name from the cast, a genre or a category.'
       : count + (count === 1 ? ' video' : ' videos') + ' found for “' + query + '”';
   };
 
@@ -1572,12 +1572,10 @@
 
     if (entry.type === 'embed') {
       dom.watchPlayer.classList.add('is-embed');
-      dom.watchPlayer.style.aspectRatio = String(entry.ratio || DEFAULT_EMBED_RATIO);
       dom.watchPlayer.append(createEmbedFrame(entry));
       return;
     }
 
-    dom.watchPlayer.style.aspectRatio = DEFAULT_PLAYER_RATIO;
     dom.watchVideo.src = entry.url;
     dom.watchVideo.play().catch(() => {});
   };
@@ -1599,11 +1597,15 @@
 
   const buildRecommendations = (entry) => {
     const others = state.entries.filter((other) => other !== entry);
-    const sameCategory = others.filter((other) => other.category === entry.category);
-    const sharedCast = others.filter(
-      (other) => other.category !== entry.category && other.cast.some((name) => entry.cast.includes(name))
+    const shares = (a, b) => a.some((value) => b.includes(value));
+    const sameCategory = others.filter((other) => shares(other.categories, entry.categories));
+    const sameGenre = others.filter(
+      (other) => entry.genre !== '' && other.genre === entry.genre && !sameCategory.includes(other)
     );
-    const related = [...sameCategory, ...sharedCast];
+    const sharedCast = others.filter(
+      (other) => shares(other.cast, entry.cast) && !sameCategory.includes(other) && !sameGenre.includes(other)
+    );
+    const related = [...sameCategory, ...sameGenre, ...sharedCast];
 
     return (related.length > 0 ? related : others).slice(0, getRecommendationLimit());
   };
@@ -1648,7 +1650,9 @@
     info.append(title);
 
     if (entry.cast.length > 0) info.append(createRecommendationMeta(entry.cast.join(', ')));
-    info.append(createRecommendationMeta(entry.category));
+
+    const labels = [entry.genre, ...entry.categories].filter(Boolean);
+    if (labels.length > 0) info.append(createRecommendationMeta(labels.join(', ')));
 
     const link = document.createElement('a');
     link.className = 'rec';
@@ -1688,7 +1692,10 @@
 
   const renderWatchDetails = (entry) => {
     dom.watchTitle.textContent = entry.title;
-    dom.watchCategory.replaceChildren(createMetaLink(entry.category));
+    dom.watchGenreRow.hidden = entry.genre === '';
+    dom.watchGenre.replaceChildren(...(entry.genre ? [createMetaLink(entry.genre)] : []));
+    dom.watchCategoryRow.hidden = entry.categories.length === 0;
+    dom.watchCategory.replaceChildren(...joinWithCommas(entry.categories.map(createMetaLink)));
     dom.watchCastRow.hidden = entry.cast.length === 0;
     dom.watchCast.replaceChildren(...joinWithCommas(entry.cast.map(createMetaLink)));
   };
@@ -1953,11 +1960,6 @@
     }
   };
 
-  const handleMetadata = () => {
-    const { videoWidth, videoHeight } = dom.watchVideo;
-    if (videoWidth > 0 && videoHeight > 0) dom.watchPlayer.style.aspectRatio = videoWidth + ' / ' + videoHeight;
-  };
-
   const bindEvents = () => {
     bindNavbar();
     bindSearch();
@@ -1969,7 +1971,6 @@
     dom.recommendationMoreList.addEventListener('click', handleRecommendationClick);
     dom.watchMeta.addEventListener('click', handleMetaClick);
 
-    dom.watchVideo.addEventListener('loadedmetadata', handleMetadata);
     dom.watchVideo.addEventListener('contextmenu', (event) => event.preventDefault());
 
     document.addEventListener('keydown', handleEscape);
