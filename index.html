@@ -339,28 +339,19 @@
     to   { transform: translateX(290%); }
   }
 
-  /* ================= Gallery (masonry) ================= */
+  /* ================= Gallery (justified rows) =================
+     Tiles are placed with absolute coordinates by layoutRows() in the script;
+     the gallery only needs to be the positioning context. */
   #gallery {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--gap);
+    position: relative;
     width: 100%;
     padding: var(--gap);
   }
 
-  .col {
-    display: flex;
-    flex: 1 1 0;
-    flex-direction: column;
-    gap: var(--gap);
-    min-width: 0;
-  }
-
   /* ================= Tile ================= */
   .tile {
-    position: relative;
+    position: absolute;
     display: block;
-    flex: 0 0 auto;
     margin: 0;
     overflow: hidden;
     background: var(--placeholder);
@@ -375,7 +366,8 @@
   .tile video {
     display: block;
     width: 100%;
-    height: auto; /* aspect ratio comes from the media width/height attributes */
+    height: 100%; /* the tile has the cover's own aspect ratio, nothing is cropped */
+    object-fit: cover;
     background: var(--placeholder);
     border-radius: inherit;
     transition: filter .2s ease;
@@ -767,9 +759,12 @@
     urlListFile:     'url.txt',
     perPage:         30,       // videos per page; when a page is full, the next page is created
     defaultCategory: 'Video',  // label shown on a video that has no category in url.txt
-    minColWidth:     250,      // ideal column width (px), drives the column count
-    minCols:         2,
-    maxCols:         9,
+    rowHeightRatio:  0.2,      // wished row height = gallery width * this ...
+    minRowHeight:    200,      // ... but never below this (px)
+    maxRowHeight:    300,      // ... and never above this (px)
+    minTileWidth:    190,      // narrowest comfortable tile (px): limits how many fit in a row
+    maxPerRow:       6,
+    lastRowStretch:  1.4,      // a last row that would be taller than target * this is not stretched
     concurrency:     6,        // simultaneous video loads
     fetchTimeout:    10000,    // ms, for url.txt
     videoTimeout:    20000,    // ms, per video (waiting for its first frame)
@@ -832,12 +827,8 @@
     pageEntries: [],   // entries of the current page
     loadToken: 0,      // bumped on every page render; results from older renders are discarded
 
-    items: [],         // loaded tiles of the current page: { el, ratio, col, index, url, category }
-    columns: [],       // .col elements
-    heights: [],       // estimated height of each column
-    colWidth: 1,
-    gap: 10,
-    galleryWidth: 0,
+    items: [],         // loaded tiles of the current page: { el, ratio, index, url, category, cast }
+    galleryWidth: 0,   // last laid-out width, to ignore height-only resizes
 
     activeItem: null   // item currently shown in the lightbox
   };
@@ -934,81 +925,114 @@
   };
 
   /* ==========================================================
-   * Masonry layout
+   * Row layout
+   *
+   * Every row holds as many videos as needed to fill the full width, scaled to one common
+   * height, so there is no empty space anywhere. The videos stay in url.txt order and the rows
+   * are chosen so that their heights are as close as possible to the same target.
+   * Tiles are positioned absolutely: a re-layout only changes styles, no tile is ever moved
+   * in the DOM (a moved <video> could lose its cover frame).
    * ========================================================== */
   const readGap = () => {
     const value = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap'));
     return Number.isFinite(value) ? value : 10;
   };
 
-  const columnCountFor = (width) =>
-    clamp(Math.round(width / CONFIG.minColWidth), CONFIG.minCols, CONFIG.maxCols);
+  const targetRowHeight = (width) =>
+    clamp(width * CONFIG.rowHeightRatio, CONFIG.minRowHeight, CONFIG.maxRowHeight);
 
-  const measureColumnWidth = (count, gap) => {
-    const style = getComputedStyle(gallery);
-    const padding = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
-    const inner = gallery.clientWidth - padding;
-    return Math.max(1, (inner - gap * (count - 1)) / count);
-  };
+  const maxPerRow = (width) =>
+    clamp(Math.round(width / CONFIG.minTileWidth), 1, CONFIG.maxPerRow);
 
-  const itemHeight = (item) => state.colWidth / item.ratio;
+  /**
+   * Splits `ratios` (aspect ratios in order) into rows with the best fit to `target`.
+   * A row of k videos has the height (width - gaps) / sum of ratios, and its cost is how far
+   * that height is from the target. Dynamic programming finds the cheapest split.
+   * Returns [[start, end), ...].
+   */
+  const breakRows = (ratios, width, gap, target, perRow) => {
+    const n = ratios.length;
+    const cost = new Array(n + 1).fill(Infinity);
+    const from = new Array(n + 1).fill(0);
+    cost[0] = 0;
 
-  const shortestColumnIndex = () => state.heights.indexOf(Math.min(...state.heights));
+    for (let end = 1; end <= n; end++) {
+      let sum = 0;
+      for (let count = 1; count <= Math.min(perRow, end); count++) {
+        const start = end - count;
+        sum += ratios[start];
+        const height = (width - (count - 1) * gap) / sum;
+        if (height <= 0) continue;
 
-  const addToColumn = (item, index) => {
-    const column = state.columns[index];
-    if (column.childElementCount > 0) state.heights[index] += state.gap;
-    state.heights[index] += itemHeight(item);
-    item.col = index;
-    column.appendChild(item.el);
-  };
-
-  const place = (item) => addToColumn(item, shortestColumnIndex());
-
-  /** Re-reads the gap, column width and gallery width. */
-  const syncMetrics = (columnCount) => {
-    state.gap = readGap();
-    state.colWidth = measureColumnWidth(columnCount, state.gap);
-    state.galleryWidth = gallery.clientWidth;
-  };
-
-  /** Rebuilds every column and re-places all tiles (used on a new page or when the column count changes). */
-  const rebuildLayout = () => {
-    const count = columnCountFor(gallery.clientWidth);
-
-    state.columns = Array.from({ length: count }, () => {
-      const column = document.createElement('div');
-      column.className = 'col';
-      return column;
-    });
-    state.heights = new Array(count).fill(0);
-    syncMetrics(count);
-
-    state.items.forEach((item) => place(item));
-
-    // single replace -> no empty frame, scroll position stays intact
-    gallery.replaceChildren(...state.columns);
-  };
-
-  /** Same column count, only the width changed: recompute height estimates without moving tiles. */
-  const refreshMetrics = () => {
-    syncMetrics(state.columns.length);
-    state.heights.fill(0);
-
-    const hasItem = new Array(state.columns.length).fill(false);
-    for (const item of state.items) {
-      if (hasItem[item.col]) state.heights[item.col] += state.gap;
-      hasItem[item.col] = true;
-      state.heights[item.col] += itemHeight(item);
+        const deviation = (height - target) / target;
+        const total = cost[start] + deviation * deviation;
+        if (total < cost[end]) {
+          cost[end] = total;
+          from[end] = start;
+        }
+      }
     }
+
+    const rows = [];
+    for (let end = n; end > 0; end = from[end]) rows.unshift([from[end], end]);
+    return rows;
+  };
+
+  /** Computes the position of every loaded tile and sizes the gallery to fit them. */
+  const layoutRows = () => {
+    layoutQueued = false;
+
+    const items = orderedItems();
+    const style = getComputedStyle(gallery);
+    const padX = parseFloat(style.paddingLeft) || 0;
+    const padY = parseFloat(style.paddingTop) || 0;
+    const width = Math.max(1, gallery.clientWidth - padX - (parseFloat(style.paddingRight) || 0));
+    const gap = readGap();
+    const target = targetRowHeight(width);
+
+    state.galleryWidth = gallery.clientWidth;
+
+    const rows = breakRows(items.map((item) => item.ratio), width, gap, target, maxPerRow(width));
+    let y = 0;
+
+    rows.forEach(([start, end], rowIndex) => {
+      const row = items.slice(start, end);
+      const sum = row.reduce((total, item) => total + item.ratio, 0);
+      let height = (width - (row.length - 1) * gap) / sum;
+
+      // a short last row (e.g. the last page, or a page that is still loading) is not
+      // stretched into huge tiles: it keeps a normal height and stays left-aligned
+      if (rowIndex === rows.length - 1 && height > target * CONFIG.lastRowStretch) {
+        height = target;
+      }
+
+      let x = 0;
+      for (const item of row) {
+        const tileWidth = item.ratio * height;
+        const { style: tile } = item.el;
+        tile.left = (padX + x) + 'px';
+        tile.top = (padY + y) + 'px';
+        tile.width = tileWidth + 'px';
+        tile.height = height + 'px';
+        x += tileWidth + gap;
+      }
+      y += height + gap;
+    });
+
+    const contentHeight = rows.length > 0 ? y - gap : 0;
+    gallery.style.height = (contentHeight + 2 * padY) + 'px';
+  };
+
+  /** Several tiles can arrive in the same frame: lay out only once. */
+  let layoutQueued = false;
+  const scheduleLayout = () => {
+    if (layoutQueued) return;
+    layoutQueued = true;
+    requestAnimationFrame(() => { if (layoutQueued) layoutRows(); });
   };
 
   const handleResize = () => {
-    const width = gallery.clientWidth;
-    if (width === state.galleryWidth) return; // height-only changes (e.g. mobile address bar) are ignored
-
-    if (columnCountFor(width) !== state.columns.length) rebuildLayout();
-    else refreshMetrics();
+    if (gallery.clientWidth !== state.galleryWidth) layoutRows(); // height-only changes are ignored
   };
 
   /* ==========================================================
@@ -1071,10 +1095,6 @@
   };
 
   const createTile = (video, entry, index) => {
-    // intrinsic width/height -> the browser derives the aspect ratio (no layout shift)
-    video.width = video.videoWidth;
-    video.height = video.videoHeight;
-
     const el = document.createElement('figure');
     el.className = 'tile';
     el.tabIndex = 0;
@@ -1085,7 +1105,6 @@
     const item = {
       el,
       ratio: video.videoWidth / video.videoHeight,
-      col: -1,
       index,                      // position inside the page (url.txt order)
       url: entry.url,
       category: entry.category,
@@ -1195,7 +1214,8 @@
     state.items = [];
 
     messageEl.hidden = true;
-    rebuildLayout();
+    gallery.replaceChildren();
+    layoutRows();
     renderPagination();
     updateTitle();
     scroller.scrollTo(0, 0);
@@ -1211,10 +1231,12 @@
 
       const item = createTile(video, entry, index);
       state.items.push(item);
-      place(item);
+      gallery.appendChild(item.el);
+      scheduleLayout();
     });
 
     if (token !== state.loadToken) return;
+    layoutRows(); // final layout with every cover of the page
 
     setLoading(false);
     if (state.items.length === 0) showMessage(MESSAGES.allFailed);
@@ -1534,8 +1556,6 @@
     yearEl.textContent = String(new Date().getFullYear()); // footer copyright year
     syncThemeControls();
 
-
-    rebuildLayout();
     bindEvents();
 
     let entries;
