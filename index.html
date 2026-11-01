@@ -7,11 +7,11 @@
 <meta name="theme-color" content="#ececea" />
 <title>Galeri SB99</title>
 <script>
-  /* Apply the saved theme before the first paint (prevents a light flash in dark mode).
-     The storage key and colors must match THEME_KEY / THEME_COLORS in the main script. */
   (function () {
     var theme = 'light';
-    try { if (localStorage.getItem('sb99-theme') === 'dark') theme = 'dark'; } catch (e) { /* storage blocked */ }
+    try {
+      if (localStorage.getItem('sb99-theme') === 'dark') theme = 'dark';
+    } catch (error) {}
     document.documentElement.dataset.theme = theme;
     if (theme === 'dark') document.querySelector('meta[name="theme-color"]').content = '#0e0e0e';
   })();
@@ -21,46 +21,41 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=Bricolage+Grotesque:wght@700;800&amp;display=swap" />
 <style>
-  /* ================= Design tokens =================
-     Monochrome on purpose: the videos bring the color.
-     Light is the default; dark is switched on with <html data-theme="dark">. */
   :root {
     color-scheme: light;
 
-    --gap: 12px;               /* space between covers and from the screen edge */
+    --gap: 12px;
     --radius: 4px;
 
-    --bg:            #ececea;  /* page + bars */
-    --bar:           #ececea;
-    --hover:         #e0e0dd;  /* hover / subtle fill */
-    --placeholder:   #dcdcd9;  /* behind a video cover until it has loaded */
-    --line:          #cfcfcb;  /* hairlines */
-    --ink:           #131313;  /* text, current page, focus */
-    --ink-muted:     #6b6b67;  /* secondary text */
-    --on-ink:        #ececea;
+    --bg: #ececea;
+    --bar: #ececea;
+    --hover: #e0e0dd;
+    --placeholder: #dcdcd9;
+    --line: #cfcfcb;
+    --ink: #131313;
+    --ink-muted: #6b6b67;
+    --on-ink: #ececea;
+    --overlay: rgba(8, 8, 8, .94);
 
-    --overlay:       rgba(8, 8, 8, .94);
+    --nav-h: 60px;
+    --footer-h: 42px;
 
-    --nav-h:         60px;     /* height of the fixed navbar (safe area is added on top) */
-    --footer-h:      42px;     /* height of the fixed footer (safe area is added on top) */
-
-    --font:    "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --font-display: "Bricolage Grotesque", var(--font);
   }
 
   :root[data-theme="dark"] {
     color-scheme: dark;
 
-    --bg:            #0e0e0e;
-    --bar:           #0e0e0e;
-    --hover:         #1d1d1d;
-    --placeholder:   #1a1a1a;
-    --line:          #2a2a2a;
-    --ink:           #f1f1ee;
-    --ink-muted:     #9a9a95;
-    --on-ink:        #0e0e0e;
-
-    --overlay:       rgba(0, 0, 0, .95);
+    --bg: #0e0e0e;
+    --bar: #0e0e0e;
+    --hover: #1d1d1d;
+    --placeholder: #1a1a1a;
+    --line: #2a2a2a;
+    --ink: #f1f1ee;
+    --ink-muted: #9a9a95;
+    --on-ink: #0e0e0e;
+    --overlay: rgba(0, 0, 0, .95);
   }
 
   @media (max-width: 600px) {
@@ -71,12 +66,15 @@
     }
   }
 
-  /* ================= Base ================= */
   *,
   *::before,
-  *::after { box-sizing: border-box; }
+  *::after {
+    box-sizing: border-box;
+  }
 
-  [hidden] { display: none !important; }
+  [hidden] {
+    display: none !important;
+  }
 
   html {
     background: var(--bg);
@@ -91,26 +89,11 @@
   body {
     min-height: 100vh;
     min-height: 100dvh;
+    overflow: hidden;
     color: var(--ink);
     font-family: var(--font);
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
-    overflow: hidden; /* the page itself never scrolls: only .scroller does (see below) */
-  }
-
-  /* The scrolling area sits between the fixed navbar and footer. The scrollbar therefore lives
-     only there, and the navbar and footer reach both screen edges. */
-  .scroller {
-    position: fixed;
-    top: calc(var(--nav-h) + env(safe-area-inset-top));
-    right: 0;
-    bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
-    left: 0;
-    overflow-x: hidden;
-    overflow-y: scroll; /* always reserved: the layout never jumps when a page gets shorter */
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: var(--ink-muted) var(--bg);
   }
 
   ::selection {
@@ -118,7 +101,31 @@
     color: var(--on-ink);
   }
 
-  /* ================= Navbar (fixed top) ================= */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .scroller {
+    position: fixed;
+    top: calc(var(--nav-h) + env(safe-area-inset-top));
+    right: 0;
+    bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
+    left: 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink-muted) var(--bg);
+  }
+
   .site-nav {
     position: fixed;
     top: 0;
@@ -135,7 +142,6 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* site title */
   .brand {
     flex: none;
     color: var(--ink);
@@ -177,10 +183,10 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .nav-link:hover { color: var(--ink); }
-
-  /* current page: underline that sits on the navbar's bottom line */
-  .nav-link[aria-current="page"] { color: var(--ink); }
+  .nav-link:hover,
+  .nav-link[aria-current="page"] {
+    color: var(--ink);
+  }
 
   .nav-link[aria-current="page"]::after {
     content: "";
@@ -192,7 +198,6 @@
     background: var(--ink);
   }
 
-  /* icon buttons (hamburger + theme toggle) */
   .nav-btn {
     display: inline-flex;
     flex: none;
@@ -210,24 +215,53 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .nav-btn:hover { background: var(--hover); }
-  .nav-btn svg { display: block; }
+  .nav-btn:hover {
+    background: var(--hover);
+  }
 
-  .nav-toggle { display: none; }          /* hamburger: small screens only */
-  .nav-toggle .icon-x { display: none; }
-  .site-nav.is-open .nav-toggle .icon-burger { display: none; }
-  .site-nav.is-open .nav-toggle .icon-x { display: block; }
+  .nav-btn svg {
+    display: block;
+  }
 
-  .theme-toggle { margin-left: auto; }    /* pinned to the right corner */
-  .theme-toggle .icon-sun { display: none; }
-  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
-  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+  .nav-toggle,
+  .nav-toggle .icon-x,
+  .theme-toggle .icon-sun {
+    display: none;
+  }
 
-  /* small screens: hamburger on the left, links in a dropdown panel under it */
+  .site-nav.is-open .nav-toggle .icon-burger {
+    display: none;
+  }
+
+  .site-nav.is-open .nav-toggle .icon-x {
+    display: block;
+  }
+
+  .theme-toggle {
+    margin-left: auto;
+  }
+
+  :root[data-theme="dark"] .theme-toggle .icon-moon {
+    display: none;
+  }
+
+  :root[data-theme="dark"] .theme-toggle .icon-sun {
+    display: block;
+  }
+
   @media (max-width: 720px) {
-    .site-nav { gap: 10px; }
-    .nav-toggle { display: inline-flex; margin-left: -8px; }
-    .brand { font-size: 23px; }
+    .site-nav {
+      gap: 10px;
+    }
+
+    .nav-toggle {
+      display: inline-flex;
+      margin-left: -8px;
+    }
+
+    .brand {
+      font-size: 23px;
+    }
 
     .nav-menu {
       position: fixed;
@@ -258,9 +292,10 @@
       letter-spacing: -.02em;
     }
 
-    .nav-link:last-child { border-bottom: 0; }
+    .nav-link:last-child {
+      border-bottom: 0;
+    }
 
-    /* in the dropdown the current page is shown by color + a bar on its left */
     .nav-link[aria-current="page"]::after {
       top: 14px;
       right: auto;
@@ -278,20 +313,6 @@
     }
   }
 
-  /* visible to screen readers and search engines only */
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  /* ================= Footer (fixed) ================= */
   .site-footer {
     position: fixed;
     right: 0;
@@ -313,7 +334,6 @@
     font-size: 13px;
   }
 
-  /* ================= Loading bar ================= */
   .progress {
     position: fixed;
     top: calc(var(--nav-h) + env(safe-area-inset-top));
@@ -336,19 +356,15 @@
 
   @keyframes progress-slide {
     from { transform: translateX(-100%); }
-    to   { transform: translateX(290%); }
+    to { transform: translateX(290%); }
   }
 
-  /* ================= Gallery (justified rows) =================
-     Tiles are placed with absolute coordinates by layoutRows() in the script;
-     the gallery only needs to be the positioning context. */
   #gallery {
     position: relative;
     width: 100%;
     padding: var(--gap);
   }
 
-  /* ================= Tile ================= */
   .tile {
     position: absolute;
     display: block;
@@ -358,7 +374,6 @@
     border-radius: var(--radius);
     outline: none;
     cursor: pointer;
-    /* "backwards": the animation must not keep holding `opacity` after it ends */
     animation: tile-in .3s ease backwards;
     -webkit-tap-highlight-color: transparent;
   }
@@ -366,17 +381,14 @@
   .tile video {
     display: block;
     width: 100%;
-    height: 100%; /* the tile has the cover's own aspect ratio, nothing is cropped */
+    height: 100%;
     object-fit: cover;
     background: var(--placeholder);
     border-radius: inherit;
+    pointer-events: none;
     transition: filter .2s ease;
   }
 
-  /* the video cover is only a still frame: clicks go to the tile, not the <video> */
-  .tile video { pointer-events: none; }
-
-  /* category label from url.txt: a small paper tape on the cover's bottom-left corner */
   .badge {
     position: absolute;
     bottom: 8px;
@@ -384,6 +396,7 @@
     z-index: 1;
     max-width: calc(100% - 16px);
     padding: 5px 8px 6px;
+    overflow: hidden;
     border-radius: 3px;
     background: var(--bg);
     color: var(--ink);
@@ -391,13 +404,11 @@
     font-weight: 600;
     letter-spacing: .005em;
     line-height: 1;
-    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     pointer-events: none;
   }
 
-  /* play button in the middle of the cover */
   .play {
     position: absolute;
     top: 50%;
@@ -415,25 +426,34 @@
     transition: transform .2s ease;
   }
 
-  .play svg { width: 20px; height: 20px; margin-left: 2px; } /* a triangle looks centered when nudged right */
-
-  @media (hover: hover) {
-    .tile:hover video { filter: brightness(.82); }
-    .tile:hover .play { transform: translate(-50%, -50%) scale(1.12); }
+  .play svg {
+    width: 20px;
+    height: 20px;
+    margin-left: 2px;
   }
 
-  .tile:active .play { transform: translate(-50%, -50%) scale(.95); }
+  @media (hover: hover) {
+    .tile:hover video {
+      filter: brightness(.82);
+    }
+
+    .tile:hover .play {
+      transform: translate(-50%, -50%) scale(1.12);
+    }
+  }
+
+  .tile:active .play {
+    transform: translate(-50%, -50%) scale(.95);
+  }
 
   @keyframes tile-in {
     from { opacity: 0; }
   }
 
-  /* ================= Pagination ================= */
   .pagination {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
     padding: 28px var(--gap) 36px;
   }
 
@@ -463,9 +483,10 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  a.page-btn:hover { color: var(--ink); }
+  a.page-btn:hover {
+    color: var(--ink);
+  }
 
-  /* current page: ink color + a thick bar under the number */
   .page-btn[aria-current="page"] {
     color: var(--ink);
     font-weight: 700;
@@ -492,7 +513,6 @@
     text-align: center;
   }
 
-  /* ================= Lightbox ================= */
   #lightbox {
     position: fixed;
     inset: 0;
@@ -500,22 +520,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(12px, 4vmin, 48px);
+    padding: 68px clamp(12px, 4vmin, 48px) clamp(12px, 4vmin, 48px);
     background: var(--overlay);
     outline: none;
     cursor: zoom-out;
     overscroll-behavior: contain;
-    container-type: size; /* lets the media use cqw/cqh units (see .lb-stage video) */
+    container-type: size;
   }
 
-  /* wide screens: reserve room on both sides so the arrows sit beside the video */
-  @media (min-width: 700px) {
-    #lightbox { padding-inline: 84px; }
-  }
-
-  /* wrapper that shrink-wraps the video exactly */
   .lb-stage {
-    position: relative;
     display: flex;
     cursor: default;
   }
@@ -524,9 +537,6 @@
     display: block;
     width: auto;
     height: auto;
-    /* limit = content box of the lightbox (inside its padding).
-       Percentages do not work here: the wrapper height is "auto",
-       so max-height: 100% would be ignored. */
     max-width: 100cqw;
     max-height: 100cqh;
     object-fit: contain;
@@ -534,8 +544,10 @@
     border-radius: var(--radius);
   }
 
-  /* round buttons (close, prev, next): same look in both themes, the overlay is always dark */
-  .lb-btn {
+  .lb-close {
+    position: absolute;
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
     z-index: 2;
     display: inline-flex;
     align-items: center;
@@ -552,76 +564,19 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .lb-btn:hover { background: rgba(255, 255, 255, .16); }
-  .lb-btn:active { transform: scale(.94); }
-  .lb-btn:focus-visible { outline: 2px solid #f1f1ee; outline-offset: 3px; }
-
-  /* info button: top-left corner of the video; opens the cast list */
-  .lb-info {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 36px;
-    height: 36px;
+  .lb-close:hover {
+    background: rgba(255, 255, 255, .16);
   }
 
-  .lb-info[aria-expanded="true"] {
-    background: #f1f1ee;
-    border-color: #f1f1ee;
-    color: #131313;
+  .lb-close:active {
+    transform: scale(.94);
   }
 
-  .lb-cast {
-    position: absolute;
-    top: 54px;
-    left: 10px;
-    z-index: 2;
-    width: max-content;
-    max-width: calc(100% - 20px);
-    max-height: calc(100% - 64px);
-    padding: 12px 16px 14px;
-    overflow-y: auto;
-    border-radius: var(--radius);
-    background: rgba(0, 0, 0, .82);
-    color: #f1f1ee;
+  .lb-close:focus-visible {
+    outline: 2px solid #f1f1ee;
+    outline-offset: 3px;
   }
 
-  .lb-cast-title {
-    margin: 0 0 6px;
-    color: rgba(241, 241, 238, .6);
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .lb-cast-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 1.6;
-  }
-
-  /* close: top-right corner of the screen (important on mobile) */
-  .lb-close {
-    position: absolute;
-    top: max(14px, env(safe-area-inset-top));
-    right: max(14px, env(safe-area-inset-right));
-  }
-
-  /* prev / next: vertically centered on the left and right edges */
-  .lb-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  .lb-nav:active { transform: translateY(-50%) scale(.94); }
-
-  .lb-prev { left: max(14px, env(safe-area-inset-left)); }
-  .lb-next { right: max(14px, env(safe-area-inset-right)); }
-
-  /* ================= Error / info message ================= */
   .message {
     width: min(560px, calc(100% - 2 * var(--gap)));
     margin: 6vh auto 0;
@@ -648,12 +603,18 @@
     .page-btn,
     .nav-btn,
     .nav-link,
-    .lb-btn { transition: none; }
+    .lb-close {
+      transition: none;
+    }
 
     .tile,
-    .site-nav.is-open .nav-menu { animation: none; }
+    .site-nav.is-open .nav-menu {
+      animation: none;
+    }
 
-    .progress::before { animation-duration: 2.4s; }
+    .progress::before {
+      animation-duration: 2.4s;
+    }
   }
 </style>
 </head>
@@ -664,11 +625,11 @@
           aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
     <svg class="icon-burger" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/>
+      <path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" />
     </svg>
     <svg class="icon-x" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M6 6l12 12"/><path d="M18 6L6 18"/>
+      <path d="M6 6l12 12" /><path d="M18 6L6 18" />
     </svg>
   </button>
 
@@ -676,7 +637,6 @@
 
   <nav id="nav-menu" class="nav-menu" aria-label="Main">
     <a class="nav-link" href="./" data-home aria-current="page">Home</a>
-    <a class="nav-link" href="#">About</a>
     <a class="nav-link" href="#">Support Me</a>
   </nav>
 
@@ -684,63 +644,39 @@
           aria-label="Switch to dark theme" title="Switch theme">
     <svg class="icon-moon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z"/>
+      <path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z" />
     </svg>
     <svg class="icon-sun" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="4"/>
-      <path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
     </svg>
   </button>
 </header>
+
 <div id="progress" class="progress" aria-hidden="true" hidden></div>
 
 <div id="scroller" class="scroller">
-<h1 class="sr-only">Galeri SB99</h1>
-<main id="gallery" aria-label="Video gallery" aria-busy="false"></main>
+  <h1 class="sr-only">Galeri SB99</h1>
+  <main id="gallery" aria-label="Video gallery" aria-busy="false"></main>
 
-<nav id="pagination" class="pagination" aria-label="Pagination" hidden>
-  <div id="page-list" class="page-list"></div>
-</nav>
+  <nav id="pagination" class="pagination" aria-label="Pagination" hidden>
+    <div id="page-list" class="page-list"></div>
+  </nav>
 
-<p id="message" class="message" role="alert" hidden></p>
+  <p id="message" class="message" role="alert" hidden></p>
 </div>
 
 <div id="lightbox" role="dialog" aria-modal="true" aria-label="Video player" tabindex="-1" hidden>
-  <button id="lb-close" class="lb-btn lb-close" type="button" aria-label="Close player" title="Close">
+  <button id="lb-close" class="lb-close" type="button" aria-label="Close player" title="Close">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M6 6l12 12"/><path d="M18 6L6 18"/>
-    </svg>
-  </button>
-
-  <button id="lb-prev" class="lb-btn lb-nav lb-prev" type="button" aria-label="Previous video" title="Previous">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M15 5l-7 7 7 7"/>
-    </svg>
-  </button>
-
-  <button id="lb-next" class="lb-btn lb-nav lb-next" type="button" aria-label="Next video" title="Next">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M9 5l7 7-7 7"/>
+      <path d="M6 6l12 12" /><path d="M18 6L6 18" />
     </svg>
   </button>
 
   <div class="lb-stage">
     <video id="lb-video" controls controlsList="nodownload" playsinline preload="auto"></video>
-    <button id="lb-info" class="lb-btn lb-info" type="button" aria-label="Show cast" aria-expanded="false"
-            aria-controls="lb-cast" title="Cast" hidden>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 11v6"/><path d="M12 6.5v.01"/>
-      </svg>
-    </button>
-    <div id="lb-cast" class="lb-cast" hidden>
-      <p class="lb-cast-title">Cast</p>
-      <ul id="lb-cast-list" class="lb-cast-list"></ul>
-    </div>
   </div>
 </div>
 
@@ -752,26 +688,30 @@
 (() => {
   'use strict';
 
-  /* ==========================================================
-   * Configuration
-   * ========================================================== */
   const CONFIG = Object.freeze({
-    urlListFile:     'url.txt',
-    perPage:         30,       // videos per page; when a page is full, the next page is created
-    defaultCategory: 'Video',  // label shown on a video that has no category in url.txt
-    rowHeightRatio:  0.2,      // wished row height = gallery width * this ...
-    minRowHeight:    200,      // ... but never below this (px)
-    maxRowHeight:    300,      // ... and never above this (px)
-    minTileWidth:    190,      // narrowest comfortable tile (px): limits how many fit in a row
-    maxPerRow:       6,
-    lastRowStretch:  1.4,      // a last row that would be taller than target * this is not stretched
-    concurrency:     6,        // simultaneous video loads
-    fetchTimeout:    10000,    // ms, for url.txt
-    videoTimeout:    20000,    // ms, per video (waiting for its first frame)
-    swipeDistance:   50        // px, minimum horizontal swipe to change video
+    urlListFile: 'url.txt',
+    perPage: 30,
+    defaultCategory: 'Video',
+    rowHeightRatio: 0.2,
+    minRowHeight: 200,
+    maxRowHeight: 300,
+    minTileWidth: 190,
+    maxPerRow: 6,
+    lastRowStretch: 1.4,
+    singleColumnQuery: '(max-width: 600px)',
+    mobileNavQuery: '(max-width: 720px)',
+    concurrency: 6,
+    fetchTimeout: 10000,
+    videoTimeout: 20000,
+    metadataGraceMs: 1500
   });
 
-  /* Static strings only (safe to render with innerHTML: no user input). */
+  const THEME_KEY = 'sb99-theme';
+  const THEME_COLORS = Object.freeze({ light: '#ececea', dark: '#0e0e0e' });
+  const PAGE_PARAM = 'page';
+  const VIDEO_PARAM = 'video';
+  const BASE_TITLE = document.title;
+
   const MESSAGES = Object.freeze({
     fetchFailed:
       'Could not load <code>url.txt</code>.<br>' +
@@ -782,63 +722,54 @@
     noUrls:
       '<code>url.txt</code> contains no valid video URLs.<br>' +
       'One video per line:<br>' +
-      '<code>https://example.com/video.mp4 | Category | Name One, Name Two</code><br>' +
-      'The category and the cast are optional.',
+      '<code>https://example.com/video.mp4 | Category</code><br>' +
+      'The category is optional.',
     allFailed:
       'All videos on this page failed to load. Check <code>url.txt</code> &mdash; every URL must ' +
       'point directly to a video file (not a web page) and be publicly accessible.'
   });
 
-  const PAGE_PARAM = 'page';
-  const LEGACY_PARAMS = ['type']; // old links like ?type=video are cleaned up
-  const BASE_TITLE = document.title;
-
-  /* ==========================================================
-   * DOM elements
-   * ========================================================== */
-  const siteNav     = document.getElementById('site-nav');
-  const navToggle   = document.getElementById('nav-toggle');
-  const themeToggle = document.getElementById('theme-toggle');
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-  const scroller    = document.getElementById('scroller');
-  const gallery     = document.getElementById('gallery');
-  const progressBar = document.getElementById('progress');
-  const messageEl   = document.getElementById('message');
-  const pagination  = document.getElementById('pagination');
-  const pageList    = document.getElementById('page-list');
-  const siteFooter  = document.querySelector('.site-footer');
-  const yearEl      = document.getElementById('year');
-  const lightbox    = document.getElementById('lightbox');
-  const lightboxVideo = document.getElementById('lb-video');
-  const lbClose     = document.getElementById('lb-close');
-  const lbPrev      = document.getElementById('lb-prev');
-  const lbNext      = document.getElementById('lb-next');
-  const lbInfo      = document.getElementById('lb-info');
-  const lbCast      = document.getElementById('lb-cast');
-  const lbCastList  = document.getElementById('lb-cast-list');
-
-  /* ==========================================================
-   * State
-   * ========================================================== */
-  const state = {
-    entries: [],       // every video of url.txt, in file order: { url, category }
-    page: 0,           // current page (1-based); 0 = nothing rendered yet
-    totalPages: 1,
-    pageEntries: [],   // entries of the current page
-    loadToken: 0,      // bumped on every page render; results from older renders are discarded
-
-    items: [],         // loaded tiles of the current page: { el, ratio, index, url, category, cast }
-    galleryWidth: 0,   // last laid-out width, to ignore height-only resizes
-
-    activeItem: null   // item currently shown in the lightbox
+  const dom = {
+    nav: document.getElementById('site-nav'),
+    navToggle: document.getElementById('nav-toggle'),
+    themeToggle: document.getElementById('theme-toggle'),
+    themeColorMeta: document.querySelector('meta[name="theme-color"]'),
+    progress: document.getElementById('progress'),
+    scroller: document.getElementById('scroller'),
+    gallery: document.getElementById('gallery'),
+    pagination: document.getElementById('pagination'),
+    pageList: document.getElementById('page-list'),
+    message: document.getElementById('message'),
+    footer: document.querySelector('.site-footer'),
+    year: document.getElementById('year'),
+    lightbox: document.getElementById('lightbox'),
+    lightboxVideo: document.getElementById('lb-video'),
+    lightboxClose: document.getElementById('lb-close')
   };
 
-  const itemByElement = new WeakMap(); // tile element -> item
+  const state = {
+    entries: [],
+    page: 0,
+    totalPages: 1,
+    items: [],
+    loadToken: 0,
+    loading: false,
+    pendingIndex: null,
+    galleryWidth: 0,
+    activeItem: null,
+    lastFocused: null,
+    layoutQueued: false
+  };
 
-  /* ==========================================================
-   * General utilities
-   * ========================================================== */
-  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+  const itemByElement = new WeakMap();
+
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+  const isModifiedClick = (event) =>
+    event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+
+  const closestFromEvent = (event, selector) =>
+    event.target instanceof Element ? event.target.closest(selector) : null;
 
   const isHttpUrl = (value) => {
     try {
@@ -849,20 +780,6 @@
     }
   };
 
-  /**
-   * Parses url.txt. One video per line:
-   *
-   *   <video_url> | <category> | <cast>
-   *
-   * - Category and cast are optional. Without a category, the label is CONFIG.defaultCategory.
-   * - Cast is a comma-separated list of names ("Name One, Name Two"). To give a cast
-   *   without a category, leave the category empty: "<video_url> | | Name One".
-   * - The URL may also come last: "Category | Cast | <video_url>".
-   * - Without any "|", everything after the URL (separated by a space) is the category.
-   * - Blank lines and lines starting with "#" are ignored.
-   * - The same URL may appear more than once (handy for dummy data and testing).
-   * - The order of the file is kept, so every page is stable across refreshes.
-   */
   const parseEntries = (text) => {
     const entries = [];
 
@@ -870,19 +787,14 @@
       const line = rawLine.trim();
       if (!line || line.startsWith('#')) continue;
 
-      const hasPipe = line.includes('|');
-      const parts = (hasPipe ? line.split('|') : line.split(/\s+/)).map((part) => part.trim());
-
+      const hasSeparator = line.includes('|');
+      const parts = (hasSeparator ? line.split('|') : line.split(/\s+/)).map((part) => part.trim());
       const urlIndex = parts.findIndex(isHttpUrl);
       if (urlIndex === -1) continue;
 
-      const rest = parts.filter((_, i) => i !== urlIndex);
-      const category = hasPipe ? rest[0] : rest.join(' ');
-      const cast = hasPipe && rest[1]
-        ? rest[1].split(',').map((name) => name.trim()).filter(Boolean)
-        : [];
-
-      entries.push({ url: parts[urlIndex], category: category || CONFIG.defaultCategory, cast });
+      const rest = parts.filter((_, index) => index !== urlIndex);
+      const category = hasSeparator ? rest[0] : rest.join(' ');
+      entries.push({ url: parts[urlIndex], category: category || CONFIG.defaultCategory });
     }
 
     return entries;
@@ -898,74 +810,61 @@
     }
   };
 
-  /** Runs `worker` for every item with at most `limit` running in parallel. */
   const runPool = async (list, limit, worker) => {
     let cursor = 0;
+
     const run = async () => {
-      while (cursor < list.length) {
-        const item = list[cursor++];
-        try {
-          await worker(item);
-        } catch {
-          /* one failing item must not stop the others */
-        }
-      }
+      while (cursor < list.length) await worker(list[cursor++]).catch(() => {});
     };
+
     await Promise.all(Array.from({ length: Math.min(limit, list.length) }, run));
   };
 
   const showMessage = (html) => {
-    messageEl.innerHTML = html;
-    messageEl.hidden = false;
+    dom.message.innerHTML = html;
+    dom.message.hidden = false;
   };
 
-  const setLoading = (isLoading) => {
-    progressBar.hidden = !isLoading;
-    gallery.setAttribute('aria-busy', String(isLoading));
+  const setLoading = (loading) => {
+    state.loading = loading;
+    dom.progress.hidden = !loading;
+    dom.gallery.setAttribute('aria-busy', String(loading));
   };
 
-  /* ==========================================================
-   * Row layout
-   *
-   * Every row holds as many videos as needed to fill the full width, scaled to one common
-   * height, so there is no empty space anywhere. The videos stay in url.txt order and the rows
-   * are chosen so that their heights are as close as possible to the same target.
-   * Tiles are positioned absolutely: a re-layout only changes styles, no tile is ever moved
-   * in the DOM (a moved <video> could lose its cover frame).
-   * ========================================================== */
   const readGap = () => {
     const value = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap'));
     return Number.isFinite(value) ? value : 10;
   };
 
+  const isSingleColumn = () => window.matchMedia(CONFIG.singleColumnQuery).matches;
+
   const targetRowHeight = (width) =>
     clamp(width * CONFIG.rowHeightRatio, CONFIG.minRowHeight, CONFIG.maxRowHeight);
 
   const maxPerRow = (width) =>
-    clamp(Math.round(width / CONFIG.minTileWidth), 1, CONFIG.maxPerRow);
+    isSingleColumn() ? 1 : clamp(Math.round(width / CONFIG.minTileWidth), 1, CONFIG.maxPerRow);
 
-  /**
-   * Splits `ratios` (aspect ratios in order) into rows with the best fit to `target`.
-   * A row of k videos has the height (width - gaps) / sum of ratios, and its cost is how far
-   * that height is from the target. Dynamic programming finds the cheapest split.
-   * Returns [[start, end), ...].
-   */
+  const orderedItems = () => state.items.slice().sort((a, b) => a.index - b.index);
+
   const breakRows = (ratios, width, gap, target, perRow) => {
-    const n = ratios.length;
-    const cost = new Array(n + 1).fill(Infinity);
-    const from = new Array(n + 1).fill(0);
+    const count = ratios.length;
+    const cost = new Array(count + 1).fill(Infinity);
+    const from = new Array(count + 1).fill(0);
     cost[0] = 0;
 
-    for (let end = 1; end <= n; end++) {
-      let sum = 0;
-      for (let count = 1; count <= Math.min(perRow, end); count++) {
-        const start = end - count;
-        sum += ratios[start];
-        const height = (width - (count - 1) * gap) / sum;
+    for (let end = 1; end <= count; end++) {
+      let ratioSum = 0;
+
+      for (let size = 1; size <= Math.min(perRow, end); size++) {
+        const start = end - size;
+        ratioSum += ratios[start];
+
+        const height = (width - (size - 1) * gap) / ratioSum;
         if (height <= 0) continue;
 
         const deviation = (height - target) / target;
         const total = cost[start] + deviation * deviation;
+
         if (total < cost[end]) {
           cost[end] = total;
           from[end] = start;
@@ -974,92 +873,89 @@
     }
 
     const rows = [];
-    for (let end = n; end > 0; end = from[end]) rows.unshift([from[end], end]);
+    for (let end = count; end > 0; end = from[end]) rows.unshift([from[end], end]);
     return rows;
   };
 
-  /** Computes the position of every loaded tile and sizes the gallery to fit them. */
   const layoutRows = () => {
-    layoutQueued = false;
+    state.layoutQueued = false;
 
     const items = orderedItems();
-    const style = getComputedStyle(gallery);
-    const padX = parseFloat(style.paddingLeft) || 0;
-    const padY = parseFloat(style.paddingTop) || 0;
-    const width = Math.max(1, gallery.clientWidth - padX - (parseFloat(style.paddingRight) || 0));
+    const style = getComputedStyle(dom.gallery);
+    const paddingX = parseFloat(style.paddingLeft) || 0;
+    const paddingY = parseFloat(style.paddingTop) || 0;
+    const width = Math.max(1, dom.gallery.clientWidth - paddingX - (parseFloat(style.paddingRight) || 0));
     const gap = readGap();
     const target = targetRowHeight(width);
-
-    state.galleryWidth = gallery.clientWidth;
-
+    const singleColumn = isSingleColumn();
     const rows = breakRows(items.map((item) => item.ratio), width, gap, target, maxPerRow(width));
-    let y = 0;
+
+    state.galleryWidth = dom.gallery.clientWidth;
+
+    let top = 0;
 
     rows.forEach(([start, end], rowIndex) => {
-      const row = items.slice(start, end);
-      const sum = row.reduce((total, item) => total + item.ratio, 0);
-      let height = (width - (row.length - 1) * gap) / sum;
+      const rowItems = items.slice(start, end);
+      const ratioSum = rowItems.reduce((sum, item) => sum + item.ratio, 0);
+      const isLastRow = rowIndex === rows.length - 1;
+      let height = (width - (rowItems.length - 1) * gap) / ratioSum;
 
-      // a short last row (e.g. the last page, or a page that is still loading) is not
-      // stretched into huge tiles: it keeps a normal height and stays left-aligned
-      if (rowIndex === rows.length - 1 && height > target * CONFIG.lastRowStretch) {
-        height = target;
-      }
+      if (!singleColumn && isLastRow && height > target * CONFIG.lastRowStretch) height = target;
 
-      let x = 0;
-      for (const item of row) {
+      let left = 0;
+
+      for (const item of rowItems) {
         const tileWidth = item.ratio * height;
-        const { style: tile } = item.el;
-        tile.left = (padX + x) + 'px';
-        tile.top = (padY + y) + 'px';
-        tile.width = tileWidth + 'px';
-        tile.height = height + 'px';
-        x += tileWidth + gap;
+        const { style: tileStyle } = item.element;
+
+        tileStyle.left = paddingX + left + 'px';
+        tileStyle.top = paddingY + top + 'px';
+        tileStyle.width = tileWidth + 'px';
+        tileStyle.height = height + 'px';
+
+        left += tileWidth + gap;
       }
-      y += height + gap;
+
+      top += height + gap;
     });
 
-    const contentHeight = rows.length > 0 ? y - gap : 0;
-    gallery.style.height = (contentHeight + 2 * padY) + 'px';
+    const contentHeight = rows.length > 0 ? top - gap : 0;
+    dom.gallery.style.height = contentHeight + 2 * paddingY + 'px';
   };
 
-  /** Several tiles can arrive in the same frame: lay out only once. */
-  let layoutQueued = false;
   const scheduleLayout = () => {
-    if (layoutQueued) return;
-    layoutQueued = true;
-    requestAnimationFrame(() => { if (layoutQueued) layoutRows(); });
+    if (state.layoutQueued) return;
+
+    state.layoutQueued = true;
+    requestAnimationFrame(() => {
+      if (state.layoutQueued) layoutRows();
+    });
   };
 
   const handleResize = () => {
-    if (gallery.clientWidth !== state.galleryWidth) layoutRows(); // height-only changes are ignored
+    if (dom.gallery.clientWidth !== state.galleryWidth) layoutRows();
   };
 
-  /* ==========================================================
-   * Video covers
-   * ========================================================== */
-  /**
-   * Loads the cover of one video (its first frame).
-   * Resolves to the <video> element, or null on failure/timeout.
-   */
   const loadVideo = (entry) => new Promise((resolve) => {
     const video = document.createElement('video');
-    let frameTimer = 0;
+    let graceTimer = 0;
 
     const settle = (loaded) => {
-      clearTimeout(timer);
-      clearTimeout(frameTimer);
+      clearTimeout(timeoutTimer);
+      clearTimeout(graceTimer);
       video.onerror = video.onloadedmetadata = video.onloadeddata = null;
 
       const valid = loaded && video.videoWidth > 0 && video.videoHeight > 0;
+
       if (!valid) {
-        video.removeAttribute('src'); // cancel a download that is still running
+        video.removeAttribute('src');
         video.load();
       }
+
       resolve(valid ? video : null);
     };
 
-    const timer = setTimeout(() => settle(false), CONFIG.videoTimeout);
+    const timeoutTimer = setTimeout(() => settle(false), CONFIG.videoTimeout);
 
     video.muted = true;
     video.setAttribute('muted', '');
@@ -1069,11 +965,11 @@
     video.draggable = false;
 
     video.onerror = () => settle(false);
-    // some browsers never fire "loadeddata" without playback: accept the metadata after a short wait
-    video.onloadedmetadata = () => { frameTimer = setTimeout(() => settle(true), 1500); };
+    video.onloadedmetadata = () => {
+      graceTimer = setTimeout(() => settle(true), CONFIG.metadataGraceMs);
+    };
     video.onloadeddata = () => settle(true);
 
-    // "#t=0.1" makes the browser show a real frame instead of a black rectangle
     video.src = entry.url + (entry.url.includes('#') ? '' : '#t=0.1');
   });
 
@@ -1095,470 +991,396 @@
   };
 
   const createTile = (video, entry, index) => {
-    const el = document.createElement('figure');
-    el.className = 'tile';
-    el.tabIndex = 0;
-    el.setAttribute('role', 'button');
-    el.setAttribute('aria-label', 'Play video: ' + entry.category);
-    el.append(video, createBadge(entry.category), createPlayIcon());
+    const element = document.createElement('figure');
+    element.className = 'tile';
+    element.tabIndex = 0;
+    element.setAttribute('role', 'button');
+    element.setAttribute('aria-label', 'Play video: ' + entry.category);
+    element.append(video, createBadge(entry.category), createPlayIcon());
 
     const item = {
-      el,
+      element,
+      index,
       ratio: video.videoWidth / video.videoHeight,
-      index,                      // position inside the page (url.txt order)
       url: entry.url,
-      category: entry.category,
-      cast: entry.cast
+      category: entry.category
     };
-    itemByElement.set(el, item);
+
+    itemByElement.set(element, item);
     return item;
   };
 
-  /* ==========================================================
-   * Pages & URL (?page=N)
-   * ========================================================== */
   const getPageFromUrl = () => {
     const value = parseInt(new URLSearchParams(location.search).get(PAGE_PARAM), 10);
     return Number.isFinite(value) ? value : 1;
   };
 
-  /** Builds the URL for a page while keeping any other query parameters. Page 1 gets a clean URL. */
-  const buildPageUrl = (page) => {
+  const getVideoFromUrl = () => {
+    const value = parseInt(new URLSearchParams(location.search).get(VIDEO_PARAM), 10);
+    return Number.isInteger(value) && value >= 1 && value <= state.entries.length ? value : null;
+  };
+
+  const pageOfVideo = (number) => Math.ceil(number / CONFIG.perPage);
+
+  const videoNumber = (item) => (state.page - 1) * CONFIG.perPage + item.index + 1;
+
+  const buildUrl = (page, video = null) => {
     const params = new URLSearchParams(location.search);
-    LEGACY_PARAMS.forEach((name) => params.delete(name));
+
     if (page <= 1) params.delete(PAGE_PARAM);
     else params.set(PAGE_PARAM, String(page));
+
+    if (video) params.set(VIDEO_PARAM, String(video));
+    else params.delete(VIDEO_PARAM);
 
     const query = params.toString();
     return location.pathname + (query ? '?' + query : '') + location.hash;
   };
 
-  /** Page numbers to display, with `null` marking a gap ("..."). Example: 1 2 ... 9 10 11 ... 19 20 */
   const buildPageList = (current, total) => {
     const wanted = new Set([1, 2, current - 1, current, current + 1, total - 1, total]);
-    const pages = [...wanted].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
-
+    const pages = [...wanted].filter((page) => page >= 1 && page <= total).sort((a, b) => a - b);
     const result = [];
-    pages.forEach((page, i) => {
-      if (i > 0) {
-        const diff = page - pages[i - 1];
-        if (diff === 2) result.push(page - 1); // a single hidden page is shown instead of "..."
-        else if (diff > 2) result.push(null);
+
+    pages.forEach((page, index) => {
+      if (index > 0) {
+        const difference = page - pages[index - 1];
+        if (difference === 2) result.push(page - 1);
+        else if (difference > 2) result.push(null);
       }
       result.push(page);
     });
+
     return result;
   };
 
   const createPageControl = ({ page, text, label, current = false, disabled = false }) => {
-    const el = document.createElement(disabled ? 'span' : 'a');
-    el.className = 'page-btn';
-    el.textContent = text;
-    if (label) el.setAttribute('aria-label', label);
+    const element = document.createElement(disabled ? 'span' : 'a');
+    element.className = 'page-btn';
+    element.textContent = text;
+    element.setAttribute('aria-label', label);
 
     if (disabled) {
-      el.setAttribute('aria-disabled', 'true');
-      return el;
+      element.setAttribute('aria-disabled', 'true');
+      return element;
     }
 
-    el.href = buildPageUrl(page); // real URL: middle-click / "open in new tab" works
-    el.dataset.page = String(page);
-    if (current) el.setAttribute('aria-current', 'page');
-    return el;
+    element.href = buildUrl(page);
+    element.dataset.page = String(page);
+    if (current) element.setAttribute('aria-current', 'page');
+    return element;
+  };
+
+  const createPageGap = () => {
+    const gap = document.createElement('span');
+    gap.className = 'page-gap';
+    gap.setAttribute('aria-hidden', 'true');
+    gap.textContent = '–';
+    return gap;
   };
 
   const renderPagination = () => {
     const { page, totalPages } = state;
 
-    pagination.hidden = totalPages <= 1;
+    dom.pagination.hidden = totalPages <= 1;
     if (totalPages <= 1) return;
 
     const controls = [
-      createPageControl({
-        page: page - 1, text: 'Prev', label: 'Previous page', disabled: page === 1
-      })
+      createPageControl({ page: page - 1, text: 'Prev', label: 'Previous page', disabled: page === 1 })
     ];
 
     for (const entry of buildPageList(page, totalPages)) {
-      if (entry === null) {
-        const gap = document.createElement('span');
-        gap.className = 'page-gap';
-        gap.setAttribute('aria-hidden', 'true');
-        gap.textContent = '\u2013';
-        controls.push(gap);
-      } else {
-        controls.push(createPageControl({
-          page: entry, text: String(entry), label: 'Page ' + entry, current: entry === page
-        }));
-      }
+      controls.push(entry === null
+        ? createPageGap()
+        : createPageControl({ page: entry, text: String(entry), label: 'Page ' + entry, current: entry === page }));
     }
 
-    controls.push(createPageControl({
-      page: page + 1, text: 'Next', label: 'Next page', disabled: page === totalPages
-    }));
+    controls.push(
+      createPageControl({ page: page + 1, text: 'Next', label: 'Next page', disabled: page === totalPages })
+    );
 
-    pageList.replaceChildren(...controls);
+    dom.pageList.replaceChildren(...controls);
   };
 
   const updateTitle = () => {
     document.title = state.page > 1 ? BASE_TITLE + ' - Page ' + state.page : BASE_TITLE;
   };
 
-  /** Clears the gallery and loads every video cover of the current page. */
   const renderPage = async () => {
     const token = ++state.loadToken;
     if (isLightboxOpen()) closeLightbox();
 
     const start = (state.page - 1) * CONFIG.perPage;
-    state.pageEntries = state.entries.slice(start, start + CONFIG.perPage);
-    state.items = [];
+    const queue = state.entries
+      .slice(start, start + CONFIG.perPage)
+      .map((entry, index) => ({ entry, index }));
 
-    messageEl.hidden = true;
-    gallery.replaceChildren();
+    state.items = [];
+    dom.message.hidden = true;
+    dom.gallery.replaceChildren();
     layoutRows();
     renderPagination();
     updateTitle();
-    scroller.scrollTo(0, 0);
+    dom.scroller.scrollTo(0, 0);
     setLoading(true);
 
-    const queue = state.pageEntries.map((entry, index) => ({ entry, index }));
-
     await runPool(queue, CONFIG.concurrency, async ({ entry, index }) => {
-      if (token !== state.loadToken) return; // the user already moved to another page
+      if (token !== state.loadToken) return;
 
       const video = await loadVideo(entry);
       if (!video || token !== state.loadToken) return;
 
       const item = createTile(video, entry, index);
       state.items.push(item);
-      gallery.appendChild(item.el);
+      dom.gallery.appendChild(item.element);
       scheduleLayout();
+
+      if (state.pendingIndex === index) {
+        state.pendingIndex = null;
+        openLightbox(item, false);
+      }
     });
 
     if (token !== state.loadToken) return;
-    layoutRows(); // final layout with every cover of the page
+
+    layoutRows();
+
+    if (state.pendingIndex !== null) {
+      state.pendingIndex = null;
+      history.replaceState(history.state, '', buildUrl(state.page));
+    }
 
     setLoading(false);
     if (state.items.length === 0) showMessage(MESSAGES.allFailed);
   };
 
-  /**
-   * Shows a page.
-   * mode: 'push'    -> add a history entry (normal navigation, Back button works)
-   *       'replace' -> rewrite the current history entry (first load: also fixes an invalid URL)
-   *       'pop'     -> browser Back / Forward: the URL is already set, only normalise it
-   */
-  const showPage = (requested, mode) => {
+  const showPage = (requested, mode, video = null) => {
     const page = clamp(requested, 1, state.totalPages);
     if (mode !== 'replace' && page === state.page) return;
 
     state.page = page;
+    state.pendingIndex = video ? (video - 1) % CONFIG.perPage : null;
 
-    const url = buildPageUrl(page);
+    const url = buildUrl(page, video);
     if (mode === 'push') history.pushState(null, '', url);
-    else history.replaceState(null, '', url);
+    else history.replaceState(mode === 'pop' ? history.state : null, '', url);
 
     renderPage();
   };
 
-  /** Browser Back / Forward. */
   const handlePopState = () => {
     if (state.entries.length === 0) return;
-    showPage(getPageFromUrl(), 'pop');
-  };
 
-  /* ==========================================================
-   * Navbar & theme
-   * ========================================================== */
-  const THEME_KEY = 'sb99-theme';
-  const THEME_COLORS = Object.freeze({ light: '#ececea', dark: '#0e0e0e' });
-  const MOBILE_NAV_QUERY = '(max-width: 720px)'; // keep in sync with the CSS breakpoint
+    const video = getVideoFromUrl();
+    const page = clamp(video ? pageOfVideo(video) : getPageFromUrl(), 1, state.totalPages);
+
+    if (page !== state.page) {
+      showPage(page, 'pop', video);
+      return;
+    }
+
+    if (!video) {
+      if (isLightboxOpen()) closeLightbox();
+      return;
+    }
+
+    const index = (video - 1) % CONFIG.perPage;
+    const item = state.items.find((candidate) => candidate.index === index);
+
+    if (item) {
+      if (!isLightboxOpen()) openLightbox(item, false);
+      else if (state.activeItem !== item) showItem(item);
+    } else if (state.loading) {
+      state.pendingIndex = index;
+    }
+  };
 
   const currentTheme = () =>
     document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
 
-  /** Updates everything that depends on the active theme (button label, browser UI color). */
   const syncThemeControls = () => {
     const theme = currentTheme();
-    themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
-    themeColorMeta.content = THEME_COLORS[theme];
+    dom.themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    dom.themeColorMeta.content = THEME_COLORS[theme];
+  };
+
+  const saveTheme = (theme) => {
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      return;
+    }
   };
 
   const setTheme = (theme) => {
     document.documentElement.dataset.theme = theme;
-    try {
-      localStorage.setItem(THEME_KEY, theme);
-    } catch {
-      /* storage blocked (private mode): the theme still works for this visit */
-    }
+    saveTheme(theme);
     syncThemeControls();
   };
 
-  const isMenuOpen = () => siteNav.classList.contains('is-open');
+  const isMenuOpen = () => dom.nav.classList.contains('is-open');
 
   const setMenuOpen = (open) => {
-    siteNav.classList.toggle('is-open', open);
-    navToggle.setAttribute('aria-expanded', String(open));
-    navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    dom.nav.classList.toggle('is-open', open);
+    dom.navToggle.setAttribute('aria-expanded', String(open));
+    dom.navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  };
+
+  const handleNavClick = (event) => {
+    const link = closestFromEvent(event, 'a');
+    if (!link) return;
+
+    if (link.getAttribute('href') === '#') {
+      event.preventDefault();
+    } else if (link.hasAttribute('data-home') && !isModifiedClick(event) && state.entries.length > 0) {
+      event.preventDefault();
+      if (state.page === 1) dom.scroller.scrollTo({ top: 0, behavior: 'smooth' });
+      else showPage(1, 'push');
+    }
+
+    setMenuOpen(false);
+  };
+
+  const handleOutsideClick = (event) => {
+    if (!isMenuOpen() || dom.nav.contains(event.target)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    setMenuOpen(false);
   };
 
   const bindNavbar = () => {
-    navToggle.addEventListener('click', () => setMenuOpen(!isMenuOpen()));
-    themeToggle.addEventListener('click', () => setTheme(currentTheme() === 'dark' ? 'light' : 'dark'));
-
-    // links: the title and "Home" go back to page 1; "#" links are placeholders
-    siteNav.addEventListener('click', (event) => {
-      const link = event.target instanceof Element ? event.target.closest('a') : null;
-      if (!link) return;
-
-      const plainClick = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-
-      if (link.getAttribute('href') === '#') {
-        event.preventDefault(); // placeholder page (About, Support Me): stay where we are
-      } else if (link.hasAttribute('data-home') && plainClick && state.entries.length > 0) {
-        event.preventDefault(); // back to page 1 without a full reload
-        if (state.page === 1) scroller.scrollTo({ top: 0, behavior: 'smooth' });
-        else showPage(1, 'push');
-      }
-
-      setMenuOpen(false);
-    });
-
-    // tap outside the navbar / Escape closes the dropdown; leaving the small layout resets it.
-    // Capture phase + stopPropagation: the outside tap only dismisses the menu, it does not
-    // also open the video underneath.
-    document.addEventListener('click', (event) => {
-      if (!isMenuOpen() || siteNav.contains(event.target)) return;
-      event.preventDefault();
-      event.stopPropagation();
-      setMenuOpen(false);
-    }, true);
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && isMenuOpen()) {
-        setMenuOpen(false);
-        navToggle.focus();
-      }
-    });
-
-    window.matchMedia(MOBILE_NAV_QUERY).addEventListener('change', () => setMenuOpen(false));
+    dom.navToggle.addEventListener('click', () => setMenuOpen(!isMenuOpen()));
+    dom.themeToggle.addEventListener('click', () => setTheme(currentTheme() === 'dark' ? 'light' : 'dark'));
+    dom.nav.addEventListener('click', handleNavClick);
+    document.addEventListener('click', handleOutsideClick, true);
+    window.matchMedia(CONFIG.mobileNavQuery).addEventListener('change', () => setMenuOpen(false));
   };
 
-  /* ==========================================================
-   * Lightbox (video player)
-   * ========================================================== */
-  let lastFocused = null;
+  const isLightboxOpen = () => !dom.lightbox.hidden;
 
-  const isLightboxOpen = () => !lightbox.hidden;
-
-  /** Everything behind the lightbox: keep keyboard focus and screen readers out of it. */
-  const backgroundEls = [siteNav, scroller, siteFooter];
-  const setBackgroundInert = (inert) => backgroundEls.forEach((el) => { el.inert = inert; });
-
-  /** Loaded items of the current page in url.txt order (not in load-completion order). */
-  const orderedItems = () => state.items.slice().sort((a, b) => a.index - b.index);
-
-  const neighborOf = (item, offset) => {
-    const list = orderedItems();
-    return list[list.indexOf(item) + offset] || null;
-  };
-
-  const updateLightboxControls = () => {
-    const item = state.activeItem;
-    if (!item) return;
-
-    lbPrev.hidden = !neighborOf(item, -1);
-    lbNext.hidden = !neighborOf(item, 1);
-
-    // an arrow that just disappeared may have held the focus: keep it inside the dialog
-    if (!lightbox.contains(document.activeElement)) lightbox.focus();
+  const setBackgroundInert = (inert) => {
+    [dom.nav, dom.scroller, dom.footer].forEach((element) => {
+      element.inert = inert;
+    });
   };
 
   const stopVideo = () => {
-    lightboxVideo.pause();
-    lightboxVideo.removeAttribute('src');
-    lightboxVideo.load();
-  };
-
-  const isCastOpen = () => !lbCast.hidden;
-
-  const setCastOpen = (open) => {
-    lbCast.hidden = !open;
-    lbInfo.setAttribute('aria-expanded', String(open));
-    lbInfo.setAttribute('aria-label', open ? 'Hide cast' : 'Show cast');
-  };
-
-  /** The info button only exists for videos that have a cast in url.txt. */
-  const updateCast = (item) => {
-    lbCastList.replaceChildren(...item.cast.map((name) => {
-      const li = document.createElement('li');
-      li.textContent = name;
-      return li;
-    }));
-    lbInfo.hidden = item.cast.length === 0;
-    setCastOpen(false);
+    dom.lightboxVideo.pause();
+    dom.lightboxVideo.removeAttribute('src');
+    dom.lightboxVideo.load();
   };
 
   const showItem = (item) => {
     state.activeItem = item;
-    lightboxVideo.src = item.url;
-    updateCast(item);
+    dom.lightboxVideo.src = item.url;
 
-    const playing = lightboxVideo.play();
-    if (playing) playing.catch(() => { /* autoplay blocked: the controls still work */ });
-
-    updateLightboxControls();
+    const playing = dom.lightboxVideo.play();
+    if (playing) playing.catch(() => {});
   };
 
-  const showNeighbor = (offset) => {
-    if (!state.activeItem) return;
-    const next = neighborOf(state.activeItem, offset);
-    if (next) showItem(next);
-  };
+  const openLightbox = (item, push = true) => {
+    if (push) history.pushState({ player: true }, '', buildUrl(state.page, videoNumber(item)));
 
-  const openLightbox = (item) => {
-    lastFocused = document.activeElement;
-    lightbox.hidden = false;
+    state.lastFocused = document.activeElement;
+    dom.lightbox.hidden = false;
     setMenuOpen(false);
     setBackgroundInert(true);
-    lightbox.focus();
+    dom.lightbox.focus();
     showItem(item);
   };
 
   const closeLightbox = () => {
-    const returnTo = state.activeItem && state.activeItem.el.isConnected
-      ? state.activeItem.el   // the tile of the video that was watched last
-      : lastFocused;
+    const returnTo = state.activeItem && state.activeItem.element.isConnected
+      ? state.activeItem.element
+      : state.lastFocused;
 
-    lightbox.hidden = true;
+    dom.lightbox.hidden = true;
     stopVideo();
     state.activeItem = null;
+    state.lastFocused = null;
     setBackgroundInert(false);
 
     if (returnTo && typeof returnTo.focus === 'function') returnTo.focus();
-    lastFocused = null;
   };
 
-  const tileFromEvent = (event) =>
-    event.target instanceof Element ? event.target.closest('.tile') : null;
+  const dismissLightbox = () => {
+    closeLightbox();
+
+    if (history.state && history.state.player) history.back();
+    else history.replaceState(history.state, '', buildUrl(state.page));
+  };
 
   const openTile = (tile) => {
     const item = itemByElement.get(tile);
     if (item) openLightbox(item);
   };
 
-  /* ==========================================================
-   * Event binding
-   * ========================================================== */
+  const handleGalleryClick = (event) => {
+    const tile = closestFromEvent(event, '.tile');
+    if (tile) openTile(tile);
+  };
+
+  const handleGalleryKeydown = (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    const tile = closestFromEvent(event, '.tile');
+    if (!tile) return;
+
+    event.preventDefault();
+    openTile(tile);
+  };
+
+  const handlePaginationClick = (event) => {
+    const link = closestFromEvent(event, 'a[data-page]');
+    if (!link || isModifiedClick(event)) return;
+
+    event.preventDefault();
+    showPage(Number(link.dataset.page), 'push');
+  };
+
+  const handleEscape = (event) => {
+    if (event.key !== 'Escape') return;
+
+    if (isMenuOpen()) {
+      setMenuOpen(false);
+      dom.navToggle.focus();
+    } else if (isLightboxOpen()) {
+      dismissLightbox();
+    }
+  };
+
   const bindEvents = () => {
     bindNavbar();
 
-    // click / keyboard on a tile -> open lightbox (event delegation)
-    gallery.addEventListener('click', (event) => {
-      const tile = tileFromEvent(event);
-      if (tile) openTile(tile);
+    dom.gallery.addEventListener('click', handleGalleryClick);
+    dom.gallery.addEventListener('keydown', handleGalleryKeydown);
+    dom.pagination.addEventListener('click', handlePaginationClick);
+
+    dom.lightbox.addEventListener('click', (event) => {
+      if (event.target === dom.lightbox) dismissLightbox();
     });
+    dom.lightboxClose.addEventListener('click', dismissLightbox);
+    dom.lightboxVideo.addEventListener('contextmenu', (event) => event.preventDefault());
 
-    gallery.addEventListener('keydown', (event) => {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      const tile = tileFromEvent(event);
-      if (!tile) return;
-      event.preventDefault();
-      openTile(tile);
-    });
-
-    // pagination links: navigate without a full reload (modified clicks keep the default behavior)
-    pagination.addEventListener('click', (event) => {
-      const link = event.target instanceof Element ? event.target.closest('a[data-page]') : null;
-      if (!link) return;
-      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-      event.preventDefault();
-      showPage(Number(link.dataset.page), 'push');
-    });
-
+    document.addEventListener('keydown', handleEscape);
     window.addEventListener('popstate', handlePopState);
-
-    // dark area outside the video / close button -> close
-    lightbox.addEventListener('click', (event) => {
-      if (event.target === lightbox) closeLightbox();
-    });
-    lbClose.addEventListener('click', closeLightbox);
-
-    // cast list; a second click on the button closes it
-    lbInfo.addEventListener('click', () => setCastOpen(!isCastOpen()));
-
-    // no "Save video as..." in the right-click menu either
-    lightboxVideo.addEventListener('contextmenu', (event) => event.preventDefault());
-
-    // previous / next video
-    lbPrev.addEventListener('click', () => showNeighbor(-1));
-    lbNext.addEventListener('click', () => showNeighbor(1));
-
-    // keyboard: Escape closes, arrow keys switch video
-    document.addEventListener('keydown', (event) => {
-      if (!isLightboxOpen() || event.altKey || event.ctrlKey || event.metaKey) return;
-
-      // while the player has focus, the arrow keys seek inside the video
-      const onPlayer = event.target === lightboxVideo;
-
-      if (event.key === 'Escape') {
-        if (isCastOpen()) {
-          setCastOpen(false); // first Escape closes the cast list, the second one the player
-          lbInfo.focus();
-        } else {
-          closeLightbox();
-        }
-      }
-      else if (event.key === 'ArrowLeft' && !onPlayer) showNeighbor(-1);
-      else if (event.key === 'ArrowRight' && !onPlayer) showNeighbor(1);
-    });
-
-    // touch: swipe left = next video, swipe right = previous video
-    let touchStart = null;
-
-    lightbox.addEventListener('touchstart', (event) => {
-      // a drag on the player's seek bar or on the cast list must not change the video
-      const onControls = event.target === lightboxVideo ||
-        (event.target instanceof Element && event.target.closest('.lb-info, .lb-cast'));
-      touchStart = event.touches.length === 1 && !onControls
-        ? { x: event.touches[0].clientX, y: event.touches[0].clientY }
-        : null;
-    }, { passive: true });
-
-    lightbox.addEventListener('touchend', (event) => {
-      if (!touchStart) return;
-
-      const touch = event.changedTouches[0];
-      const dx = touch.clientX - touchStart.x;
-      const dy = touch.clientY - touchStart.y;
-      touchStart = null;
-
-      if (Math.abs(dx) >= CONFIG.swipeDistance && Math.abs(dx) > Math.abs(dy) * 1.5) {
-        showNeighbor(dx < 0 ? 1 : -1);
-      }
-    }, { passive: true });
-
-    // responsive layout: watch the gallery width
-    new ResizeObserver(handleResize).observe(gallery);
+    new ResizeObserver(handleResize).observe(dom.gallery);
   };
 
-  /* ==========================================================
-   * Init
-   * ========================================================== */
   const loadEntries = async () => {
-    const res = await fetchWithTimeout(CONFIG.urlListFile, CONFIG.fetchTimeout);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return parseEntries(await res.text());
+    const response = await fetchWithTimeout(CONFIG.urlListFile, CONFIG.fetchTimeout);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return parseEntries(await response.text());
   };
 
   const init = async () => {
-    yearEl.textContent = String(new Date().getFullYear()); // footer copyright year
+    dom.year.textContent = String(new Date().getFullYear());
     syncThemeControls();
-
     bindEvents();
 
     let entries;
+
     try {
       entries = await loadEntries();
     } catch {
@@ -1574,8 +1396,8 @@
     state.entries = entries;
     state.totalPages = Math.max(1, Math.ceil(entries.length / CONFIG.perPage));
 
-    // open the page from the URL (?page=N); 'replace' also cleans up an invalid value
-    showPage(getPageFromUrl(), 'replace');
+    const video = getVideoFromUrl();
+    showPage(video ? pageOfVideo(video) : getPageFromUrl(), 'replace', video);
   };
 
   init();
