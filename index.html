@@ -494,22 +494,47 @@
   }
 
   #gallery {
-    position: relative;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 22px var(--gap);
     width: 100%;
     padding: var(--gap);
   }
 
   .tile {
-    position: absolute;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
     margin: 0;
-    overflow: hidden;
-    background: var(--placeholder);
-    border-radius: var(--radius);
     outline: none;
     cursor: pointer;
     animation: tile-in .3s ease backwards;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .tile-cover {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--placeholder);
+    border-radius: var(--radius);
+  }
+
+  .tile:focus-visible .tile-cover {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  .tile-title {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   .tile :is(video, img) {
@@ -575,8 +600,12 @@
   }
 
   @media (hover: hover) {
-    .tile:hover video {
+    .tile:hover .tile-cover :is(video, img) {
       filter: brightness(.82);
+    }
+
+    .tile:hover .tile-title {
+      text-decoration: underline;
     }
 
     .tile:hover .play {
@@ -675,6 +704,9 @@
   .watch {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-areas:
+      "main side"
+      "more more";
     gap: 28px;
     align-items: start;
     max-width: 1600px;
@@ -683,7 +715,19 @@
   }
 
   .watch-main {
+    grid-area: main;
     min-width: 0;
+  }
+
+  .recommendations {
+    grid-area: side;
+    align-self: stretch;
+    overflow: hidden;
+    contain: size;
+  }
+
+  .recommendations-more {
+    grid-area: more;
   }
 
   .watch-player {
@@ -771,6 +815,15 @@
     list-style: none;
   }
 
+  .recommendation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
   .rec {
     display: flex;
     gap: 12px;
@@ -839,7 +892,15 @@
   @media (max-width: 1000px) {
     .watch {
       grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "main"
+        "side";
       gap: 24px;
+    }
+
+    .recommendations {
+      overflow: visible;
+      contain: none;
     }
   }
 
@@ -980,7 +1041,7 @@
   <p id="message" class="message" role="alert" hidden></p>
 
   <section class="watch" aria-label="Video player">
-    <div class="watch-main">
+    <div id="watch-main" class="watch-main">
       <div id="watch-player" class="watch-player">
         <video id="watch-video" controls controlsList="nodownload" playsinline preload="auto"></video>
       </div>
@@ -998,10 +1059,15 @@
       </dl>
     </div>
 
-    <aside id="recommendations" class="recommendations" aria-label="More videos" hidden>
-      <h3 class="recommendations-title">More videos</h3>
+    <aside id="recommendations" class="recommendations" aria-label="Related videos" hidden>
+      <h3 class="recommendations-title">Related videos</h3>
       <ul id="recommendation-list" class="recommendation-list"></ul>
     </aside>
+
+    <section id="recommendations-more" class="recommendations-more" aria-label="More videos" hidden>
+      <h3 class="recommendations-title">More videos</h3>
+      <ul id="recommendation-more-list" class="recommendation-grid"></ul>
+    </section>
   </section>
 </div>
 
@@ -1019,13 +1085,8 @@
     recommendations: 20,
     mobileRecommendations: 5,
     defaultCategory: 'Video',
-    rowHeightRatio: 0.2,
-    minRowHeight: 200,
-    maxRowHeight: 300,
-    minTileWidth: 190,
-    maxPerRow: 6,
-    lastRowStretch: 1.4,
     singleColumnQuery: '(max-width: 600px)',
+    watchColumnsQuery: '(min-width: 1001px)',
     mobileNavQuery: '(max-width: 720px)',
     concurrency: 6,
     fetchTimeout: 10000,
@@ -1040,7 +1101,7 @@
   const QUERY_PARAM = 'q';
   const DEFAULT_PLAYER_RATIO = '16 / 9';
   const DEFAULT_EMBED_RATIO = 16 / 9;
-  const IFRAME_SRC_PATTERN = /<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i;
+  const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
   const BASE_TITLE = document.title;
 
@@ -1089,6 +1150,9 @@
     watchCast: document.getElementById('watch-cast'),
     recommendations: document.getElementById('recommendations'),
     recommendationList: document.getElementById('recommendation-list'),
+    recommendationMore: document.getElementById('recommendations-more'),
+    recommendationMoreList: document.getElementById('recommendation-more-list'),
+    watchMain: document.getElementById('watch-main'),
     year: document.getElementById('year')
   };
 
@@ -1101,9 +1165,7 @@
     items: [],
     loadToken: 0,
     loading: false,
-    galleryWidth: 0,
     gridScroll: 0,
-    layoutQueued: false,
     watching: null
   };
 
@@ -1128,11 +1190,9 @@
 
   const toText = (value) => (typeof value === 'string' ? value.trim() : '');
 
-  const toEmbedUrl = (value) => {
-    const text = toText(value);
-    const match = text.match(IFRAME_SRC_PATTERN);
-    const source = (match ? match[1] : text).replace(/&amp;/g, '&');
-    return source.startsWith('//') ? 'https:' + source : source;
+  const detectType = (url, declared) => {
+    if (declared === 'video' || declared === 'embed') return declared;
+    return VIDEO_FILE_PATTERN.test(new URL(url).pathname) ? 'video' : 'embed';
   };
 
   const toRatio = (value) => {
@@ -1156,9 +1216,7 @@
     const entries = [];
 
     for (const raw of list) {
-      const embedUrl = raw ? toEmbedUrl(raw.embed) : '';
-      const type = embedUrl ? 'embed' : 'video';
-      const url = embedUrl || (raw ? toText(raw.url) : '');
+      const url = raw ? toText(raw.url) : '';
       if (!isHttpUrl(url)) continue;
 
       const number = entries.length + 1;
@@ -1168,9 +1226,9 @@
 
       entries.push({
         number,
-        type,
+        type: detectType(url, toText(raw.type).toLowerCase()),
         url,
-        thumbnail: isHttpUrl(toText(raw.thumbnail)) ? toText(raw.thumbnail) : '',
+        cover: isHttpUrl(toText(raw.cover)) ? toText(raw.cover) : '',
         ratio: toRatio(raw.ratio),
         title,
         category,
@@ -1228,110 +1286,9 @@
     syncProgress();
   };
 
-  const readGap = () => {
-    const value = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap'));
-    return Number.isFinite(value) ? value : 10;
-  };
-
   const isSingleColumn = () => window.matchMedia(CONFIG.singleColumnQuery).matches;
 
-  const targetRowHeight = (width) =>
-    clamp(width * CONFIG.rowHeightRatio, CONFIG.minRowHeight, CONFIG.maxRowHeight);
-
-  const maxPerRow = (width) =>
-    isSingleColumn() ? 1 : clamp(Math.round(width / CONFIG.minTileWidth), 1, CONFIG.maxPerRow);
-
   const orderedItems = () => state.items.slice().sort((a, b) => a.index - b.index);
-
-  const breakRows = (ratios, width, gap, target, perRow) => {
-    const count = ratios.length;
-    const cost = new Array(count + 1).fill(Infinity);
-    const from = new Array(count + 1).fill(0);
-    cost[0] = 0;
-
-    for (let end = 1; end <= count; end++) {
-      let ratioSum = 0;
-
-      for (let size = 1; size <= Math.min(perRow, end); size++) {
-        const start = end - size;
-        ratioSum += ratios[start];
-
-        const height = (width - (size - 1) * gap) / ratioSum;
-        if (height <= 0) continue;
-
-        const deviation = (height - target) / target;
-        const total = cost[start] + deviation * deviation;
-
-        if (total < cost[end]) {
-          cost[end] = total;
-          from[end] = start;
-        }
-      }
-    }
-
-    const rows = [];
-    for (let end = count; end > 0; end = from[end]) rows.unshift([from[end], end]);
-    return rows;
-  };
-
-  const layoutRows = () => {
-    state.layoutQueued = false;
-    state.galleryWidth = dom.gallery.clientWidth;
-    if (state.galleryWidth === 0) return;
-
-    const items = orderedItems();
-    const style = getComputedStyle(dom.gallery);
-    const paddingX = parseFloat(style.paddingLeft) || 0;
-    const paddingY = parseFloat(style.paddingTop) || 0;
-    const width = Math.max(1, state.galleryWidth - paddingX - (parseFloat(style.paddingRight) || 0));
-    const gap = readGap();
-    const target = targetRowHeight(width);
-    const singleColumn = isSingleColumn();
-    const rows = breakRows(items.map((item) => item.ratio), width, gap, target, maxPerRow(width));
-
-    let top = 0;
-
-    rows.forEach(([start, end], rowIndex) => {
-      const rowItems = items.slice(start, end);
-      const ratioSum = rowItems.reduce((sum, item) => sum + item.ratio, 0);
-      const isLastRow = rowIndex === rows.length - 1;
-      let height = (width - (rowItems.length - 1) * gap) / ratioSum;
-
-      if (!singleColumn && isLastRow && height > target * CONFIG.lastRowStretch) height = target;
-
-      let left = 0;
-
-      for (const item of rowItems) {
-        const tileWidth = item.ratio * height;
-        const { style: tileStyle } = item.element;
-
-        tileStyle.left = paddingX + left + 'px';
-        tileStyle.top = paddingY + top + 'px';
-        tileStyle.width = tileWidth + 'px';
-        tileStyle.height = height + 'px';
-
-        left += tileWidth + gap;
-      }
-
-      top += height + gap;
-    });
-
-    const contentHeight = rows.length > 0 ? top - gap : 0;
-    dom.gallery.style.height = contentHeight + 2 * paddingY + 'px';
-  };
-
-  const scheduleLayout = () => {
-    if (state.layoutQueued) return;
-
-    state.layoutQueued = true;
-    requestAnimationFrame(() => {
-      if (state.layoutQueued) layoutRows();
-    });
-  };
-
-  const handleResize = () => {
-    if (dom.gallery.clientWidth !== state.galleryWidth) layoutRows();
-  };
 
   const coverSource = (url) => url + (url.includes('#') ? '' : '#t=0.1');
 
@@ -1400,18 +1357,10 @@
   };
 
   const loadCover = async (entry) => {
-    if (entry.type === 'video') {
-      const video = await loadVideo(entry);
-      return video && { media: video, ratio: video.videoWidth / video.videoHeight };
-    }
+    const image = entry.cover ? await loadImage(entry.cover) : null;
+    if (image) return image;
 
-    const image = entry.thumbnail ? await loadImage(entry.thumbnail) : null;
-    const imageRatio = image ? image.naturalWidth / image.naturalHeight : 0;
-
-    return {
-      media: image || createCoverFallback(),
-      ratio: entry.ratio || imageRatio || DEFAULT_EMBED_RATIO
-    };
+    return entry.type === 'video' ? loadVideo(entry) : createCoverFallback();
   };
 
   const createBadge = (text) => {
@@ -1431,15 +1380,23 @@
     return icon;
   };
 
-  const createTile = (media, ratio, entry, index) => {
+  const createTile = (media, entry, index) => {
+    const cover = document.createElement('div');
+    cover.className = 'tile-cover';
+    cover.append(media, createBadge(entry.category), createPlayIcon());
+
+    const title = document.createElement('figcaption');
+    title.className = 'tile-title';
+    title.textContent = entry.title;
+
     const element = document.createElement('figure');
     element.className = 'tile';
     element.tabIndex = 0;
     element.setAttribute('role', 'button');
     element.setAttribute('aria-label', 'Play video: ' + entry.title);
-    element.append(media, createBadge(entry.category), createPlayIcon());
+    element.append(cover, title);
 
-    const item = { element, index, entry, ratio };
+    const item = { element, index, entry };
 
     itemByElement.set(element, item);
     return item;
@@ -1570,7 +1527,6 @@
     state.items = [];
     dom.message.hidden = true;
     dom.gallery.replaceChildren();
-    layoutRows();
     renderPagination();
     dom.scroller.scrollTo(0, 0);
     setLoading(queue.length > 0);
@@ -1581,15 +1537,14 @@
       const cover = await loadCover(entry);
       if (!cover || token !== state.loadToken) return;
 
-      const item = createTile(cover.media, cover.ratio, entry, index);
+      const item = createTile(cover, entry, index);
       state.items.push(item);
-      dom.gallery.appendChild(item.element);
-      scheduleLayout();
+      const next = orderedItems().find((other) => other.index > index);
+      dom.gallery.insertBefore(item.element, next ? next.element : null);
     });
 
     if (token !== state.loadToken) return;
 
-    layoutRows();
     setLoading(false);
     if (queue.length > 0 && state.items.length === 0) showMessage(MESSAGES.allFailed);
   };
@@ -1661,19 +1616,21 @@
   };
 
   const createRecommendationCover = (entry) => {
-    if (entry.type === 'video') {
+    const fallbackCover = () => {
+      if (entry.type !== 'video') return createCoverFallback();
+
       const video = createCoverVideo();
       video.src = coverSource(entry.url);
       return video;
-    }
+    };
 
-    if (!entry.thumbnail) return createCoverFallback();
+    if (!entry.cover) return fallbackCover();
 
     const image = new Image();
     image.alt = '';
     image.draggable = false;
-    image.onerror = () => image.replaceWith(createCoverFallback());
-    image.src = entry.thumbnail;
+    image.onerror = () => image.replaceWith(fallbackCover());
+    image.src = entry.cover;
     return image;
   };
 
@@ -1704,11 +1661,29 @@
     return item;
   };
 
+  const distributeRecommendations = () => {
+    const items = [...dom.recommendationList.children, ...dom.recommendationMoreList.children];
+    dom.recommendationList.replaceChildren(...items);
+    dom.recommendationMoreList.replaceChildren();
+    dom.recommendationMore.hidden = true;
+
+    if (!isWatching() || !window.matchMedia(CONFIG.watchColumnsQuery).matches) return;
+
+    const limit = dom.recommendations.getBoundingClientRect().bottom;
+    const overflowIndex = items.findIndex((item) => item.getBoundingClientRect().bottom > limit);
+    if (overflowIndex === -1) return;
+
+    dom.recommendationMoreList.replaceChildren(...items.slice(overflowIndex));
+    dom.recommendationMore.hidden = false;
+  };
+
   const renderRecommendations = (entry) => {
     const list = buildRecommendations(entry);
 
     dom.recommendationList.replaceChildren(...list.map(createRecommendation));
+    dom.recommendationMoreList.replaceChildren();
     dom.recommendations.hidden = list.length === 0;
+    distributeRecommendations();
   };
 
   const renderWatchDetails = (entry) => {
@@ -1743,6 +1718,7 @@
 
     stopWatchVideo();
     dom.recommendationList.replaceChildren();
+    dom.recommendationMoreList.replaceChildren();
     dom.scroller.classList.remove('is-watching');
     syncProgress();
 
@@ -1766,7 +1742,6 @@
       return;
     }
 
-    layoutRows();
     if (wasWatching) dom.scroller.scrollTo(0, state.gridScroll);
   };
 
@@ -1991,6 +1966,7 @@
     dom.gallery.addEventListener('keydown', handleGalleryKeydown);
     dom.pagination.addEventListener('click', handlePaginationClick);
     dom.recommendationList.addEventListener('click', handleRecommendationClick);
+    dom.recommendationMoreList.addEventListener('click', handleRecommendationClick);
     dom.watchMeta.addEventListener('click', handleMetaClick);
 
     dom.watchVideo.addEventListener('loadedmetadata', handleMetadata);
@@ -2000,7 +1976,7 @@
     window.addEventListener('popstate', () => {
       if (state.entries.length > 0) applyRoute();
     });
-    new ResizeObserver(handleResize).observe(dom.gallery);
+    new ResizeObserver(distributeRecommendations).observe(dom.watchMain);
   };
 
   const loadEntries = async () => {
