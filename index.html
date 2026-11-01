@@ -19,7 +19,7 @@
 <link rel="icon" href="data:," />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=Syne:wght@700;800&amp;display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=Bricolage+Grotesque:wght@700;800&amp;display=swap" />
 <style>
   /* ================= Design tokens =================
      Monochrome on purpose: the videos bring the color.
@@ -45,7 +45,7 @@
     --footer-h:      42px;     /* height of the fixed footer (safe area is added on top) */
 
     --font:    "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-display: "Syne", var(--font);
+    --font-display: "Bricolage Grotesque", var(--font);
   }
 
   :root[data-theme="dark"] {
@@ -134,9 +134,9 @@
     flex: none;
     color: var(--ink);
     font-family: var(--font-display);
-    font-size: 25px;
+    font-size: 26px;
     font-weight: 800;
-    letter-spacing: -.035em;
+    letter-spacing: -.03em;
     line-height: 1;
     text-decoration: none;
     white-space: nowrap;
@@ -583,36 +583,6 @@
   .lb-prev { left: max(14px, env(safe-area-inset-left)); }
   .lb-next { right: max(14px, env(safe-area-inset-right)); }
 
-  /* top-left: category of the playing video, with the position ("3 / 30") under it */
-  .lb-info {
-    position: absolute;
-    top: max(14px, env(safe-area-inset-top));
-    left: max(18px, env(safe-area-inset-left));
-    z-index: 2;
-    max-width: calc(100% - 100px);
-    color: #f1f1ee;
-    pointer-events: none;
-  }
-
-  .lb-title {
-    margin: 0;
-    overflow: hidden;
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -.02em;
-    line-height: 1.15;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .lb-counter {
-    margin: 4px 0 0;
-    color: rgba(241, 241, 238, .65);
-    font-size: 13px;
-    font-variant-numeric: tabular-nums;
-  }
-
   /* ================= Error / info message ================= */
   .message {
     width: min(560px, calc(100% - 2 * var(--gap)));
@@ -698,11 +668,6 @@
 <p id="message" class="message" role="alert" hidden></p>
 
 <div id="lightbox" role="dialog" aria-modal="true" aria-label="Video player" tabindex="-1" hidden>
-  <div class="lb-info">
-    <p id="lb-title" class="lb-title"></p>
-    <p id="lb-counter" class="lb-counter" aria-live="polite"></p>
-  </div>
-
   <button id="lb-close" class="lb-btn lb-close" type="button" aria-label="Close player" title="Close">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -795,8 +760,6 @@
   const lbClose     = document.getElementById('lb-close');
   const lbPrev      = document.getElementById('lb-prev');
   const lbNext      = document.getElementById('lb-next');
-  const lbCounter   = document.getElementById('lb-counter');
-  const lbTitle     = document.getElementById('lb-title');
 
   /* ==========================================================
    * State
@@ -1322,8 +1285,6 @@
 
     lbPrev.hidden = !neighborOf(item, -1);
     lbNext.hidden = !neighborOf(item, 1);
-    lbTitle.textContent = item.category;
-    lbCounter.textContent = (item.index + 1) + ' / ' + state.pageEntries.length;
 
     // an arrow that just disappeared may have held the focus: keep it inside the dialog
     if (!lightbox.contains(document.activeElement)) lightbox.focus();
