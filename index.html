@@ -512,7 +512,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .tile video {
+  .tile :is(video, img) {
     display: block;
     width: 100%;
     height: 100%;
@@ -521,6 +521,14 @@
     border-radius: inherit;
     pointer-events: none;
     transition: filter .2s ease;
+  }
+
+  .cover-fallback {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--placeholder);
+    pointer-events: none;
   }
 
   .badge {
@@ -687,12 +695,17 @@
     border-radius: var(--radius);
   }
 
-  .watch-player video {
+  .watch-player.is-embed video {
+    display: none;
+  }
+
+  .watch-player :is(video, iframe) {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: contain;
     background: #000;
+    border: 0;
   }
 
   .watch-title {
@@ -780,7 +793,7 @@
     border-radius: var(--radius);
   }
 
-  .rec-thumb video {
+  .rec-thumb :is(video, img) {
     display: block;
     width: 100%;
     height: 100%;
@@ -814,7 +827,7 @@
   }
 
   @media (hover: hover) {
-    .rec:hover .rec-thumb video {
+    .rec:hover .rec-thumb :is(video, img) {
       filter: brightness(.82);
     }
 
@@ -861,8 +874,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .tile video,
-    .rec-thumb video,
+    .tile :is(video, img),
+    .rec-thumb :is(video, img),
     .play,
     .page-btn,
     .nav-btn,
@@ -1026,6 +1039,9 @@
   const VIDEO_PARAM = 'video';
   const QUERY_PARAM = 'q';
   const DEFAULT_PLAYER_RATIO = '16 / 9';
+  const DEFAULT_EMBED_RATIO = 16 / 9;
+  const IFRAME_SRC_PATTERN = /<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i;
+  const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
   const BASE_TITLE = document.title;
 
   const MESSAGES = Object.freeze({
@@ -1112,6 +1128,19 @@
 
   const toText = (value) => (typeof value === 'string' ? value.trim() : '');
 
+  const toEmbedUrl = (value) => {
+    const text = toText(value);
+    const match = text.match(IFRAME_SRC_PATTERN);
+    const source = (match ? match[1] : text).replace(/&amp;/g, '&');
+    return source.startsWith('//') ? 'https:' + source : source;
+  };
+
+  const toRatio = (value) => {
+    const parts = String(value ?? '').split(/[:/x]/).map(Number);
+    const ratio = parts.length === 2 ? parts[0] / parts[1] : parts[0];
+    return Number.isFinite(ratio) && ratio > 0 ? ratio : 0;
+  };
+
   const toCastList = (value) => {
     const names = Array.isArray(value) ? value : typeof value === 'string' ? value.split(',') : [];
     return names.map(toText).filter(Boolean);
@@ -1127,7 +1156,9 @@
     const entries = [];
 
     for (const raw of list) {
-      const url = raw ? toText(raw.url) : '';
+      const embedUrl = raw ? toEmbedUrl(raw.embed) : '';
+      const type = embedUrl ? 'embed' : 'video';
+      const url = embedUrl || (raw ? toText(raw.url) : '');
       if (!isHttpUrl(url)) continue;
 
       const number = entries.length + 1;
@@ -1137,7 +1168,10 @@
 
       entries.push({
         number,
+        type,
         url,
+        thumbnail: isHttpUrl(toText(raw.thumbnail)) ? toText(raw.thumbnail) : '',
+        ratio: toRatio(raw.ratio),
         title,
         category,
         cast,
@@ -1341,6 +1375,45 @@
     video.src = coverSource(entry.url);
   });
 
+  const loadImage = (url) => new Promise((resolve) => {
+    const image = new Image();
+    image.alt = '';
+    image.draggable = false;
+
+    const timeoutTimer = setTimeout(() => settle(null), CONFIG.videoTimeout);
+
+    const settle = (result) => {
+      clearTimeout(timeoutTimer);
+      image.onload = image.onerror = null;
+      resolve(result);
+    };
+
+    image.onload = () => settle(image.naturalWidth > 0 ? image : null);
+    image.onerror = () => settle(null);
+    image.src = url;
+  });
+
+  const createCoverFallback = () => {
+    const fallback = document.createElement('span');
+    fallback.className = 'cover-fallback';
+    return fallback;
+  };
+
+  const loadCover = async (entry) => {
+    if (entry.type === 'video') {
+      const video = await loadVideo(entry);
+      return video && { media: video, ratio: video.videoWidth / video.videoHeight };
+    }
+
+    const image = entry.thumbnail ? await loadImage(entry.thumbnail) : null;
+    const imageRatio = image ? image.naturalWidth / image.naturalHeight : 0;
+
+    return {
+      media: image || createCoverFallback(),
+      ratio: entry.ratio || imageRatio || DEFAULT_EMBED_RATIO
+    };
+  };
+
   const createBadge = (text) => {
     const badge = document.createElement('span');
     badge.className = 'badge';
@@ -1358,15 +1431,15 @@
     return icon;
   };
 
-  const createTile = (video, entry, index) => {
+  const createTile = (media, ratio, entry, index) => {
     const element = document.createElement('figure');
     element.className = 'tile';
     element.tabIndex = 0;
     element.setAttribute('role', 'button');
     element.setAttribute('aria-label', 'Play video: ' + entry.title);
-    element.append(video, createBadge(entry.category), createPlayIcon());
+    element.append(media, createBadge(entry.category), createPlayIcon());
 
-    const item = { element, index, entry, ratio: video.videoWidth / video.videoHeight };
+    const item = { element, index, entry, ratio };
 
     itemByElement.set(element, item);
     return item;
@@ -1505,10 +1578,10 @@
     await runPool(queue, CONFIG.concurrency, async ({ entry, index }) => {
       if (token !== state.loadToken) return;
 
-      const video = await loadVideo(entry);
-      if (!video || token !== state.loadToken) return;
+      const cover = await loadCover(entry);
+      if (!cover || token !== state.loadToken) return;
 
-      const item = createTile(video, entry, index);
+      const item = createTile(cover.media, cover.ratio, entry, index);
       state.items.push(item);
       dom.gallery.appendChild(item.element);
       scheduleLayout();
@@ -1525,6 +1598,33 @@
     dom.watchVideo.pause();
     dom.watchVideo.removeAttribute('src');
     dom.watchVideo.load();
+    dom.watchPlayer.querySelector('iframe')?.remove();
+    dom.watchPlayer.classList.remove('is-embed');
+  };
+
+  const createEmbedFrame = (entry) => {
+    const frame = document.createElement('iframe');
+    frame.title = entry.title;
+    frame.allow = EMBED_ALLOW;
+    frame.allowFullscreen = true;
+    frame.referrerPolicy = 'strict-origin-when-cross-origin';
+    frame.src = entry.url;
+    return frame;
+  };
+
+  const playEntry = (entry) => {
+    stopWatchVideo();
+
+    if (entry.type === 'embed') {
+      dom.watchPlayer.classList.add('is-embed');
+      dom.watchPlayer.style.aspectRatio = String(entry.ratio || DEFAULT_EMBED_RATIO);
+      dom.watchPlayer.append(createEmbedFrame(entry));
+      return;
+    }
+
+    dom.watchPlayer.style.aspectRatio = DEFAULT_PLAYER_RATIO;
+    dom.watchVideo.src = entry.url;
+    dom.watchVideo.play().catch(() => {});
   };
 
   const createMetaLink = (text) => {
@@ -1560,13 +1660,27 @@
     return meta;
   };
 
-  const createRecommendation = (entry) => {
-    const cover = createCoverVideo();
-    cover.src = coverSource(entry.url);
+  const createRecommendationCover = (entry) => {
+    if (entry.type === 'video') {
+      const video = createCoverVideo();
+      video.src = coverSource(entry.url);
+      return video;
+    }
 
+    if (!entry.thumbnail) return createCoverFallback();
+
+    const image = new Image();
+    image.alt = '';
+    image.draggable = false;
+    image.onerror = () => image.replaceWith(createCoverFallback());
+    image.src = entry.thumbnail;
+    return image;
+  };
+
+  const createRecommendation = (entry) => {
     const thumbnail = document.createElement('span');
     thumbnail.className = 'rec-thumb';
-    thumbnail.append(cover);
+    thumbnail.append(createRecommendationCover(entry));
 
     const title = document.createElement('span');
     title.className = 'rec-title';
@@ -1614,9 +1728,7 @@
     dom.scroller.classList.add('is-watching');
     syncProgress();
 
-    dom.watchPlayer.style.aspectRatio = DEFAULT_PLAYER_RATIO;
-    dom.watchVideo.src = entry.url;
-    dom.watchVideo.play().catch(() => {});
+    playEntry(entry);
 
     renderWatchDetails(entry);
     renderRecommendations(entry);
