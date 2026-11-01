@@ -318,19 +318,6 @@
     display: none;
   }
 
-  .search-close {
-    height: 40px;
-    padding: 0 4px 0 12px;
-    border: 0;
-    background: transparent;
-    color: var(--ink);
-    font: inherit;
-    font-size: 15px;
-    font-weight: 500;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-
   :root[data-theme="dark"] .theme-toggle .icon-moon {
     display: none;
   }
@@ -387,6 +374,10 @@
 
     .site-nav.is-searching .search-close {
       display: inline-flex;
+    }
+
+    .site-nav.is-searching .search-clear {
+      display: none;
     }
 
     .nav-menu {
@@ -921,7 +912,12 @@
       </button>
     </div>
 
-    <button id="search-close" class="search-close" type="button">Cancel</button>
+    <button id="search-close" class="nav-btn search-close" type="button" aria-label="Close search">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 6l12 12" /><path d="M18 6L6 18" />
+      </svg>
+    </button>
   </form>
 
   <button id="theme-toggle" class="nav-btn theme-toggle" type="button"
@@ -959,13 +955,13 @@
       <h2 id="watch-title" class="watch-title" tabindex="-1"></h2>
 
       <dl id="watch-meta" class="watch-meta">
-        <div class="watch-meta-row">
-          <dt>Category</dt>
-          <dd id="watch-category"></dd>
-        </div>
         <div id="watch-cast-row" class="watch-meta-row" hidden>
           <dt>Cast</dt>
           <dd id="watch-cast"></dd>
+        </div>
+        <div class="watch-meta-row">
+          <dt>Category</dt>
+          <dd id="watch-category"></dd>
         </div>
       </dl>
     </div>
@@ -1536,6 +1532,13 @@
     return [...sameCategory, ...otherCategories].slice(0, CONFIG.recommendations);
   };
 
+  const createRecommendationMeta = (text) => {
+    const meta = document.createElement('span');
+    meta.className = 'rec-meta';
+    meta.textContent = text;
+    return meta;
+  };
+
   const createRecommendation = (entry) => {
     const cover = createCoverVideo();
     cover.src = coverSource(entry.url);
@@ -1548,13 +1551,12 @@
     title.className = 'rec-title';
     title.textContent = entry.title;
 
-    const category = document.createElement('span');
-    category.className = 'rec-meta';
-    category.textContent = entry.category;
-
     const info = document.createElement('span');
     info.className = 'rec-info';
-    info.append(title, category);
+    info.append(title);
+
+    if (entry.cast.length > 0) info.append(createRecommendationMeta(entry.cast.join(', ')));
+    info.append(createRecommendationMeta(entry.category));
 
     const link = document.createElement('a');
     link.className = 'rec';
@@ -1707,12 +1709,22 @@
     dom.searchInput.focus();
   };
 
+  const handleSearchCancel = () => {
+    if (dom.searchInput.value !== '') {
+      clearTimeout(state.searchTimer);
+      dom.searchInput.value = '';
+      dom.searchClear.hidden = true;
+      submitSearch('');
+    }
+    setSearching(false);
+  };
+
   const bindSearch = () => {
     dom.searchInput.addEventListener('input', handleSearchInput);
     dom.searchForm.addEventListener('submit', handleSearchSubmit);
     dom.searchClear.addEventListener('click', handleSearchClear);
     dom.searchToggle.addEventListener('click', () => setSearching(true));
-    dom.searchClose.addEventListener('click', () => setSearching(false));
+    dom.searchClose.addEventListener('click', handleSearchCancel);
   };
 
   const currentTheme = () =>
