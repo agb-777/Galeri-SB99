@@ -80,12 +80,7 @@
 
   html {
     background: var(--bg);
-    /* The browser scrollbar is hidden: a fixed navbar/footer can never cover it, so it
-       would leave a strip at the right edge. Wheel, touch, trackpad and keyboard still scroll. */
-    scrollbar-width: none;
   }
-
-  html::-webkit-scrollbar { display: none; }
 
   html,
   body {
@@ -100,17 +95,28 @@
     font-family: var(--font);
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
-    /* keep the content clear of the fixed navbar and footer */
-    padding-top: calc(var(--nav-h) + env(safe-area-inset-top));
-    padding-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
+    overflow: hidden; /* the page itself never scrolls: only .scroller does (see below) */
+  }
+
+  /* The scrolling area sits between the fixed navbar and footer. The scrollbar therefore lives
+     only there, and the navbar and footer reach both screen edges. */
+  .scroller {
+    position: fixed;
+    top: calc(var(--nav-h) + env(safe-area-inset-top));
+    right: 0;
+    bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
+    left: 0;
+    overflow-x: hidden;
+    overflow-y: scroll; /* always reserved: the layout never jumps when a page gets shorter */
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink-muted) var(--bg);
   }
 
   ::selection {
     background: var(--ink);
     color: var(--on-ink);
   }
-
-  body.no-scroll { overflow: hidden; }
 
   /* ================= Navbar (fixed top) ================= */
   .site-nav {
@@ -697,6 +703,7 @@
 </header>
 <div id="progress" class="progress" aria-hidden="true" hidden></div>
 
+<div id="scroller" class="scroller">
 <h1 class="sr-only">Galeri SB99</h1>
 <main id="gallery" aria-label="Video gallery" aria-busy="false"></main>
 
@@ -705,6 +712,7 @@
 </nav>
 
 <p id="message" class="message" role="alert" hidden></p>
+</div>
 
 <div id="lightbox" role="dialog" aria-modal="true" aria-label="Video player" tabindex="-1" hidden>
   <button id="lb-close" class="lb-btn lb-close" type="button" aria-label="Close player" title="Close">
@@ -797,6 +805,7 @@
   const navToggle   = document.getElementById('nav-toggle');
   const themeToggle = document.getElementById('theme-toggle');
   const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  const scroller    = document.getElementById('scroller');
   const gallery     = document.getElementById('gallery');
   const progressBar = document.getElementById('progress');
   const messageEl   = document.getElementById('message');
@@ -1189,7 +1198,7 @@
     rebuildLayout();
     renderPagination();
     updateTitle();
-    window.scrollTo(0, 0);
+    scroller.scrollTo(0, 0);
     setLoading(true);
 
     const queue = state.pageEntries.map((entry, index) => ({ entry, index }));
@@ -1286,7 +1295,7 @@
         event.preventDefault(); // placeholder page (About, Support Me): stay where we are
       } else if (link.hasAttribute('data-home') && plainClick && state.entries.length > 0) {
         event.preventDefault(); // back to page 1 without a full reload
-        if (state.page === 1) window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (state.page === 1) scroller.scrollTo({ top: 0, behavior: 'smooth' });
         else showPage(1, 'push');
       }
 
@@ -1321,7 +1330,7 @@
   const isLightboxOpen = () => !lightbox.hidden;
 
   /** Everything behind the lightbox: keep keyboard focus and screen readers out of it. */
-  const backgroundEls = [siteNav, gallery, pagination, siteFooter];
+  const backgroundEls = [siteNav, scroller, siteFooter];
   const setBackgroundInert = (inert) => backgroundEls.forEach((el) => { el.inert = inert; });
 
   /** Loaded items of the current page in url.txt order (not in load-completion order). */
@@ -1390,7 +1399,6 @@
     lightbox.hidden = false;
     setMenuOpen(false);
     setBackgroundInert(true);
-    document.body.classList.add('no-scroll');
     lightbox.focus();
     showItem(item);
   };
@@ -1404,7 +1412,6 @@
     stopVideo();
     state.activeItem = null;
     setBackgroundInert(false);
-    document.body.classList.remove('no-scroll');
 
     if (returnTo && typeof returnTo.focus === 'function') returnTo.focus();
     lastFocused = null;
@@ -1510,7 +1517,7 @@
       }
     }, { passive: true });
 
-    // responsive layout: watch the gallery width (also catches scrollbar changes)
+    // responsive layout: watch the gallery width
     new ResizeObserver(handleResize).observe(gallery);
   };
 
@@ -1527,8 +1534,6 @@
     yearEl.textContent = String(new Date().getFullYear()); // footer copyright year
     syncThemeControls();
 
-    // we restore the scroll position ourselves (always the top of a freshly loaded page)
-    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
     rebuildLayout();
     bindEvents();
