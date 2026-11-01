@@ -156,6 +156,7 @@
   .brand:focus-visible,
   .nav-link:focus-visible,
   .search-clear:focus-visible,
+  .search-submit:focus-visible,
   .search-close:focus-visible,
   .meta-link:focus-visible,
   .nav-btn:focus-visible,
@@ -252,7 +253,7 @@
     align-items: center;
     min-width: 0;
     height: 40px;
-    padding: 0 6px 0 14px;
+    padding: 0 6px 0 8px;
     background: var(--hover);
     border: 1px solid transparent;
     border-radius: 20px;
@@ -263,9 +264,25 @@
     border-color: var(--ink);
   }
 
-  .search-icon {
+  .search-submit {
+    display: inline-flex;
     flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
     color: var(--ink-muted);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .search-submit:hover {
+    background: var(--line);
+    color: var(--ink);
   }
 
   .search-input {
@@ -897,10 +914,12 @@
     </button>
 
     <div class="search-box">
-      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
-      </svg>
+      <button class="search-submit" type="submit" aria-label="Search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
+        </svg>
+      </button>
       <input id="search-input" class="search-input" type="search" name="q"
              placeholder="Search title, cast or category" aria-label="Search videos"
              autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
@@ -985,8 +1004,8 @@
     dataFile: 'url.json',
     perPage: 30,
     recommendations: 20,
+    mobileRecommendations: 5,
     defaultCategory: 'Video',
-    searchDelayMs: 250,
     rowHeightRatio: 0.2,
     minRowHeight: 200,
     maxRowHeight: 300,
@@ -1069,7 +1088,7 @@
     galleryWidth: 0,
     gridScroll: 0,
     layoutQueued: false,
-    searchTimer: 0
+    watching: null
   };
 
   const itemByElement = new WeakMap();
@@ -1126,8 +1145,10 @@
       });
     }
 
-    return entries;
+    return entries.reverse();
   };
+
+  const findEntry = (number) => state.entries[state.entries.length - number];
 
   const filterEntries = (query) => {
     if (!query) return state.entries;
@@ -1518,18 +1539,18 @@
   const joinWithCommas = (nodes) =>
     nodes.flatMap((node, index) => (index === 0 ? [node] : [', ', node]));
 
+  const getRecommendationLimit = () =>
+    isSingleColumn() ? CONFIG.mobileRecommendations : CONFIG.recommendations;
+
   const buildRecommendations = (entry) => {
-    const total = state.entries.length;
-    const others = [];
-
-    for (let step = 1; step < total; step++) {
-      others.push(state.entries[(entry.number - 1 + step) % total]);
-    }
-
+    const others = state.entries.filter((other) => other !== entry);
     const sameCategory = others.filter((other) => other.category === entry.category);
-    const otherCategories = others.filter((other) => other.category !== entry.category);
+    const sharedCast = others.filter(
+      (other) => other.category !== entry.category && other.cast.some((name) => entry.cast.includes(name))
+    );
+    const related = [...sameCategory, ...sharedCast];
 
-    return [...sameCategory, ...otherCategories].slice(0, CONFIG.recommendations);
+    return (related.length > 0 ? related : others).slice(0, getRecommendationLimit());
   };
 
   const createRecommendationMeta = (text) => {
@@ -1586,7 +1607,8 @@
   const showWatch = (number, query) => {
     if (!isWatching()) state.gridScroll = dom.scroller.scrollTop;
 
-    const entry = state.entries[number - 1];
+    const entry = findEntry(number);
+    state.watching = entry;
 
     normalizeUrl(buildUrl(1, number, query));
     dom.scroller.classList.add('is-watching');
@@ -1671,11 +1693,10 @@
   const submitSearch = (value) => {
     const query = normalizeQuery(value);
     const currentQuery = getQueryFromUrl();
-    const searchingInGrid = !isWatching() && currentQuery !== '';
 
     if (!isWatching() && query === currentQuery) return;
 
-    navigate(1, null, query, searchingInGrid ? 'replace' : 'push');
+    navigate(1, null, query, 'push');
   };
 
   const setSearching = (searching) => {
@@ -1688,21 +1709,15 @@
 
   const handleSearchInput = () => {
     dom.searchClear.hidden = dom.searchInput.value === '';
-
-    clearTimeout(state.searchTimer);
-    state.searchTimer = setTimeout(() => submitSearch(dom.searchInput.value), CONFIG.searchDelayMs);
   };
 
   const handleSearchSubmit = (event) => {
     event.preventDefault();
-
-    clearTimeout(state.searchTimer);
     submitSearch(dom.searchInput.value);
     dom.searchInput.blur();
   };
 
   const handleSearchClear = () => {
-    clearTimeout(state.searchTimer);
     dom.searchInput.value = '';
     dom.searchClear.hidden = true;
     submitSearch('');
@@ -1711,7 +1726,6 @@
 
   const handleSearchCancel = () => {
     if (dom.searchInput.value !== '') {
-      clearTimeout(state.searchTimer);
       dom.searchInput.value = '';
       dom.searchClear.hidden = true;
       submitSearch('');
@@ -1785,6 +1799,10 @@
     dom.themeToggle.addEventListener('click', () => setTheme(currentTheme() === 'dark' ? 'light' : 'dark'));
     dom.nav.addEventListener('click', handleNavClick);
     document.addEventListener('click', handleOutsideClick, true);
+    window.matchMedia(CONFIG.singleColumnQuery).addEventListener('change', () => {
+      if (isWatching() && state.watching) renderRecommendations(state.watching);
+    });
+
     window.matchMedia(CONFIG.mobileNavQuery).addEventListener('change', () => {
       setMenuOpen(false);
       setSearching(false);
