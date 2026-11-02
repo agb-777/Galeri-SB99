@@ -28,11 +28,7 @@
     --radius: 4px;
 
     --bg: #ececea;
-    --bar: rgba(246, 246, 244, .6);
-    --bar-strong: rgba(246, 246, 244, .94);
-    --field: rgba(255, 255, 255, .55);
-    --shine: rgba(255, 255, 255, .75);
-    --gloss: linear-gradient(to bottom, rgba(255, 255, 255, .7), rgba(255, 255, 255, .08) 60%, rgba(255, 255, 255, 0));
+    --bar: #ececea;
     --hover: #e0e0dd;
     --placeholder: #dcdcd9;
     --line: #cfcfcb;
@@ -57,11 +53,7 @@
     color-scheme: dark;
 
     --bg: #0e0e0e;
-    --bar: rgba(24, 24, 24, .58);
-    --bar-strong: rgba(20, 20, 20, .95);
-    --field: rgba(255, 255, 255, .09);
-    --shine: rgba(255, 255, 255, .16);
-    --gloss: linear-gradient(to bottom, rgba(255, 255, 255, .22), rgba(255, 255, 255, .03) 60%, rgba(255, 255, 255, 0));
+    --bar: #0e0e0e;
     --hover: #1d1d1d;
     --placeholder: #1a1a1a;
     --line: #2a2a2a;
@@ -91,6 +83,7 @@
   html {
     background: var(--bg);
   }
+
 
   html,
   body {
@@ -127,39 +120,15 @@
 
   .scroller {
     position: fixed;
-    inset: 0;
-    padding-top: calc(var(--nav-h) + env(safe-area-inset-top));
-    padding-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
+    top: calc(var(--nav-h) + env(safe-area-inset-top));
+    right: 0;
+    bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
+    left: 0;
     overflow-x: hidden;
     overflow-y: scroll;
     overscroll-behavior: contain;
-    scroll-padding-top: calc(var(--nav-h) + env(safe-area-inset-top));
-  }
-
-  @supports selector(::-webkit-scrollbar) {
-    .scroller::-webkit-scrollbar {
-      width: 12px;
-    }
-
-    .scroller::-webkit-scrollbar-track {
-      margin-top: calc(var(--nav-h) + env(safe-area-inset-top));
-      margin-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
-      background: transparent;
-    }
-
-    .scroller::-webkit-scrollbar-thumb {
-      background: var(--ink-muted);
-      background-clip: padding-box;
-      border: 3px solid transparent;
-      border-radius: 6px;
-    }
-  }
-
-  @supports not selector(::-webkit-scrollbar) {
-    .scroller {
-      scrollbar-width: thin;
-      scrollbar-color: var(--ink-muted) transparent;
-    }
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink-muted) var(--bg);
   }
 
   .site-nav {
@@ -173,11 +142,8 @@
     gap: 28px;
     height: calc(var(--nav-h) + env(safe-area-inset-top));
     padding: env(safe-area-inset-top) max(var(--gap), env(safe-area-inset-right)) 0 max(var(--gap), env(safe-area-inset-left));
-    background: var(--gloss), var(--bar);
+    background: var(--bar);
     border-bottom: 1px solid var(--line);
-    box-shadow: inset 0 1px 0 var(--shine), 0 6px 24px rgba(0, 0, 0, .06);
-    -webkit-backdrop-filter: blur(22px) saturate(1.8);
-    backdrop-filter: blur(22px) saturate(1.8);
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -189,7 +155,6 @@
     font-weight: 400;
     letter-spacing: .01em;
     line-height: 1;
-    transform: rotate(-2deg);
     text-decoration: none;
     white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
@@ -296,10 +261,9 @@
     min-width: 0;
     height: 40px;
     padding: 0 6px 0 8px;
-    background: var(--field);
-    border: 1px solid var(--line);
+    background: var(--hover);
+    border: 1px solid transparent;
     border-radius: 20px;
-    box-shadow: inset 0 1px 0 var(--shine);
     transition: border-color .15s ease;
   }
 
@@ -451,10 +415,8 @@
       align-items: stretch;
       gap: 0;
       padding: 4px max(var(--gap), env(safe-area-inset-left)) 12px;
-      background: var(--gloss), var(--bar-strong);
+      background: var(--bar);
       border-bottom: 1px solid var(--line);
-      -webkit-backdrop-filter: blur(22px) saturate(1.8);
-      backdrop-filter: blur(22px) saturate(1.8);
     }
 
     .site-nav.is-open .nav-menu {
@@ -503,11 +465,8 @@
     justify-content: center;
     height: calc(var(--footer-h) + env(safe-area-inset-bottom));
     padding: 0 var(--gap) env(safe-area-inset-bottom);
-    background: var(--gloss), var(--bar);
+    background: var(--bar);
     border-top: 1px solid var(--line);
-    box-shadow: inset 0 1px 0 var(--shine), 0 -6px 24px rgba(0, 0, 0, .05);
-    -webkit-backdrop-filter: blur(22px) saturate(1.8);
-    backdrop-filter: blur(22px) saturate(1.8);
   }
 
   .footer-text {
@@ -617,10 +576,9 @@
     max-width: calc(100% - 16px);
     padding: 5px 8px 6px;
     overflow: hidden;
-    border-radius: 4px;
-    background: var(--gloss), var(--bg);
+    border-radius: 3px;
+    background: var(--bg);
     color: var(--ink);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 2px 6px rgba(0, 0, 0, .25);
     font-size: 12.5px;
     font-weight: 600;
     letter-spacing: .005em;
@@ -651,7 +609,7 @@
   }
 
   .badge[data-genre] {
-    background: var(--gloss), var(--genre);
+    background: var(--genre);
     color: var(--genre-ink);
   }
 
@@ -665,11 +623,8 @@
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, .95), rgba(255, 255, 255, .62));
-    color: #111;
-    box-shadow: inset 0 1px 0 #fff, 0 6px 18px rgba(0, 0, 0, .35);
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
+    background: var(--bg);
+    color: var(--ink);
     transform: translate(-50%, -50%);
     pointer-events: none;
     transition: transform .2s ease;
@@ -775,11 +730,8 @@
     top: 0;
     z-index: 20;
     padding: 10px 0;
-    background: var(--gloss), var(--bar);
+    background: var(--bar);
     border-bottom: 1px solid var(--line);
-    box-shadow: inset 0 1px 0 var(--shine);
-    -webkit-backdrop-filter: blur(22px) saturate(1.8);
-    backdrop-filter: blur(22px) saturate(1.8);
   }
 
   .genre-scroll {
@@ -789,7 +741,6 @@
     padding: 0 var(--gap);
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
@@ -798,47 +749,33 @@
     display: none;
   }
 
-  .genre-scroll.is-more-end {
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
-  }
-
-  .genre-scroll.is-more-start {
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 40px);
-    mask-image: linear-gradient(to right, transparent, #000 40px);
-  }
-
-  .genre-scroll.is-more-start.is-more-end {
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
-    mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
-  }
-
   .genre-chip {
     flex: none;
     height: 34px;
     padding: 0 16px;
     border: 1px solid color-mix(in srgb, var(--genre, var(--ink)) 55%, transparent);
     border-radius: 17px;
-    background: var(--gloss), var(--field);
+    background: var(--hover);
     color: var(--ink);
-    box-shadow: inset 0 1px 0 var(--shine);
     font: inherit;
     font-size: 14px;
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
-    scroll-snap-align: center;
     transition: transform .15s ease;
     -webkit-tap-highlight-color: transparent;
   }
 
   @media (max-width: 600px) {
     .genre-scroll {
-      gap: 6px;
+      gap: 5px;
     }
 
     .genre-chip {
-      padding: 0 13px;
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 0 8px;
+      font-size: 13px;
     }
   }
 
@@ -853,9 +790,8 @@
 
   .genre-chip[aria-pressed="true"] {
     border-color: transparent;
-    background: var(--gloss), var(--genre, var(--ink));
+    background: var(--genre, var(--ink));
     color: var(--genre-ink, var(--on-ink));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 2px 8px rgba(0, 0, 0, .2);
   }
 
   .scroller.is-watching :is(#gallery, #pagination, #message, #search-status, .genre-bar) {
@@ -1347,6 +1283,7 @@
     totalPages: 1,
     perPage: 0,
     genre: '',
+    genreDragged: false,
     items: [],
     loadToken: 0,
     loading: false,
@@ -2038,13 +1975,6 @@
     if (wasWatching) dom.scroller.scrollTo(0, state.gridScroll);
   };
 
-  const syncGenreFade = () => {
-    const { scrollLeft, scrollWidth, clientWidth } = dom.genreScroll;
-
-    dom.genreScroll.classList.toggle('is-more-start', scrollLeft > 4);
-    dom.genreScroll.classList.toggle('is-more-end', scrollLeft < scrollWidth - clientWidth - 4);
-  };
-
   const centerGenreChip = (chip) => {
     const left = chip.offsetLeft - (dom.genreScroll.clientWidth - chip.offsetWidth) / 2;
     dom.genreScroll.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
@@ -2251,9 +2181,42 @@
     navigate(1, Number(link.dataset.video), getQueryFromUrl(), 'push');
   };
 
+  const bindGenreScroll = () => {
+    const scroller = dom.genreScroll;
+    let drag = null;
+
+    scroller.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse') drag = { x: event.clientX, left: scroller.scrollLeft, moved: false };
+    });
+
+    window.addEventListener('pointermove', (event) => {
+      if (!drag) return;
+
+      const distance = event.clientX - drag.x;
+      if (Math.abs(distance) > 5) drag.moved = true;
+      if (drag.moved) scroller.scrollLeft = drag.left - distance;
+    });
+
+    window.addEventListener('pointerup', () => {
+      state.genreDragged = drag !== null && drag.moved;
+      drag = null;
+      setTimeout(() => {
+        state.genreDragged = false;
+      }, 0);
+    });
+
+    scroller.addEventListener('wheel', (event) => {
+      const scrollable = scroller.scrollWidth > scroller.clientWidth;
+      if (!scrollable || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+
+      event.preventDefault();
+      scroller.scrollLeft += event.deltaY;
+    }, { passive: false });
+  };
+
   const handleGenreClick = (event) => {
     const chip = closestFromEvent(event, 'button[data-filter]');
-    if (!chip || chip.dataset.filter === getGenreFromUrl()) return;
+    if (state.genreDragged || !chip || chip.dataset.filter === getGenreFromUrl()) return;
 
     navigate(1, null, getQueryFromUrl(), 'push', chip.dataset.filter);
   };
@@ -2288,8 +2251,7 @@
     dom.recommendationMoreList.addEventListener('click', handleRecommendationClick);
     dom.watchMeta.addEventListener('click', handleMetaClick);
     dom.genreBar.addEventListener('click', handleGenreClick);
-    dom.genreScroll.addEventListener('scroll', syncGenreFade, { passive: true });
-    new ResizeObserver(syncGenreFade).observe(dom.genreScroll);
+    bindGenreScroll();
 
     dom.watchVideo.addEventListener('contextmenu', (event) => event.preventDefault());
 
