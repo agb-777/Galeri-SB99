@@ -1275,6 +1275,87 @@
       transition: none;
     }
   }
+
+  /* ===== Player loading ===== */
+  .player-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: #000 center / contain no-repeat;
+    color: #fff;
+    pointer-events: none;
+  }
+
+  .player-loading::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgb(0 0 0 / .5), rgb(0 0 0 / .7));
+  }
+
+  .player-loading-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    max-width: 34ch;
+    text-align: center;
+  }
+
+  .player-spinner {
+    animation: player-spin 1s linear infinite;
+  }
+
+  .player-loading-text {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.45;
+    text-shadow: 0 1px 8px rgb(0 0 0 / .6);
+    text-wrap: balance;
+  }
+
+  .player-retry {
+    margin-top: 4px;
+    padding: 8px 18px 9px;
+    border: 2px solid #fff;
+    border-radius: 999px;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: background .15s ease, color .15s ease;
+  }
+
+  .player-retry:hover {
+    background: #fff;
+    color: #000;
+  }
+
+  .player-retry:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+  }
+
+  @keyframes player-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 600px) {
+    .player-spinner { width: 44px; height: 44px; }
+    .player-loading-text { font-size: 14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .player-spinner { animation-duration: 3s; }
+  }
 </style>
 </head>
 <body>
@@ -1364,6 +1445,15 @@
     <div id="watch-main" class="watch-main">
       <div id="watch-player" class="watch-player">
         <video id="watch-video" controls controlsList="nodownload" playsinline preload="auto"></video>
+        <div id="player-loading" class="player-loading" role="status" aria-live="polite" hidden>
+          <div class="player-loading-body">
+            <svg class="player-spinner" viewBox="0 0 50 50" width="56" height="56" aria-hidden="true">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-dasharray="90 40" />
+            </svg>
+            <p id="player-loading-text" class="player-loading-text"></p>
+            <button id="player-retry" class="player-retry" type="button" hidden>Muat ulang</button>
+          </div>
+        </div>
       </div>
       <h2 id="watch-title" class="watch-title" tabindex="-1"></h2>
 
@@ -1471,6 +1561,9 @@
     watchTitle: document.getElementById('watch-title'),
     watchMeta: document.getElementById('watch-meta'),
     watchInfo: document.getElementById('watch-info'),
+    playerLoading: document.getElementById('player-loading'),
+    playerLoadingText: document.getElementById('player-loading-text'),
+    playerRetry: document.getElementById('player-retry'),
     infoToggle: document.getElementById('info-toggle'),
     watchCastRow: document.getElementById('watch-cast-row'),
     watchCast: document.getElementById('watch-cast'),
@@ -1560,6 +1653,7 @@
     list.forEach((raw, index) => {
       const item = raw && typeof raw === 'object' ? raw : {};
       const categories = uniqueList(toList(item.category));
+      const genre = toText(item.genre).toLowerCase();
       const url = toText(item.url);
       const type = isHttpUrl(url) ? detectType(url, toText(item.type).toLowerCase()) : null;
       const missing = findMissingKeys(item, type, categories);
@@ -1578,8 +1672,10 @@
         type,
         url,
         cover: type === 'embed' ? toText(item.cover) : '',
+        poster: isHttpUrl(toText(item.cover)) ? toText(item.cover) : '',
         title,
         categories: shownCategories,
+        genre,
         cast,
         searchText: normalizeText([title, ...shownCategories, ...cast].join(' '))
       });
@@ -1896,9 +1992,50 @@
     if (queue.length > 0 && state.items.length === 0) showMessage(MESSAGES.allFailed);
   };
 
+  const LOADING_STAGES = Object.freeze([
+    [0, 'Menghubungkan ke server…'],
+    [5000, 'Server agak lama merespons. Tunggu sebentar ya…'],
+    [15000, 'Masih menunggu server. Kalau tidak muncul, coba muat ulang.']
+  ]);
+
+  let loadingTimers = [];
+
+  const clearLoading = () => {
+    loadingTimers.forEach(clearTimeout);
+    loadingTimers = [];
+    dom.playerLoading.hidden = true;
+    dom.playerRetry.hidden = true;
+  };
+
+  const startLoading = (entry) => {
+    clearLoading();
+    dom.playerLoading.style.backgroundImage = entry.poster ? 'url(' + JSON.stringify(entry.poster) + ')' : '';
+    dom.playerLoading.hidden = false;
+
+    LOADING_STAGES.forEach(([delay, text], index) => {
+      const show = () => {
+        dom.playerLoadingText.textContent = text;
+        dom.playerRetry.hidden = index < LOADING_STAGES.length - 1;
+      };
+
+      if (delay === 0) show();
+      else loadingTimers.push(setTimeout(show, delay));
+    });
+  };
+
+  const failLoading = () => {
+    loadingTimers.forEach(clearTimeout);
+    loadingTimers = [];
+    dom.playerLoading.hidden = false;
+    dom.playerLoadingText.textContent = 'Video gagal dimuat. Periksa koneksi lu atau coba muat ulang.';
+    dom.playerRetry.hidden = false;
+  };
+
   const stopWatchVideo = () => {
+    clearLoading();
     dom.watchVideo.pause();
     dom.watchVideo.removeAttribute('src');
+    dom.watchVideo.removeAttribute('poster');
     dom.watchVideo.load();
     dom.watchPlayer.querySelector('iframe')?.remove();
     dom.watchPlayer.classList.remove('is-embed');
@@ -1910,6 +2047,7 @@
     frame.allow = EMBED_ALLOW;
     frame.allowFullscreen = true;
     frame.referrerPolicy = 'strict-origin-when-cross-origin';
+    frame.addEventListener('load', clearLoading, { once: true });
     frame.src = entry.url;
     return frame;
   };
@@ -1917,12 +2055,15 @@
   const playEntry = (entry) => {
     stopWatchVideo();
 
+    startLoading(entry);
+
     if (entry.type === 'embed') {
       dom.watchPlayer.classList.add('is-embed');
       dom.watchPlayer.append(createEmbedFrame(entry));
       return;
     }
 
+    if (entry.poster) dom.watchVideo.poster = entry.poster;
     dom.watchVideo.src = entry.url;
     dom.watchVideo.play().catch(() => {});
   };
@@ -1946,10 +2087,13 @@
     const others = state.entries.filter((other) => other !== entry);
     const shares = (a, b) => a.some((value) => b.includes(value));
     const sameCategory = others.filter((other) => shares(other.categories, entry.categories));
-    const sharedCast = others.filter(
-      (other) => shares(other.cast, entry.cast) && !sameCategory.includes(other)
+    const sameGenre = others.filter(
+      (other) => entry.genre !== '' && other.genre === entry.genre && !sameCategory.includes(other)
     );
-    const related = [...sameCategory, ...sharedCast];
+    const sharedCast = others.filter(
+      (other) => shares(other.cast, entry.cast) && !sameCategory.includes(other) && !sameGenre.includes(other)
+    );
+    const related = [...sameCategory, ...sameGenre, ...sharedCast];
 
     return (related.length > 0 ? related : others).slice(0, getRecommendationLimit());
   };
@@ -2386,6 +2530,17 @@
     dom.recommendationList.addEventListener('click', handleRecommendationClick);
     dom.recommendationMoreList.addEventListener('click', handleRecommendationClick);
     dom.watchMeta.addEventListener('click', handleMetaClick);
+    dom.playerRetry.addEventListener('click', () => {
+      if (state.watching) playEntry(state.watching);
+    });
+    dom.watchVideo.addEventListener('loadeddata', clearLoading);
+    dom.watchVideo.addEventListener('playing', clearLoading);
+    dom.watchVideo.addEventListener('waiting', () => {
+      if (state.watching && dom.watchVideo.getAttribute('src')) startLoading(state.watching);
+    });
+    dom.watchVideo.addEventListener('error', () => {
+      if (dom.watchVideo.getAttribute('src')) failLoading();
+    });
     dom.infoToggle.addEventListener('click', () => setInfoOpen(dom.infoToggle.getAttribute('aria-expanded') !== 'true', true));
 
     dom.watchVideo.addEventListener('contextmenu', (event) => event.preventDefault());
