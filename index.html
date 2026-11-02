@@ -1085,10 +1085,6 @@
           <dt>Category</dt>
           <dd id="watch-category"></dd>
         </div>
-        <div class="watch-meta-row">
-          <dt>Uploaded</dt>
-          <dd id="watch-uploaded"></dd>
-        </div>
       </dl>
     </div>
 
@@ -1120,8 +1116,6 @@
     singleColumnQuery: '(max-width: 600px)',
     watchColumnsQuery: '(min-width: 1001px)',
     mobileNavQuery: '(max-width: 720px)',
-    uploader: 'Admin',
-    dateLocale: 'en-GB',
     concurrency: 6,
     fetchTimeout: 10000,
     videoTimeout: 20000,
@@ -1134,7 +1128,6 @@
   const VIDEO_PARAM = 'video';
   const QUERY_PARAM = 'q';
   const GENRES = Object.freeze({ indo: 'Indo', jepang: 'Jepang', barat: 'Barat', china: 'China' });
-  const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
   const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
   const BASE_TITLE = document.title;
@@ -1185,7 +1178,6 @@
     watchGenre: document.getElementById('watch-genre'),
     watchCategoryRow: document.getElementById('watch-category-row'),
     watchCategory: document.getElementById('watch-category'),
-    watchUploaded: document.getElementById('watch-uploaded'),
     watchCastRow: document.getElementById('watch-cast-row'),
     watchCast: document.getElementById('watch-cast'),
     recommendations: document.getElementById('recommendations'),
@@ -1231,22 +1223,6 @@
   };
 
   const toText = (value) => (typeof value === 'string' ? value.trim() : '');
-
-  const formatUploaded = (value) => {
-    const text = toText(value);
-    const date = text ? new Date(text) : null;
-    if (!date || Number.isNaN(date.getTime())) return 'by ' + CONFIG.uploader;
-
-    const dateOnly = DATE_ONLY_PATTERN.test(text);
-    const label = new Intl.DateTimeFormat(CONFIG.dateLocale, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      ...(dateOnly ? { timeZone: 'UTC' } : { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-    }).format(date);
-
-    return 'by ' + CONFIG.uploader + ' on ' + label;
-  };
 
   const detectType = (url, declared) => {
     if (declared === 'video' || declared === 'embed') return declared;
@@ -1314,7 +1290,6 @@
         title,
         genre,
         categories: shownCategories,
-        uploaded: formatUploaded(item.date),
         cast,
         searchText: normalizeText([title, genre, ...shownCategories, ...cast].join(' '))
       });
@@ -1802,7 +1777,6 @@
     dom.watchGenre.replaceChildren(...(entry.genre ? [createMetaLink(entry.genre)] : []));
     dom.watchCategoryRow.hidden = entry.categories.length === 0;
     dom.watchCategory.replaceChildren(...joinWithCommas(entry.categories.map(createMetaLink)));
-    dom.watchUploaded.textContent = entry.uploaded;
     dom.watchCastRow.hidden = entry.cast.length === 0;
     dom.watchCast.replaceChildren(...joinWithCommas(entry.cast.map(createMetaLink)));
   };
