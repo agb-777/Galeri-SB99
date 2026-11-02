@@ -36,11 +36,6 @@
     --ink-muted: #6b6b67;
     --on-ink: #ececea;
 
-    --genre-indo: #d92d2d;
-    --genre-jepang: #2563eb;
-    --genre-barat: #1f9d55;
-    --genre-china: #f5c518;
-
     --nav-h: 60px;
     --footer-h: 42px;
 
@@ -568,51 +563,6 @@
     pointer-events: none;
   }
 
-  .badge {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
-    z-index: 1;
-    max-width: calc(100% - 16px);
-    padding: 5px 8px 6px;
-    overflow: hidden;
-    border-radius: 3px;
-    background: var(--bg);
-    color: var(--ink);
-    font-size: 12.5px;
-    font-weight: 600;
-    letter-spacing: .005em;
-    line-height: 1;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
-  [data-genre="indo"] {
-    --genre: var(--genre-indo);
-    --genre-ink: #fff;
-  }
-
-  [data-genre="jepang"] {
-    --genre: var(--genre-jepang);
-    --genre-ink: #fff;
-  }
-
-  [data-genre="barat"] {
-    --genre: var(--genre-barat);
-    --genre-ink: #fff;
-  }
-
-  [data-genre="china"] {
-    --genre: var(--genre-china);
-    --genre-ink: #111;
-  }
-
-  .badge[data-genre] {
-    background: var(--genre);
-    color: var(--genre-ink);
-  }
-
   .play {
     position: absolute;
     top: 50%;
@@ -725,76 +675,7 @@
     display: none;
   }
 
-  .genre-bar {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    padding: 10px 0;
-    background: var(--bar);
-    border-bottom: 1px solid var(--line);
-  }
-
-  .genre-scroll {
-    position: relative;
-    display: flex;
-    gap: 8px;
-    padding: 0 var(--gap);
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .genre-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  .genre-chip {
-    flex: none;
-    height: 34px;
-    padding: 0 16px;
-    border: 1px solid color-mix(in srgb, var(--genre, var(--ink)) 55%, transparent);
-    border-radius: 17px;
-    background: var(--hover);
-    color: var(--ink);
-    font: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1;
-    cursor: pointer;
-    transition: transform .15s ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  @media (max-width: 600px) {
-    .genre-scroll {
-      gap: 5px;
-    }
-
-    .genre-chip {
-      flex: 1 1 auto;
-      min-width: 0;
-      padding: 0 8px;
-      font-size: 13px;
-    }
-  }
-
-  .genre-chip:active {
-    transform: scale(.96);
-  }
-
-  .genre-chip:focus-visible {
-    outline: 2px solid var(--ink);
-    outline-offset: 2px;
-  }
-
-  .genre-chip[aria-pressed="true"] {
-    border-color: transparent;
-    background: var(--genre, var(--ink));
-    color: var(--genre-ink, var(--on-ink));
-  }
-
-  .scroller.is-watching :is(#gallery, #pagination, #message, #search-status, .genre-bar) {
+  .scroller.is-watching :is(#gallery, #pagination, #message, #search-status) {
     display: none;
   }
 
@@ -1041,17 +922,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .tile :is(video, img),
-    .rec-thumb :is(video, img),
-    .play,
-    .page-btn,
-    .nav-btn,
-    .nav-link,
-    .search-box,
-    .genre-chip,
-    .meta-link {
-      transition: none;
-    }
 
     .tile,
     .site-nav.is-open .nav-menu {
@@ -1083,29 +953,6 @@
   .search-box:focus-within {
     background: var(--bg);
     box-shadow: 0 0 0 4px var(--ring);
-  }
-
-  /* Genre chips: the dot carries the same colour as the badge on each cover */
-  .genre-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border-color: var(--line);
-    transition: background .2s var(--ease), color .2s ease, border-color .2s ease, transform .15s ease;
-  }
-
-  .genre-chip[data-genre]::before {
-    content: "";
-    flex: none;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--genre);
-  }
-
-  .genre-chip[aria-pressed="true"][data-genre]::before {
-    background: var(--genre-ink);
   }
 
   /* Tiles */
@@ -1155,12 +1002,6 @@
     letter-spacing: -.005em;
   }
 
-  .badge {
-    padding: 6px 9px 7px;
-    border-radius: 4px;
-    box-shadow: 0 2px 10px rgb(0 0 0 / .28);
-  }
-
   .play {
     background: color-mix(in srgb, var(--bg) 86%, transparent);
     -webkit-backdrop-filter: blur(8px);
@@ -1172,11 +1013,6 @@
   @media (hover: hover) {
     .brand:hover {
       transform: rotate(-2.5deg) scale(1.03);
-    }
-
-    .genre-chip[aria-pressed="false"]:hover {
-      border-color: var(--genre, var(--ink));
-      background: var(--bg);
     }
 
     .tile:hover .tile-cover :is(video, img),
@@ -1255,7 +1091,6 @@
   .scroller::-webkit-scrollbar-thumb:hover { background: var(--ink-muted); }
 
   @media (max-width: 600px) {
-    .genre-chip { gap: 6px; }
     .watch-player { border-radius: var(--radius); }
   }
 
@@ -1333,32 +1168,6 @@
     letter-spacing: .02em;
   }
 
-  /* Stickers: genre badge slapped on each cover */
-  .badge {
-    font-weight: 700;
-    box-shadow: 0 0 0 2px #fff, 0 4px 10px rgb(0 0 0 / .35);
-    transform: rotate(-2.5deg);
-    transform-origin: left bottom;
-  }
-
-  .tile:nth-child(even) .badge {
-    transform: rotate(1.5deg);
-  }
-
-  /* Chips act as stickers too: the selected one is pressed on, slightly crooked */
-  .genre-chip[aria-pressed="true"] {
-    transform: rotate(-2deg);
-    box-shadow: 3px 3px 0 var(--ink);
-  }
-
-  .genre-chip:nth-child(even)[aria-pressed="true"] {
-    transform: rotate(1.5deg);
-  }
-
-  .genre-chip:active {
-    transform: rotate(0) scale(.96);
-  }
-
   /* Posters on a wall: hard offset shadow, lifted on hover */
   .tile-cover,
   .rec-thumb {
@@ -1403,25 +1212,6 @@
     }
   }
 
-  /* ===== Info collapsible + genre di menu mobile ===== */
-  .info-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin: 10px 0 0;
-    padding: 5px 12px 6px 14px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: transparent;
-    color: var(--ink-muted);
-    font: inherit;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: color .15s ease, border-color .15s ease, background .15s ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-
   .info-toggle:hover {
     border-color: var(--ink);
     color: var(--ink);
@@ -1461,53 +1251,11 @@
     padding-top: 12px;
   }
 
-  .nav-genres {
-    display: none;
-  }
-
   .nav-toggle {
     position: relative;
   }
 
-  .nav-toggle[data-filtered]::after {
-    content: "";
-    position: absolute;
-    top: 7px;
-    right: 6px;
-    width: 9px;
-    height: 9px;
-    border: 2px solid var(--bar);
-    border-radius: 50%;
-    background: var(--genre-indo);
-  }
-
   @media (max-width: 720px) {
-    .genre-bar {
-      display: none;
-    }
-
-    .nav-genres {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 14px 0 6px;
-    }
-
-    .nav-genres::before {
-      content: "Genre";
-      flex: 0 0 100%;
-      color: var(--ink-muted);
-      font-family: var(--font-graffiti);
-      font-size: 20px;
-      letter-spacing: .03em;
-    }
-
-    .nav-genres .genre-chip {
-      flex: 0 0 auto;
-      height: 38px;
-      padding: 0 16px;
-      font-size: 15px;
-    }
 
     .nav-link[aria-current="page"]::after {
       top: 14px;
@@ -1549,13 +1297,6 @@
   <nav id="nav-menu" class="nav-menu" aria-label="Menu utama">
     <a class="nav-link" href="./" data-home aria-current="page">Beranda</a>
     <a class="nav-link" href="#">Dukung Saya</a>
-    <div id="nav-genres" class="nav-genres" role="group" aria-label="Filter genre">
-      <button class="genre-chip" type="button" data-filter="" aria-pressed="true">Semua</button>
-      <button class="genre-chip" type="button" data-filter="indo" data-genre="indo" aria-pressed="false">Indo</button>
-      <button class="genre-chip" type="button" data-filter="jepang" data-genre="jepang" aria-pressed="false">Jepang</button>
-      <button class="genre-chip" type="button" data-filter="barat" data-genre="barat" aria-pressed="false">Barat</button>
-      <button class="genre-chip" type="button" data-filter="china" data-genre="china" aria-pressed="false">China</button>
-    </div>
   </nav>
 
   <form id="search-form" class="search" role="search">
@@ -1574,7 +1315,7 @@
         </svg>
       </button>
       <input id="search-input" class="search-input" type="search" name="q"
-             placeholder="Cari judul, pemeran, genre, kategori" aria-label="Cari video"
+             placeholder="Cari judul, pemeran, kategori" aria-label="Cari video"
              autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
       <button id="search-clear" class="search-clear" type="button" aria-label="Hapus pencarian" hidden>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1610,15 +1351,6 @@
 
 <div id="scroller" class="scroller">
   <h1 class="sr-only">Galeri SB99</h1>
-  <nav id="genre-bar" class="genre-bar" aria-label="Filter genre">
-    <div id="genre-scroll" class="genre-scroll">
-      <button class="genre-chip" type="button" data-filter="" aria-pressed="true">Semua</button>
-      <button class="genre-chip" type="button" data-filter="indo" data-genre="indo" aria-pressed="false">Indo</button>
-      <button class="genre-chip" type="button" data-filter="jepang" data-genre="jepang" aria-pressed="false">Jepang</button>
-      <button class="genre-chip" type="button" data-filter="barat" data-genre="barat" aria-pressed="false">Barat</button>
-      <button class="genre-chip" type="button" data-filter="china" data-genre="china" aria-pressed="false">China</button>
-    </div>
-  </nav>
   <p id="search-status" class="search-status" role="status" hidden></p>
   <main id="gallery" aria-label="Galeri video" aria-busy="false"></main>
 
@@ -1692,8 +1424,6 @@
   const PAGE_PARAM = 'page';
   const VIDEO_PARAM = 'video';
   const QUERY_PARAM = 'q';
-  const GENRE_PARAM = 'genre';
-  const GENRES = Object.freeze({ indo: 'Indo', jepang: 'Jepang', barat: 'Barat', china: 'China' });
   const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
   const BASE_TITLE = document.title;
@@ -1710,10 +1440,10 @@
     noVideos:
       '<code>url.json</code> tidak berisi video yang valid.<br>' +
       'Isinya harus berupa daftar objek. Wajib ada: <code>url</code>, <code>title</code>, ' +
-      '<code>genre</code> (Indo, Jepang, Barat, atau China) dan <code>category</code>. ' +
+      '<code>category</code>. ' +
       'Embed juga butuh <code>cover</code>:<br><br>' +
       '<code>{ "url": "https://example.com/video.mp4", "title": "Judul", ' +
-      '"genre": "Indo", "category": ["Drama"] }</code>',
+      '"category": ["Drama"] }</code>',
     allFailed:
       'Semua video di halaman ini gagal dimuat. Periksa <code>url.json</code> &mdash; setiap URL harus ' +
       'langsung mengarah ke file video (bukan halaman web) dan bisa diakses publik.'
@@ -1742,16 +1472,13 @@
     watchMeta: document.getElementById('watch-meta'),
     watchInfo: document.getElementById('watch-info'),
     infoToggle: document.getElementById('info-toggle'),
-    navGenres: document.getElementById('nav-genres'),
     watchCastRow: document.getElementById('watch-cast-row'),
     watchCast: document.getElementById('watch-cast'),
     recommendations: document.getElementById('recommendations'),
     recommendationList: document.getElementById('recommendation-list'),
     recommendationMore: document.getElementById('recommendations-more'),
     recommendationMoreList: document.getElementById('recommendation-more-list'),
-    watchMain: document.getElementById('watch-main'),
-    genreBar: document.getElementById('genre-bar'),
-    genreScroll: document.getElementById('genre-scroll')
+    watchMain: document.getElementById('watch-main')
   };
 
   const state = {
@@ -1761,8 +1488,6 @@
     page: 0,
     totalPages: 1,
     perPage: 0,
-    genre: '',
-    genreDragged: false,
     items: [],
     loadToken: 0,
     loading: false,
@@ -1817,12 +1542,11 @@
 
   const normalizeQuery = (value) => value.trim().replace(/\s+/g, ' ');
 
-  const findMissingKeys = (raw, type, genre, categories) => {
+  const findMissingKeys = (raw, type, categories) => {
     const checks = {
       url: type !== null,
       title: toText(raw.title) !== '',
       cover: type !== 'embed' || isHttpUrl(toText(raw.cover)),
-      genre: genre !== '',
       category: categories.length > 0
     };
 
@@ -1835,11 +1559,10 @@
 
     list.forEach((raw, index) => {
       const item = raw && typeof raw === 'object' ? raw : {};
-      const genre = GENRES[toText(item.genre).toLowerCase()] || '';
       const categories = uniqueList(toList(item.category));
       const url = toText(item.url);
       const type = isHttpUrl(url) ? detectType(url, toText(item.type).toLowerCase()) : null;
-      const missing = findMissingKeys(item, type, genre, categories);
+      const missing = findMissingKeys(item, type, categories);
 
       if (missing.length > 0) {
         console.warn('url.json item ' + (index + 1) + ' skipped, missing or invalid: ' + missing.join(', '));
@@ -1848,7 +1571,7 @@
 
       const title = toText(item.title);
       const cast = toList(item.cast);
-      const shownCategories = categories.filter((name) => name.toLowerCase() !== genre.toLowerCase());
+      const shownCategories = categories;
 
       entries.push({
         number: entries.length + 1,
@@ -1856,10 +1579,9 @@
         url,
         cover: type === 'embed' ? toText(item.cover) : '',
         title,
-        genre,
         categories: shownCategories,
         cast,
-        searchText: normalizeText([title, genre, ...shownCategories, ...cast].join(' '))
+        searchText: normalizeText([title, ...shownCategories, ...cast].join(' '))
       });
     });
 
@@ -1868,8 +1590,8 @@
 
   const findEntry = (number) => state.entries[state.entries.length - number];
 
-  const filterEntries = (query, genre) => {
-    const pool = genre ? state.entries.filter((entry) => entry.genre.toLowerCase() === genre) : state.entries;
+  const filterEntries = (query) => {
+    const pool = state.entries;
     if (!query) return pool;
 
     const terms = normalizeText(query).split(' ');
@@ -1989,14 +1711,6 @@
     return (await loadImage(entry.cover)) || createCoverFallback();
   };
 
-  const createBadge = (text) => {
-    const badge = document.createElement('span');
-    badge.className = 'badge';
-    badge.textContent = text;
-    badge.dataset.genre = text.toLowerCase();
-    return badge;
-  };
-
   const createPlayIcon = () => {
     const icon = document.createElement('span');
     icon.className = 'play';
@@ -2010,7 +1724,7 @@
   const createTile = (media, entry, index) => {
     const cover = document.createElement('div');
     cover.className = 'tile-cover';
-    cover.append(media, ...(entry.genre ? [createBadge(entry.genre)] : []), createPlayIcon());
+    cover.append(media, createPlayIcon());
 
     const title = document.createElement('figcaption');
     title.className = 'tile-title';
@@ -2039,15 +1753,10 @@
     return Number.isInteger(value) && value >= 1 && value <= state.entries.length ? value : null;
   };
 
-  const getGenreFromUrl = () => {
-    const value = (new URLSearchParams(location.search).get(GENRE_PARAM) || '').toLowerCase();
-    return Object.hasOwn(GENRES, value) ? value : '';
-  };
-
   const getQueryFromUrl = () =>
     normalizeQuery(new URLSearchParams(location.search).get(QUERY_PARAM) || '');
 
-  const buildUrl = (page, video, query, genre = getGenreFromUrl()) => {
+  const buildUrl = (page, video, query) => {
     const params = new URLSearchParams(location.search);
 
     if (page <= 1) params.delete(PAGE_PARAM);
@@ -2059,8 +1768,7 @@
     if (query) params.set(QUERY_PARAM, query);
     else params.delete(QUERY_PARAM);
 
-    if (genre) params.set(GENRE_PARAM, genre);
-    else params.delete(GENRE_PARAM);
+    params.delete('genre');
 
     const search = params.toString();
     return location.pathname + (search ? '?' + search : '') + location.hash;
@@ -2137,23 +1845,19 @@
   };
 
   const renderSearchStatus = () => {
-    const { query, genre, results } = state;
+    const { query, results } = state;
     const count = results.length;
-    const genreLabel = genre ? GENRES[genre] : '';
 
     dom.searchStatus.hidden = count > 0 && !query;
     if (dom.searchStatus.hidden) return;
 
     if (count === 0) {
-      dom.searchStatus.textContent = query
-        ? 'Tidak ada video untuk “' + query + '”' + (genreLabel ? ' di genre ' + genreLabel : '') +
-          '. Coba judul, nama pemeran, genre, atau kategori.'
-        : 'Belum ada video untuk genre ' + genreLabel + '.';
+      dom.searchStatus.textContent =
+        'Tidak ada video untuk “' + query + '”. Coba judul, nama pemeran, atau kategori.';
       return;
     }
 
-    dom.searchStatus.textContent =
-      count + ' video ditemukan untuk “' + query + '”' + (genreLabel ? ' di genre ' + genreLabel : '');
+    dom.searchStatus.textContent = count + ' video ditemukan untuk “' + query + '”';
   };
 
   const setTitle = (label = '') => {
@@ -2226,7 +1930,7 @@
   const createMetaLink = (text) => {
     const link = document.createElement('a');
     link.className = 'meta-link';
-    link.href = buildUrl(1, null, text, '');
+    link.href = buildUrl(1, null, text);
     link.dataset.query = text;
     link.textContent = text;
     return link;
@@ -2242,13 +1946,10 @@
     const others = state.entries.filter((other) => other !== entry);
     const shares = (a, b) => a.some((value) => b.includes(value));
     const sameCategory = others.filter((other) => shares(other.categories, entry.categories));
-    const sameGenre = others.filter(
-      (other) => entry.genre !== '' && other.genre === entry.genre && !sameCategory.includes(other)
-    );
     const sharedCast = others.filter(
-      (other) => shares(other.cast, entry.cast) && !sameCategory.includes(other) && !sameGenre.includes(other)
+      (other) => shares(other.cast, entry.cast) && !sameCategory.includes(other)
     );
-    const related = [...sameCategory, ...sameGenre, ...sharedCast];
+    const related = [...sameCategory, ...sharedCast];
 
     return (related.length > 0 ? related : others).slice(0, getRecommendationLimit());
   };
@@ -2304,11 +2005,7 @@
   const createMoreCard = (entry) => {
     const cover = document.createElement('div');
     cover.className = 'tile-cover';
-    cover.append(
-      createRecommendationCover(entry),
-      ...(entry.genre ? [createBadge(entry.genre)] : []),
-      createPlayIcon()
-    );
+    cover.append(createRecommendationCover(entry), createPlayIcon());
 
     const title = document.createElement('span');
     title.className = 'tile-title';
@@ -2434,7 +2131,7 @@
     navigate(Math.floor(firstIndex / state.perPage) + 1, null, state.query, 'replace');
   };
 
-  const showGrid = (query, genre, requestedPage) => {
+  const showGrid = (query, requestedPage) => {
     const wasWatching = isWatching();
 
     stopWatchVideo();
@@ -2445,10 +2142,9 @@
     syncProgress();
     syncPerPage();
 
-    if (state.results === null || query !== state.query || genre !== state.genre) {
+    if (state.results === null || query !== state.query) {
       state.query = query;
-      state.genre = genre;
-      state.results = filterEntries(query, genre);
+      state.results = filterEntries(query);
       state.totalPages = countPages();
       state.page = 0;
       renderSearchStatus();
@@ -2456,12 +2152,11 @@
 
     const page = clamp(requestedPage, 1, state.totalPages);
     const titleParts = [
-      genre && GENRES[genre],
       query && 'Cari: ' + query,
       page > 1 && 'Halaman ' + page
     ];
 
-    normalizeUrl(buildUrl(page, null, query, genre));
+    normalizeUrl(buildUrl(page, null, query));
     setTitle(titleParts.filter(Boolean).join(' - '));
 
     if (state.page !== page) {
@@ -2473,26 +2168,6 @@
     if (wasWatching) dom.scroller.scrollTo(0, state.gridScroll);
   };
 
-  const centerGenreChip = (chip) => {
-    const left = chip.offsetLeft - (dom.genreScroll.clientWidth - chip.offsetWidth) / 2;
-    dom.genreScroll.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
-  };
-
-  const syncGenreBar = (genre) => {
-    for (const chip of dom.genreScroll.children) {
-      const pressed = chip.dataset.filter === genre;
-
-      chip.setAttribute('aria-pressed', String(pressed));
-      if (pressed) centerGenreChip(chip);
-    }
-
-    for (const chip of dom.navGenres.children) {
-      chip.setAttribute('aria-pressed', String(chip.dataset.filter === genre));
-    }
-
-    dom.navToggle.toggleAttribute('data-filtered', genre !== '');
-  };
-
   const syncSearchInput = (query) => {
     if (normalizeQuery(dom.searchInput.value) !== query) dom.searchInput.value = query;
     dom.searchClear.hidden = dom.searchInput.value === '';
@@ -2502,17 +2177,14 @@
     const video = getVideoFromUrl();
     const query = getQueryFromUrl();
 
-    const genre = getGenreFromUrl();
-
     syncSearchInput(query);
-    syncGenreBar(genre);
 
     if (video) showWatch(video, query);
-    else showGrid(query, genre, getPageFromUrl());
+    else showGrid(query, getPageFromUrl());
   };
 
-  const navigate = (page, video, query, mode, genre) => {
-    const url = buildUrl(page, video, query, genre);
+  const navigate = (page, video, query, mode) => {
+    const url = buildUrl(page, video, query);
 
     if (mode === 'push') history.pushState(null, '', url);
     else history.replaceState(null, '', url);
@@ -2521,10 +2193,10 @@
   };
 
   const goHome = () => {
-    if (!isWatching() && state.page === 1 && state.query === '' && state.genre === '') {
+    if (!isWatching() && state.page === 1 && state.query === '') {
       dom.scroller.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      navigate(1, null, '', 'push', '');
+      navigate(1, null, '', 'push');
     }
   };
 
@@ -2611,13 +2283,6 @@
   };
 
   const handleNavClick = (event) => {
-    const chip = closestFromEvent(event, 'button[data-filter]');
-    if (chip) {
-      if (chip.dataset.filter !== getGenreFromUrl()) navigate(1, null, getQueryFromUrl(), 'push', chip.dataset.filter);
-      setMenuOpen(false);
-      return;
-    }
-
     const link = closestFromEvent(event, 'a');
     if (!link) return;
 
@@ -2692,52 +2357,12 @@
     navigate(1, Number(link.dataset.video), getQueryFromUrl(), 'push');
   };
 
-  const bindGenreScroll = () => {
-    const scroller = dom.genreScroll;
-    let drag = null;
-
-    scroller.addEventListener('pointerdown', (event) => {
-      if (event.pointerType === 'mouse') drag = { x: event.clientX, left: scroller.scrollLeft, moved: false };
-    });
-
-    window.addEventListener('pointermove', (event) => {
-      if (!drag) return;
-
-      const distance = event.clientX - drag.x;
-      if (Math.abs(distance) > 5) drag.moved = true;
-      if (drag.moved) scroller.scrollLeft = drag.left - distance;
-    });
-
-    window.addEventListener('pointerup', () => {
-      state.genreDragged = drag !== null && drag.moved;
-      drag = null;
-      setTimeout(() => {
-        state.genreDragged = false;
-      }, 0);
-    });
-
-    scroller.addEventListener('wheel', (event) => {
-      const scrollable = scroller.scrollWidth > scroller.clientWidth;
-      if (!scrollable || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-
-      event.preventDefault();
-      scroller.scrollLeft += event.deltaY;
-    }, { passive: false });
-  };
-
-  const handleGenreClick = (event) => {
-    const chip = closestFromEvent(event, 'button[data-filter]');
-    if (state.genreDragged || !chip || chip.dataset.filter === getGenreFromUrl()) return;
-
-    navigate(1, null, getQueryFromUrl(), 'push', chip.dataset.filter);
-  };
-
   const handleMetaClick = (event) => {
     const link = closestFromEvent(event, 'a[data-query]');
     if (!link || isModifiedClick(event)) return;
 
     event.preventDefault();
-    navigate(1, null, link.dataset.query, 'push', '');
+    navigate(1, null, link.dataset.query, 'push');
   };
 
   const handleEscape = (event) => {
@@ -2762,8 +2387,6 @@
     dom.recommendationMoreList.addEventListener('click', handleRecommendationClick);
     dom.watchMeta.addEventListener('click', handleMetaClick);
     dom.infoToggle.addEventListener('click', () => setInfoOpen(dom.infoToggle.getAttribute('aria-expanded') !== 'true', true));
-    dom.genreBar.addEventListener('click', handleGenreClick);
-    bindGenreScroll();
 
     dom.watchVideo.addEventListener('contextmenu', (event) => event.preventDefault());
 
