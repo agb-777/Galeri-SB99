@@ -41,7 +41,7 @@
     --on-ink: #ececea;
 
     --genre-indo: #d92d2d;
-    --genre-korea: #2563eb;
+    --genre-jepang: #2563eb;
     --genre-barat: #1f9d55;
     --genre-china: #f5c518;
 
@@ -635,8 +635,8 @@
     --genre-ink: #fff;
   }
 
-  [data-genre="korea"] {
-    --genre: var(--genre-korea);
+  [data-genre="jepang"] {
+    --genre: var(--genre-jepang);
     --genre-ink: #fff;
   }
 
@@ -774,20 +774,43 @@
     position: sticky;
     top: 0;
     z-index: 20;
-    display: flex;
-    gap: 8px;
-    padding: 10px var(--gap);
-    overflow-x: auto;
+    padding: 10px 0;
     background: var(--gloss), var(--bar);
     border-bottom: 1px solid var(--line);
     box-shadow: inset 0 1px 0 var(--shine);
     -webkit-backdrop-filter: blur(22px) saturate(1.8);
     backdrop-filter: blur(22px) saturate(1.8);
-    scrollbar-width: none;
   }
 
-  .genre-bar::-webkit-scrollbar {
+  .genre-scroll {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    padding: 0 var(--gap);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .genre-scroll::-webkit-scrollbar {
     display: none;
+  }
+
+  .genre-scroll.is-more-end {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  }
+
+  .genre-scroll.is-more-start {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 40px);
+    mask-image: linear-gradient(to right, transparent, #000 40px);
+  }
+
+  .genre-scroll.is-more-start.is-more-end {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent);
   }
 
   .genre-chip {
@@ -804,8 +827,19 @@
     font-weight: 600;
     line-height: 1;
     cursor: pointer;
+    scroll-snap-align: center;
     transition: transform .15s ease;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (max-width: 600px) {
+    .genre-scroll {
+      gap: 6px;
+    }
+
+    .genre-chip {
+      padding: 0 13px;
+    }
   }
 
   .genre-chip:active {
@@ -1169,11 +1203,13 @@
 <div id="scroller" class="scroller">
   <h1 class="sr-only">Galeri SB99</h1>
   <nav id="genre-bar" class="genre-bar" aria-label="Filter genre">
-    <button class="genre-chip" type="button" data-filter="" aria-pressed="true">Semua</button>
-    <button class="genre-chip" type="button" data-filter="indo" data-genre="indo" aria-pressed="false">Indo</button>
-    <button class="genre-chip" type="button" data-filter="korea" data-genre="korea" aria-pressed="false">Korea</button>
-    <button class="genre-chip" type="button" data-filter="barat" data-genre="barat" aria-pressed="false">Barat</button>
-    <button class="genre-chip" type="button" data-filter="china" data-genre="china" aria-pressed="false">China</button>
+    <div id="genre-scroll" class="genre-scroll">
+      <button class="genre-chip" type="button" data-filter="" aria-pressed="true">Semua</button>
+      <button class="genre-chip" type="button" data-filter="indo" data-genre="indo" aria-pressed="false">Indo</button>
+      <button class="genre-chip" type="button" data-filter="jepang" data-genre="jepang" aria-pressed="false">Jepang</button>
+      <button class="genre-chip" type="button" data-filter="barat" data-genre="barat" aria-pressed="false">Barat</button>
+      <button class="genre-chip" type="button" data-filter="china" data-genre="china" aria-pressed="false">China</button>
+    </div>
   </nav>
   <p id="search-status" class="search-status" role="status" hidden></p>
   <main id="gallery" aria-label="Galeri video" aria-busy="false"></main>
@@ -1243,7 +1279,7 @@
   const VIDEO_PARAM = 'video';
   const QUERY_PARAM = 'q';
   const GENRE_PARAM = 'genre';
-  const GENRES = Object.freeze({ indo: 'Indo', korea: 'Korea', barat: 'Barat', china: 'China' });
+  const GENRES = Object.freeze({ indo: 'Indo', jepang: 'Jepang', barat: 'Barat', china: 'China' });
   const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
   const BASE_TITLE = document.title;
@@ -1260,7 +1296,7 @@
     noVideos:
       '<code>url.json</code> tidak berisi video yang valid.<br>' +
       'Isinya harus berupa daftar objek. Wajib ada: <code>url</code>, <code>title</code>, ' +
-      '<code>genre</code> (Indo, Korea, Barat, atau China) dan <code>category</code>. ' +
+      '<code>genre</code> (Indo, Jepang, Barat, atau China) dan <code>category</code>. ' +
       'Embed juga butuh <code>cover</code>:<br><br>' +
       '<code>{ "url": "https://example.com/video.mp4", "title": "Judul", ' +
       '"genre": "Indo", "category": ["Drama"] }</code>',
@@ -1299,7 +1335,8 @@
     recommendationMore: document.getElementById('recommendations-more'),
     recommendationMoreList: document.getElementById('recommendation-more-list'),
     watchMain: document.getElementById('watch-main'),
-    genreBar: document.getElementById('genre-bar')
+    genreBar: document.getElementById('genre-bar'),
+    genreScroll: document.getElementById('genre-scroll')
   };
 
   const state = {
@@ -2001,9 +2038,24 @@
     if (wasWatching) dom.scroller.scrollTo(0, state.gridScroll);
   };
 
+  const syncGenreFade = () => {
+    const { scrollLeft, scrollWidth, clientWidth } = dom.genreScroll;
+
+    dom.genreScroll.classList.toggle('is-more-start', scrollLeft > 4);
+    dom.genreScroll.classList.toggle('is-more-end', scrollLeft < scrollWidth - clientWidth - 4);
+  };
+
+  const centerGenreChip = (chip) => {
+    const left = chip.offsetLeft - (dom.genreScroll.clientWidth - chip.offsetWidth) / 2;
+    dom.genreScroll.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+  };
+
   const syncGenreBar = (genre) => {
-    for (const chip of dom.genreBar.children) {
-      chip.setAttribute('aria-pressed', String(chip.dataset.filter === genre));
+    for (const chip of dom.genreScroll.children) {
+      const pressed = chip.dataset.filter === genre;
+
+      chip.setAttribute('aria-pressed', String(pressed));
+      if (pressed) centerGenreChip(chip);
     }
   };
 
@@ -2236,6 +2288,8 @@
     dom.recommendationMoreList.addEventListener('click', handleRecommendationClick);
     dom.watchMeta.addEventListener('click', handleMetaClick);
     dom.genreBar.addEventListener('click', handleGenreClick);
+    dom.genreScroll.addEventListener('scroll', syncGenreFade, { passive: true });
+    new ResizeObserver(syncGenreFade).observe(dom.genreScroll);
 
     dom.watchVideo.addEventListener('contextmenu', (event) => event.preventDefault());
 
