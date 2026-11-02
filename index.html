@@ -1062,6 +1062,471 @@
       animation-duration: 2.4s;
     }
   }
+
+  /* ===== Polish layer ===== */
+  :root {
+    --radius: 6px;
+    --ease: cubic-bezier(.2, .7, .2, 1);
+    --ring: color-mix(in srgb, var(--ink) 14%, transparent);
+  }
+
+  /* Brand + nav */
+  .brand {
+    display: inline-block;
+    transition: transform .3s var(--ease);
+  }
+
+  .search-box {
+    transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+  }
+
+  .search-box:focus-within {
+    background: var(--bg);
+    box-shadow: 0 0 0 4px var(--ring);
+  }
+
+  /* Genre chips: the dot carries the same colour as the badge on each cover */
+  .genre-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-color: var(--line);
+    transition: background .2s var(--ease), color .2s ease, border-color .2s ease, transform .15s ease;
+  }
+
+  .genre-chip[data-genre]::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--genre);
+  }
+
+  .genre-chip[aria-pressed="true"][data-genre]::before {
+    background: var(--genre-ink);
+  }
+
+  /* Tiles */
+  .tile {
+    gap: 12px;
+    animation: tile-rise .55s var(--ease) backwards;
+  }
+
+  .tile:nth-child(2){ animation-delay: 35ms; }
+  .tile:nth-child(3){ animation-delay: 70ms; }
+  .tile:nth-child(4){ animation-delay: 105ms; }
+  .tile:nth-child(5){ animation-delay: 140ms; }
+  .tile:nth-child(6){ animation-delay: 175ms; }
+  .tile:nth-child(7){ animation-delay: 210ms; }
+  .tile:nth-child(8){ animation-delay: 245ms; }
+  .tile:nth-child(9){ animation-delay: 280ms; }
+  .tile:nth-child(10){ animation-delay: 315ms; }
+  .tile:nth-child(11){ animation-delay: 350ms; }
+  .tile:nth-child(12){ animation-delay: 385ms; }
+
+  @keyframes tile-rise {
+    from { opacity: 0; transform: translateY(12px); }
+  }
+
+  .tile-cover::after,
+  .rec-thumb::after,
+  .watch-player::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent);
+    pointer-events: none;
+  }
+
+  .rec-thumb,
+  .watch-player {
+    position: relative;
+  }
+
+  .tile :is(video, img),
+  .rec-thumb :is(video, img) {
+    transition: filter .3s ease, transform .6s var(--ease);
+  }
+
+  .tile-title {
+    letter-spacing: -.005em;
+  }
+
+  .badge {
+    padding: 6px 9px 7px;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / .28);
+  }
+
+  .play {
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 6px 20px rgb(0 0 0 / .3);
+    transition: transform .3s var(--ease);
+  }
+
+  @media (hover: hover) {
+    .brand:hover {
+      transform: rotate(-2.5deg) scale(1.03);
+    }
+
+    .genre-chip[aria-pressed="false"]:hover {
+      border-color: var(--genre, var(--ink));
+      background: var(--bg);
+    }
+
+    .tile:hover .tile-cover :is(video, img),
+    .rec:hover .rec-thumb :is(video, img) {
+      filter: brightness(.88);
+      transform: scale(1.035);
+    }
+
+    .tile:hover .tile-title,
+    .rec:hover .rec-title {
+      text-decoration: underline;
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 3px;
+    }
+
+    a.page-btn:hover {
+      background: var(--hover);
+    }
+  }
+
+  /* Pagination */
+  .page-btn {
+    border-radius: 20px;
+    transition: color .15s ease, background .15s ease;
+  }
+
+  /* Watch page */
+  .watch-player {
+    border-radius: 8px;
+    box-shadow: 0 24px 48px -28px rgb(0 0 0 / .55);
+  }
+
+  .watch-title {
+    font-size: clamp(22px, 2.4vw, 30px);
+    letter-spacing: -.025em;
+    text-wrap: balance;
+  }
+
+  .watch-meta dt {
+    padding-top: 5px;
+    color: var(--ink-muted);
+    font-size: 14px;
+  }
+
+  .watch-meta dd {
+    margin: 0;
+  }
+
+  .meta-link {
+    display: inline-block;
+    margin: 0 4px 6px 0;
+    padding: 4px 11px 5px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+
+  .meta-link:hover {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--on-ink);
+  }
+
+  /* Scrollbar */
+  .scroller::-webkit-scrollbar { width: 10px; }
+  .scroller::-webkit-scrollbar-track { background: var(--bg); }
+  .scroller::-webkit-scrollbar-thumb {
+    border: 3px solid var(--bg);
+    border-radius: 10px;
+    background: var(--line);
+  }
+  .scroller::-webkit-scrollbar-thumb:hover { background: var(--ink-muted); }
+
+  @media (max-width: 600px) {
+    .genre-chip { gap: 6px; }
+    .watch-player { border-radius: var(--radius); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brand,
+    .tile,
+    .tile :is(video, img),
+    .rec-thumb :is(video, img),
+    .page-btn,
+    .meta-link {
+      animation: none;
+      transition: none;
+      transform: none !important;
+    }
+  }
+
+  /* ===== Street layer: graffiti language beyond the logo ===== */
+  :root {
+    --stroke: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6.5C16 2.5 28 9 46 5S80 3 98 6' fill='none' stroke='%23000' stroke-width='3.2' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Wall texture: fine grain, like paint on concrete */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--grain);
+    opacity: .06;
+    pointer-events: none;
+  }
+
+  :root[data-theme="dark"] body::before {
+    opacity: .1;
+    filter: invert(1);
+  }
+
+  /* Marker underline: active nav link + current page */
+  .nav-link[aria-current="page"]::after,
+  .page-btn[aria-current="page"]::after {
+    height: 9px;
+    background: var(--ink);
+    -webkit-mask: var(--stroke) center / 100% 100% no-repeat;
+    mask: var(--stroke) center / 100% 100% no-repeat;
+  }
+
+  .nav-link[aria-current="page"]::after {
+    bottom: -15px;
+    left: -4px;
+    right: -4px;
+  }
+
+  .page-btn[aria-current="page"]::after {
+    bottom: 0;
+  }
+
+  /* Hand-lettered headings */
+  .recommendations-title {
+    font-family: var(--font-graffiti);
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: .02em;
+  }
+
+  .footer-text {
+    font-family: var(--font-graffiti);
+    font-size: 17px;
+    letter-spacing: .03em;
+  }
+
+  .search-status {
+    font-family: var(--font-graffiti);
+    font-size: 20px;
+    letter-spacing: .02em;
+  }
+
+  /* Stickers: genre badge slapped on each cover */
+  .badge {
+    font-weight: 700;
+    box-shadow: 0 0 0 2px #fff, 0 4px 10px rgb(0 0 0 / .35);
+    transform: rotate(-2.5deg);
+    transform-origin: left bottom;
+  }
+
+  .tile:nth-child(even) .badge {
+    transform: rotate(1.5deg);
+  }
+
+  /* Chips act as stickers too: the selected one is pressed on, slightly crooked */
+  .genre-chip[aria-pressed="true"] {
+    transform: rotate(-2deg);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  .genre-chip:nth-child(even)[aria-pressed="true"] {
+    transform: rotate(1.5deg);
+  }
+
+  .genre-chip:active {
+    transform: rotate(0) scale(.96);
+  }
+
+  /* Posters on a wall: hard offset shadow, lifted on hover */
+  .tile-cover,
+  .rec-thumb {
+    transition: transform .25s var(--ease), box-shadow .25s var(--ease);
+  }
+
+  @media (hover: hover) {
+    .tile:hover .tile-cover {
+      transform: translate(-3px, -3px) rotate(-.4deg);
+      box-shadow: 6px 6px 0 var(--ink);
+    }
+
+    .tile:nth-child(even):hover .tile-cover {
+      transform: translate(-3px, -3px) rotate(.4deg);
+    }
+
+    .rec:hover .rec-thumb {
+      transform: translate(-2px, -2px);
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+  }
+
+  /* Player framed like a pasted poster */
+  .watch-player {
+    box-shadow: 8px 8px 0 var(--ink);
+  }
+
+  @media (max-width: 600px) {
+    .watch-player {
+      box-shadow: 5px 5px 0 var(--ink);
+    }
+
+    .recommendations-title {
+      font-size: 22px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile-cover,
+    .rec-thumb {
+      transition: none;
+    }
+  }
+
+  /* ===== Info collapsible + genre di menu mobile ===== */
+  .info-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0 0;
+    padding: 5px 12px 6px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-muted);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .info-toggle:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .info-toggle:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+
+  .info-toggle svg {
+    transition: transform .3s var(--ease);
+  }
+
+  .info-toggle[aria-expanded="false"] svg {
+    transform: rotate(180deg);
+  }
+
+  .watch-info {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows .3s var(--ease), opacity .25s ease;
+  }
+
+  .watch-info.is-collapsed {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  .watch-info-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .watch-meta {
+    margin: 0;
+    padding-top: 12px;
+  }
+
+  .nav-genres {
+    display: none;
+  }
+
+  .nav-toggle {
+    position: relative;
+  }
+
+  .nav-toggle[data-filtered]::after {
+    content: "";
+    position: absolute;
+    top: 7px;
+    right: 6px;
+    width: 9px;
+    height: 9px;
+    border: 2px solid var(--bar);
+    border-radius: 50%;
+    background: var(--genre-indo);
+  }
+
+  @media (max-width: 720px) {
+    .genre-bar {
+      display: none;
+    }
+
+    .nav-genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 14px 0 6px;
+    }
+
+    .nav-genres::before {
+      content: "Genre";
+      flex: 0 0 100%;
+      color: var(--ink-muted);
+      font-family: var(--font-graffiti);
+      font-size: 20px;
+      letter-spacing: .03em;
+    }
+
+    .nav-genres .genre-chip {
+      flex: 0 0 auto;
+      height: 38px;
+      padding: 0 16px;
+      font-size: 15px;
+    }
+
+    .nav-link[aria-current="page"]::after {
+      top: 14px;
+      right: auto;
+      bottom: 14px;
+      left: -12px;
+      width: 3px;
+      height: auto;
+      -webkit-mask: none;
+      mask: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .watch-info,
+    .info-toggle svg {
+      transition: none;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1084,6 +1549,13 @@
   <nav id="nav-menu" class="nav-menu" aria-label="Menu utama">
     <a class="nav-link" href="./" data-home aria-current="page">Beranda</a>
     <a class="nav-link" href="#">Dukung Saya</a>
+    <div id="nav-genres" class="nav-genres" role="group" aria-label="Filter genre">
+      <button class="genre-chip" type="button" data-filter="" aria-pressed="true">Semua</button>
+      <button class="genre-chip" type="button" data-filter="indo" data-genre="indo" aria-pressed="false">Indo</button>
+      <button class="genre-chip" type="button" data-filter="jepang" data-genre="jepang" aria-pressed="false">Jepang</button>
+      <button class="genre-chip" type="button" data-filter="barat" data-genre="barat" aria-pressed="false">Barat</button>
+      <button class="genre-chip" type="button" data-filter="china" data-genre="china" aria-pressed="false">China</button>
+    </div>
   </nav>
 
   <form id="search-form" class="search" role="search">
@@ -1163,16 +1635,21 @@
       </div>
       <h2 id="watch-title" class="watch-title" tabindex="-1"></h2>
 
+      <button id="info-toggle" class="info-toggle" type="button" aria-expanded="true" aria-controls="watch-info" hidden>
+        <span class="info-toggle-label">Sembunyikan info</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 15l6-6 6 6" />
+        </svg>
+      </button>
+      <div id="watch-info" class="watch-info"><div class="watch-info-inner">
       <dl id="watch-meta" class="watch-meta">
         <div id="watch-cast-row" class="watch-meta-row" hidden>
           <dt>Pemeran</dt>
           <dd id="watch-cast"></dd>
         </div>
-        <div id="watch-category-row" class="watch-meta-row" hidden>
-          <dt>Kategori</dt>
-          <dd id="watch-category"></dd>
-        </div>
       </dl>
+      </div></div>
     </div>
 
     <aside id="recommendations" class="recommendations" aria-label="Video terkait" hidden>
@@ -1210,6 +1687,7 @@
   });
 
   const THEME_KEY = 'sb99-theme';
+  const INFO_KEY = 'sb99-info';
   const THEME_COLORS = Object.freeze({ light: '#ececea', dark: '#0e0e0e' });
   const PAGE_PARAM = 'page';
   const VIDEO_PARAM = 'video';
@@ -1262,8 +1740,9 @@
     watchVideo: document.getElementById('watch-video'),
     watchTitle: document.getElementById('watch-title'),
     watchMeta: document.getElementById('watch-meta'),
-    watchCategoryRow: document.getElementById('watch-category-row'),
-    watchCategory: document.getElementById('watch-category'),
+    watchInfo: document.getElementById('watch-info'),
+    infoToggle: document.getElementById('info-toggle'),
+    navGenres: document.getElementById('nav-genres'),
     watchCastRow: document.getElementById('watch-cast-row'),
     watchCast: document.getElementById('watch-cast'),
     recommendations: document.getElementById('recommendations'),
@@ -1754,7 +2233,7 @@
   };
 
   const joinWithCommas = (nodes) =>
-    nodes.flatMap((node, index) => (index === 0 ? [node] : [', ', node]));
+    nodes.flatMap((node, index) => (index === 0 ? [node] : [' ', node]));
 
   const getRecommendationLimit = () =>
     isSingleColumn() ? CONFIG.mobileRecommendations : CONFIG.recommendations;
@@ -1810,9 +2289,6 @@
     info.append(title);
 
     if (entry.cast.length > 0) info.append(createRecommendationMeta(entry.cast.join(', ')));
-
-    const labels = [entry.genre, ...entry.categories].filter(Boolean);
-    if (labels.length > 0) info.append(createRecommendationMeta(labels.join(', ')));
 
     const link = document.createElement('a');
     link.className = 'rec';
@@ -1877,10 +2353,32 @@
     distributeRecommendations();
   };
 
+  const setInfoOpen = (open, save) => {
+    dom.watchInfo.classList.toggle('is-collapsed', !open);
+    dom.watchInfo.inert = !open;
+    dom.infoToggle.setAttribute('aria-expanded', String(open));
+    dom.infoToggle.querySelector('.info-toggle-label').textContent = open ? 'Sembunyikan info' : 'Tampilkan info';
+    if (!save) return;
+
+    try {
+      localStorage.setItem(INFO_KEY, open ? '1' : '0');
+    } catch {
+      return;
+    }
+  };
+
+  const readInfoPref = () => {
+    try {
+      return localStorage.getItem(INFO_KEY) !== '0';
+    } catch {
+      return true;
+    }
+  };
+
   const renderWatchDetails = (entry) => {
     dom.watchTitle.textContent = entry.title;
-    dom.watchCategoryRow.hidden = entry.categories.length === 0;
-    dom.watchCategory.replaceChildren(...joinWithCommas(entry.categories.map(createMetaLink)));
+    dom.infoToggle.hidden = entry.cast.length === 0;
+    dom.watchInfo.hidden = entry.cast.length === 0;
     dom.watchCastRow.hidden = entry.cast.length === 0;
     dom.watchCast.replaceChildren(...joinWithCommas(entry.cast.map(createMetaLink)));
   };
@@ -1987,6 +2485,12 @@
       chip.setAttribute('aria-pressed', String(pressed));
       if (pressed) centerGenreChip(chip);
     }
+
+    for (const chip of dom.navGenres.children) {
+      chip.setAttribute('aria-pressed', String(chip.dataset.filter === genre));
+    }
+
+    dom.navToggle.toggleAttribute('data-filtered', genre !== '');
   };
 
   const syncSearchInput = (query) => {
@@ -2107,6 +2611,13 @@
   };
 
   const handleNavClick = (event) => {
+    const chip = closestFromEvent(event, 'button[data-filter]');
+    if (chip) {
+      if (chip.dataset.filter !== getGenreFromUrl()) navigate(1, null, getQueryFromUrl(), 'push', chip.dataset.filter);
+      setMenuOpen(false);
+      return;
+    }
+
     const link = closestFromEvent(event, 'a');
     if (!link) return;
 
@@ -2250,6 +2761,7 @@
     dom.recommendationList.addEventListener('click', handleRecommendationClick);
     dom.recommendationMoreList.addEventListener('click', handleRecommendationClick);
     dom.watchMeta.addEventListener('click', handleMetaClick);
+    dom.infoToggle.addEventListener('click', () => setInfoOpen(dom.infoToggle.getAttribute('aria-expanded') !== 'true', true));
     dom.genreBar.addEventListener('click', handleGenreClick);
     bindGenreScroll();
 
@@ -2271,6 +2783,7 @@
 
   const init = async () => {
     syncThemeControls();
+    setInfoOpen(readInfoPref(), false);
     bindEvents();
 
     try {
