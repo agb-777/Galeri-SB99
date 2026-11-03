@@ -2424,15 +2424,28 @@
 
   const buildRecommendations = (entry) => {
     const others = state.entries.filter((other) => other !== entry);
-    const shares = (a, b) => a.some((value) => b.includes(value));
-    const sameCategory = others.filter((other) => shares(other.categories, entry.categories));
+    const norm = (list) => list.map((value) => value.trim().toLowerCase());
+    const overlap = (a, b) => {
+      const pool = new Set(norm(b));
+      return norm(a).filter((value) => pool.has(value)).length;
+    };
+
+    // 1) same cast first, most shared cast members on top (stable sort keeps the original order for ties)
+    const sameCast = others
+      .map((other) => ({ other, score: overlap(other.cast, entry.cast) }))
+      .filter((row) => row.score > 0)
+      .sort((x, y) => y.score - x.score)
+      .map((row) => row.other);
+
+    // 2) then same category, 3) then same genre
+    const sameCategory = others.filter(
+      (other) => overlap(other.categories, entry.categories) > 0 && !sameCast.includes(other)
+    );
     const sameGenre = others.filter(
-      (other) => entry.genre !== '' && other.genre === entry.genre && !sameCategory.includes(other)
+      (other) =>
+        entry.genre !== '' && other.genre === entry.genre && !sameCast.includes(other) && !sameCategory.includes(other)
     );
-    const sharedCast = others.filter(
-      (other) => shares(other.cast, entry.cast) && !sameCategory.includes(other) && !sameGenre.includes(other)
-    );
-    const related = [...sameCategory, ...sameGenre, ...sharedCast];
+    const related = [...sameCast, ...sameCategory, ...sameGenre];
 
     return (related.length > 0 ? related : others).slice(0, getRecommendationLimit());
   };
