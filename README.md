@@ -12,3 +12,5 @@ Keunggulan yang ditawarkan:
 - Streaming yang stabil dan jarang mengalami buffering
 
 Nge-JAV cocok bagi Anda yang mencari tempat menonton JAV yang sederhana, lengkap, dan dapat langsung diputar.
+
+![](https://i.ibb.co.com/CspTYnvx/screen.png)
