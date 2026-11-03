@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="description" content="Gallery SB99: browse and watch videos by title, cast, and category." />
+<meta name="description" content="Nge-JAV 🇯🇵: browse and watch videos by code, cast, and category." />
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#ececea" />
-<title>Gallery SB99</title>
+<title>Nge-JAV 🇯🇵</title>
 <script>
   (function () {
     var theme = 'light';
@@ -495,11 +495,15 @@
     to { transform: translateX(290%); }
   }
 
-  #gallery {
+  #gallery:not(.is-sections),
+  .tile-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 22px var(--gap);
     width: 100%;
+  }
+
+  #gallery {
     padding: var(--gap);
   }
 
@@ -675,7 +679,7 @@
     display: none;
   }
 
-  .scroller.is-watching :is(#gallery, #pagination, #message, #search-status) {
+  .scroller.is-watching :is(#gallery, #pagination, #message, #search-status, #genre-head, #grid-probe) {
     display: none;
   }
 
@@ -1399,12 +1403,101 @@
     padding: 3px 5px 4px;
     font-size: 11.5px;
   }
+
+  /* ===== Genre sections ===== */
+  #gallery.is-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+    padding-top: 24px;
+  }
+
+  .genre-section[hidden] {
+    display: none;
+  }
+
+  .genre-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 16px;
+  }
+
+  .genre-title,
+  .genre-head-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.2vw, 26px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -.025em;
+  }
+
+  .genre-more {
+    flex: none;
+    color: var(--ink-muted);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .genre-more::after {
+    content: " \2192";
+  }
+
+  .genre-more:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .genre-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 14px;
+    padding: var(--gap) var(--gap) 0;
+  }
+
+  .genre-head[hidden] {
+    display: none;
+  }
+
+  .genre-back {
+    flex: 0 0 100%;
+    color: var(--ink-muted);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .genre-back:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .genre-head-count {
+    color: var(--ink-muted);
+    font-size: 14px;
+  }
+
+  .grid-probe {
+    height: 0;
+    margin: 0;
+    padding: 0 var(--gap);
+    overflow: hidden;
+    visibility: hidden;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
 
 <header id="site-nav" class="site-nav">
-  <h1 class="sr-only">Gallery SB99</h1>
+  <h1 class="sr-only">Nge-JAV 🇯🇵</h1>
   <button id="nav-toggle" class="nav-btn nav-toggle" type="button"
           aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
     <svg class="icon-burger" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1417,7 +1510,7 @@
     </svg>
   </button>
 
-  <a class="brand" href="./" data-home aria-label="Gallery SB99 - home">Gallery SB99</a>
+  <a class="brand" href="./" data-home aria-label="Nge-JAV 🇯🇵 - home">Nge-JAV 🇯🇵</a>
 
   <nav id="nav-menu" class="nav-menu" aria-label="Main menu">
     <a class="nav-link" href="./" data-home aria-current="page"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7" /><path d="M6 10v9h4v-5h4v5h4v-9" /></svg>Home</a>
@@ -1440,7 +1533,7 @@
         </svg>
       </button>
       <input id="search-input" class="search-input" type="search" name="q"
-             placeholder="Search title, cast, category" aria-label="Search videos"
+             placeholder="Search code, cast, category" aria-label="Search videos"
              autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
       <button id="search-clear" class="search-clear" type="button" aria-label="Clear search" hidden>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1476,7 +1569,14 @@
 
 <div id="scroller" class="scroller">
   <p id="search-status" class="search-status" role="status" hidden></p>
+  <div id="genre-head" class="genre-head" hidden>
+    <a class="genre-back" href="./" data-home>&larr; All genres</a>
+    <h2 id="genre-head-title" class="genre-head-title"></h2>
+    <span id="genre-head-count" class="genre-head-count"></span>
+  </div>
+
   <main id="gallery" aria-label="Video gallery" aria-busy="false"></main>
+  <div id="grid-probe" class="tile-grid grid-probe" aria-hidden="true"></div>
 
   <nav id="pagination" class="pagination" aria-label="Pagination" hidden>
     <div id="page-list" class="page-list"></div>
@@ -1542,6 +1642,11 @@
   'use strict';
 
   const CONFIG = Object.freeze({
+    // Change the site name here. It updates the browser tab, logo, and page heading.
+    siteTitle: 'Nge-JAV 🇯🇵',
+    // Optional: order of genre sections on the home page, top to bottom (e.g. ['Drama', 'Action']).
+    // Genres not listed follow in the order they first appear in url.json; videos without a genre go last.
+    genreOrder: [],
     dataFile: 'url.json',
     perPageByColumns: [10, 12, 15, 20, 20, 24],
     recommendations: 20,
@@ -1563,7 +1668,7 @@
   const QUERY_PARAM = 'q';
   const VIDEO_FILE_PATTERN = /\.(mp4|m4v|webm|ogv|ogg|mov|mkv)$/i;
   const EMBED_ALLOW = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
-  const BASE_TITLE = document.title;
+  const BASE_TITLE = CONFIG.siteTitle;
 
   const MESSAGES = Object.freeze({
     fetchFailed:
@@ -1576,10 +1681,10 @@
       '<code>url.json</code> is not valid JSON. Check for missing commas, quotes, or brackets.',
     noVideos:
       '<code>url.json</code> contains no valid videos.<br>' +
-      'It must be a list of objects. Required: <code>url</code>, <code>title</code>, ' +
+      'It must be a list of objects. Required: <code>url</code>, <code>code</code>, ' +
       '<code>category</code>. ' +
       'Embeds also need <code>cover</code>:<br><br>' +
-      '<code>{ "url": "https://example.com/video.mp4", "title": "Title", ' +
+      '<code>{ "url": "https://example.com/video.mp4", "code": "ABC-123", ' +
       '"category": ["Drama"] }</code>',
     allFailed:
       'All videos on this page failed to load. Check <code>url.json</code> &mdash; every URL must ' +
@@ -1591,6 +1696,13 @@
     navToggle: document.getElementById('nav-toggle'),
     themeToggle: document.getElementById('theme-toggle'),
     themeColorMeta: document.querySelector('meta[name="theme-color"]'),
+    brand: document.querySelector('.brand'),
+    siteHeading: document.querySelector('#site-nav h1'),
+    metaDescription: document.querySelector('meta[name="description"]'),
+    genreHead: document.getElementById('genre-head'),
+    genreHeadTitle: document.getElementById('genre-head-title'),
+    genreHeadCount: document.getElementById('genre-head-count'),
+    gridProbe: document.getElementById('grid-probe'),
     searchForm: document.getElementById('search-form'),
     searchInput: document.getElementById('search-input'),
     searchClear: document.getElementById('search-clear'),
@@ -1627,6 +1739,10 @@
     entries: [],
     query: '',
     results: null,
+    genre: '',
+    sections: false,
+    hasGenres: false,
+    columns: 1,
     page: 0,
     totalPages: 1,
     perPage: 0,
@@ -1722,7 +1838,7 @@
   const findMissingKeys = (raw, type, categories) => {
     const checks = {
       url: type !== null,
-      title: toText(raw.title) !== '',
+      code: toText(raw.code) !== '',
       cover: type !== 'embed' || isHttpUrl(toText(raw.cover)),
       category: categories.length > 0
     };
@@ -1747,7 +1863,8 @@
         return;
       }
 
-      const title = toText(item.title);
+      const code = toText(item.code);
+      const genreLabel = toText(item.genre);
       const cast = toList(item.cast);
       const shownCategories = categories;
 
@@ -1757,12 +1874,13 @@
         url,
         cover: type === 'embed' ? toText(item.cover) : '',
         poster: isHttpUrl(toText(item.cover)) ? toText(item.cover) : '',
-        title,
+        code,
         categories: shownCategories,
         genre,
+        genreLabel,
         duration: toDuration(item.duration),
         cast,
-        searchText: normalizeText([title, ...shownCategories, ...cast].join(' '))
+        searchText: normalizeText([code, ...shownCategories, ...cast].join(' '))
       });
     });
 
@@ -1771,8 +1889,13 @@
 
   const findEntry = (number) => state.entries[state.entries.length - number];
 
-  const filterEntries = (query) => {
-    const pool = state.entries;
+  const OTHER_KEY = '_other';
+
+  const genreLabelFor = (key) =>
+    key === OTHER_KEY ? 'Other' : (state.entries.find((entry) => entry.genre === key) || {}).genreLabel || key;
+
+  const filterEntries = (query, genre) => {
+    const pool = !genre ? state.entries : state.entries.filter((entry) => (genre === OTHER_KEY ? entry.genre === '' : entry.genre === genre));
     if (!query) return pool;
 
     const terms = normalizeText(query).split(' ');
@@ -1909,13 +2032,13 @@
 
     const title = document.createElement('div');
     title.className = 'tile-title';
-    title.textContent = entry.title;
+    title.textContent = entry.code;
 
     const element = document.createElement('div');
     element.className = 'tile';
     element.tabIndex = 0;
     element.setAttribute('role', 'button');
-    element.setAttribute('aria-label', 'Play video: ' + entry.title);
+    element.setAttribute('aria-label', 'Play video: ' + entry.code);
     element.append(cover, title);
 
     const item = { element, index, entry };
@@ -1937,7 +2060,9 @@
   const getQueryFromUrl = () =>
     normalizeQuery(new URLSearchParams(location.search).get(QUERY_PARAM) || '');
 
-  const buildUrl = (page, video, query) => {
+  const getGenreFromUrl = () => normalizeQuery(new URLSearchParams(location.search).get('genre') || '').toLowerCase();
+
+  const buildUrl = (page, video, query, genre = '') => {
     const params = new URLSearchParams(location.search);
 
     if (page <= 1) params.delete(PAGE_PARAM);
@@ -1949,7 +2074,8 @@
     if (query) params.set(QUERY_PARAM, query);
     else params.delete(QUERY_PARAM);
 
-    params.delete('genre');
+    if (genre) params.set('genre', genre);
+    else params.delete('genre');
 
     const search = params.toString();
     return location.pathname + (search ? '?' + search : '') + location.hash;
@@ -1988,7 +2114,7 @@
       return element;
     }
 
-    element.href = buildUrl(page, null, state.query);
+    element.href = buildUrl(page, null, state.query, state.genre);
     element.dataset.page = String(page);
     if (current) element.setAttribute('aria-current', 'page');
     return element;
@@ -2033,8 +2159,9 @@
     if (dom.searchStatus.hidden) return;
 
     if (count === 0) {
-      dom.searchStatus.textContent =
-        'No videos found for “' + query + '”. Try a title, cast name, or category.';
+      dom.searchStatus.textContent = query
+        ? 'No videos found for “' + query + '”. Try a code, cast name, or category.'
+        : 'No videos found in this genre.';
       return;
     }
 
@@ -2054,6 +2181,7 @@
 
     state.items = [];
     dom.message.hidden = true;
+    dom.gallery.classList.remove('is-sections');
     dom.gallery.replaceChildren();
     renderPagination();
     dom.scroller.scrollTo(0, 0);
@@ -2069,6 +2197,102 @@
       state.items.push(item);
       const next = orderedItems().find((other) => other.index > index);
       dom.gallery.insertBefore(item.element, next ? next.element : null);
+    });
+
+    if (token !== state.loadToken) return;
+
+    setLoading(false);
+    if (queue.length > 0 && state.items.length === 0) showMessage(MESSAGES.allFailed);
+  };
+
+  const buildGroups = (entries) => {
+    const map = new Map();
+
+    entries.forEach((entry) => {
+      if (!map.has(entry.genre)) {
+        map.set(entry.genre, { key: entry.genre, label: entry.genreLabel || 'Other', entries: [], first: Infinity });
+      }
+
+      const group = map.get(entry.genre);
+      group.entries.push(entry);
+      group.first = Math.min(group.first, entry.number);
+    });
+
+    const order = CONFIG.genreOrder.map((name) => String(name).trim().toLowerCase());
+    const rank = (group) => (group.key === '' ? 2 : order.includes(group.key) ? 0 : 1);
+
+    return [...map.values()].sort(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        (rank(a) === 0 ? order.indexOf(a.key) - order.indexOf(b.key) : a.first - b.first)
+    );
+  };
+
+  const createSection = (group, limit) => {
+    const section = document.createElement('section');
+    section.className = 'genre-section';
+    section.hidden = true;
+    section.setAttribute('aria-label', group.label);
+
+    const head = document.createElement('div');
+    head.className = 'genre-section-head';
+
+    const title = document.createElement('h2');
+    title.className = 'genre-title';
+    title.textContent = group.label;
+    head.append(title);
+
+    if (group.entries.length > limit) {
+      const key = group.key === '' ? OTHER_KEY : group.key;
+      const more = document.createElement('a');
+      more.className = 'genre-more';
+      more.href = buildUrl(1, null, '', key);
+      more.dataset.genre = key;
+      more.textContent = 'View all (' + group.entries.length + ')';
+      head.append(more);
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'tile-grid';
+
+    section.append(head, grid);
+    return { section, grid };
+  };
+
+  const renderHome = async () => {
+    const token = ++state.loadToken;
+    const limit = Math.max(4, state.columns * 2);
+    const queue = [];
+    let index = 0;
+
+    state.items = [];
+    dom.message.hidden = true;
+    dom.pagination.hidden = true;
+    dom.gallery.classList.add('is-sections');
+    dom.gallery.replaceChildren();
+    dom.scroller.scrollTo(0, 0);
+
+    for (const group of buildGroups(state.results)) {
+      const { section, grid } = createSection(group, limit);
+      dom.gallery.append(section);
+      group.entries.slice(0, limit).forEach((entry) => queue.push({ entry, index: index++, section, grid }));
+    }
+
+    setLoading(queue.length > 0);
+
+    await runPool(queue, CONFIG.concurrency, async ({ entry, index: position, section, grid }) => {
+      if (token !== state.loadToken) return;
+
+      const cover = await loadCover(entry);
+      if (!cover || token !== state.loadToken) return;
+
+      const item = createTile(cover, entry, position);
+      item.container = grid;
+      state.items.push(item);
+
+      const next = orderedItems().find((other) => other.container === grid && other.index > position);
+      grid.insertBefore(item.element, next ? next.element : null);
+      section.hidden = false;
     });
 
     if (token !== state.loadToken) return;
@@ -2128,7 +2352,7 @@
 
   const createEmbedFrame = (entry) => {
     const frame = document.createElement('iframe');
-    frame.title = entry.title;
+    frame.title = entry.code;
     frame.allow = EMBED_ALLOW;
     frame.allowFullscreen = true;
     frame.referrerPolicy = 'strict-origin-when-cross-origin';
@@ -2220,7 +2444,7 @@
 
     const title = document.createElement('span');
     title.className = 'rec-title';
-    title.textContent = entry.title;
+    title.textContent = entry.code;
 
     const info = document.createElement('span');
     info.className = 'rec-info';
@@ -2246,7 +2470,7 @@
 
     const title = document.createElement('span');
     title.className = 'tile-title';
-    title.textContent = entry.title;
+    title.textContent = entry.code;
 
     const link = document.createElement('a');
     link.className = 'tile';
@@ -2310,7 +2534,7 @@
   };
 
   const renderWatchDetails = (entry) => {
-    dom.watchTitle.textContent = entry.title;
+    dom.watchTitle.textContent = entry.code;
     const hasInfo = entry.cast.length > 0 || entry.categories.length > 0;
     dom.infoToggle.hidden = !hasInfo;
     dom.watchInfo.hidden = !hasInfo;
@@ -2334,7 +2558,7 @@
 
     renderWatchDetails(entry);
     renderRecommendations(entry);
-    setTitle(entry.title);
+    setTitle(entry.code);
 
     dom.scroller.scrollTo(0, 0);
     dom.watchTitle.focus({ preventScroll: true });
@@ -2343,16 +2567,20 @@
   const countPages = () => Math.max(1, Math.ceil(state.results.length / state.perPage));
 
   const measurePerPage = () => {
-    const tracks = getComputedStyle(dom.gallery).gridTemplateColumns.split(' ');
+    const tracks = getComputedStyle(dom.gridProbe).gridTemplateColumns.split(' ');
     const columns = tracks.filter((track) => track.endsWith('px')).length;
     if (columns === 0) return state.perPage || CONFIG.perPageByColumns[0];
+
+    state.columns = columns;
 
     return CONFIG.perPageByColumns[Math.min(columns, CONFIG.perPageByColumns.length) - 1];
   };
 
   const syncPerPage = () => {
+    const previousColumns = state.columns;
     const perPage = measurePerPage();
-    if (perPage === state.perPage) return false;
+    const columnsChanged = state.sections && state.columns !== previousColumns;
+    if (perPage === state.perPage && !columnsChanged) return false;
 
     state.perPage = perPage;
     if (state.results !== null) {
@@ -2368,10 +2596,20 @@
     const firstIndex = (state.page - 1) * state.perPage;
     if (!syncPerPage()) return;
 
-    navigate(Math.floor(firstIndex / state.perPage) + 1, null, state.query, 'replace');
+    navigate(Math.floor(firstIndex / state.perPage) + 1, null, state.query, 'replace', state.genre);
   };
 
-  const showGrid = (query, requestedPage) => {
+  const renderGenreHead = () => {
+    const show = state.genre !== '';
+    dom.genreHead.hidden = !show;
+    if (!show) return;
+
+    dom.genreHeadTitle.textContent = genreLabelFor(state.genre);
+    const count = state.results.length;
+    dom.genreHeadCount.textContent = count + (count === 1 ? ' video' : ' videos');
+  };
+
+  const showGrid = (query, genre, requestedPage) => {
     const wasWatching = isWatching();
 
     stopWatchVideo();
@@ -2380,28 +2618,35 @@
     state.recommended = [];
     dom.scroller.classList.remove('is-watching');
     syncProgress();
+
+    const sections = query === '' && genre === '' && state.hasGenres;
+    state.sections = sections;
     syncPerPage();
 
-    if (state.results === null || query !== state.query) {
+    if (state.results === null || query !== state.query || genre !== state.genre) {
       state.query = query;
-      state.results = filterEntries(query);
-      state.totalPages = countPages();
+      state.genre = genre;
+      state.results = filterEntries(query, genre);
+      state.totalPages = sections ? 1 : countPages();
       state.page = 0;
       renderSearchStatus();
+      renderGenreHead();
     }
 
-    const page = clamp(requestedPage, 1, state.totalPages);
+    const page = sections ? 1 : clamp(requestedPage, 1, state.totalPages);
     const titleParts = [
       query && 'Search: ' + query,
+      genre && genreLabelFor(genre),
       page > 1 && 'Page ' + page
     ];
 
-    normalizeUrl(buildUrl(page, null, query));
+    normalizeUrl(buildUrl(page, null, query, genre));
     setTitle(titleParts.filter(Boolean).join(' - '));
 
     if (state.page !== page) {
       state.page = page;
-      renderPage();
+      if (sections) renderHome();
+      else renderPage();
       return;
     }
 
@@ -2420,11 +2665,11 @@
     syncSearchInput(query);
 
     if (video) showWatch(video, query);
-    else showGrid(query, getPageFromUrl());
+    else showGrid(query, getGenreFromUrl(), getPageFromUrl());
   };
 
-  const navigate = (page, video, query, mode) => {
-    const url = buildUrl(page, video, query);
+  const navigate = (page, video, query, mode, genre = '') => {
+    const url = buildUrl(page, video, query, genre);
 
     if (mode === 'push') history.pushState(null, '', url);
     else history.replaceState(null, '', url);
@@ -2433,7 +2678,7 @@
   };
 
   const goHome = () => {
-    if (!isWatching() && state.page === 1 && state.query === '') {
+    if (!isWatching() && state.page === 1 && state.query === '' && state.genre === '') {
       dom.scroller.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       navigate(1, null, '', 'push');
@@ -2565,6 +2810,15 @@
   };
 
   const handleGalleryClick = (event) => {
+    const more = closestFromEvent(event, 'a[data-genre]');
+    if (more) {
+      if (!isModifiedClick(event)) {
+        event.preventDefault();
+        navigate(1, null, '', 'push', more.dataset.genre);
+      }
+      return;
+    }
+
     const tile = closestFromEvent(event, '.tile');
     if (tile) openTile(tile);
   };
@@ -2586,7 +2840,7 @@
     event.preventDefault();
 
     const page = Number(link.dataset.page);
-    if (page !== state.page) navigate(page, null, state.query, 'push');
+    if (page !== state.page) navigate(page, null, state.query, 'push', state.genre);
   };
 
   const handleRecommendationClick = (event) => {
@@ -2621,6 +2875,13 @@
     bindSearch();
 
     dom.gallery.addEventListener('click', handleGalleryClick);
+    dom.genreHead.addEventListener('click', (event) => {
+      const back = closestFromEvent(event, 'a[data-home]');
+      if (!back || isModifiedClick(event)) return;
+
+      event.preventDefault();
+      goHome();
+    });
     dom.gallery.addEventListener('keydown', handleGalleryKeydown);
     dom.pagination.addEventListener('click', handlePaginationClick);
     dom.recommendationList.addEventListener('click', handleRecommendationClick);
@@ -2646,7 +2907,7 @@
       if (state.entries.length > 0) applyRoute();
     });
     new ResizeObserver(distributeRecommendations).observe(dom.watchMain);
-    new ResizeObserver(handleGalleryResize).observe(dom.gallery);
+    new ResizeObserver(handleGalleryResize).observe(dom.gridProbe);
   };
 
   const loadEntries = async () => {
@@ -2655,7 +2916,16 @@
     return parseEntries(await response.json());
   };
 
+  const applySiteTitle = () => {
+    document.title = BASE_TITLE;
+    dom.brand.textContent = BASE_TITLE;
+    dom.brand.setAttribute('aria-label', BASE_TITLE + ' - home');
+    dom.siteHeading.textContent = BASE_TITLE;
+    dom.metaDescription.setAttribute('content', BASE_TITLE + ': browse and watch videos by code, cast, and category.');
+  };
+
   const init = async () => {
+    applySiteTitle();
     syncThemeControls();
     setInfoOpen(readInfoPref(), false);
     bindEvents();
@@ -2672,6 +2942,7 @@
       return;
     }
 
+    state.hasGenres = state.entries.some((entry) => entry.genre !== '');
     applyRoute();
   };
 
