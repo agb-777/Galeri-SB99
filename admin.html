@@ -56,7 +56,7 @@
   .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .toolbar input[type=search] { flex: 1 1 220px; margin: 0; }
   .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
-  table { width: 100%; border-collapse: collapse; min-width: 760px; }
+  table { width: 100%; border-collapse: collapse; min-width: 900px; }
   th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 14px; }
   th { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; }
   tr:last-child td { border-bottom: 0; }
@@ -73,6 +73,18 @@
   .actions-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 18px; }
   .full { grid-column: 1 / -1; }
   pre { max-height: 320px; margin: 12px 0 0; padding: 12px; overflow: auto; border-radius: 8px; background: var(--bg); font: 12.5px/1.5 ui-monospace, Menlo, Consolas, monospace; }
+  td.thumb { width: 100px; padding: 8px 12px; }
+  .thumb img, .ph { display: block; width: 84px; aspect-ratio: 3 / 2; border-radius: 6px; }
+  .thumb img { object-fit: cover; background: var(--bg); }
+  .ph { display: grid; place-items: center; border: 1px dashed var(--line); color: var(--muted); font-size: 11px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; max-height: 148px; margin-top: 6px; overflow: auto; }
+  .chip { min-height: 34px; padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; }
+  .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+  .addcat { display: flex; gap: 8px; margin-top: 8px; }
+  .addcat input { margin: 0; }
+  .diff h3 { margin: 14px 0 4px; font-size: 13px; letter-spacing: .03em; text-transform: uppercase; }
+  .diff h3.add { color: var(--ok); } .diff h3.edit { color: var(--warn); } .diff h3.del { color: var(--danger); }
+  .diff ul { margin: 0; padding-left: 18px; font-size: 14px; }
   #toast { position: fixed; right: 16px; bottom: 16px; z-index: 50; max-width: min(460px, calc(100vw - 32px)); padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: 0 16px 40px -16px rgb(0 0 0 / .5); font-size: 14px; }
   #toast.ok { border-color: var(--ok); } #toast.err { border-color: var(--danger); }
   #toast a { color: inherit; }
@@ -82,7 +94,7 @@
 <div class="wrap">
   <header class="top">
     <h1>Video Admin</h1>
-    <span id="status" class="badge">Not loaded</span>
+    <span id="status" class="badge">Empty list</span>
     <span class="spacer"></span>
     <span class="badge" id="count">0 videos</span>
   </header>
@@ -92,8 +104,9 @@
     <div class="grid">
       <label>Owner<input id="s-owner" autocomplete="off" placeholder="your-username" /></label>
       <label>Repository<input id="s-repo" autocomplete="off" placeholder="my-gallery" /></label>
-      <label>Branch<input id="s-branch" autocomplete="off" value="main" /></label>
-      <label>File path<input id="s-path" autocomplete="off" value="url.json" /></label>
+      <label>Branch<input id="s-branch" autocomplete="off" placeholder="e.g. main" /></label>
+      <label>File path in repo<input id="s-path" autocomplete="off" placeholder="e.g. url.json" /></label>
+      <label>Gallery page<input id="s-gallery" autocomplete="off" placeholder="e.g. index.html" /><small>Opened by "Open site preview".</small></label>
       <label class="full">Personal access token
         <input id="s-token" type="password" autocomplete="off" placeholder="github_pat_..." />
         <small>Use a fine-grained token limited to this one repo with "Contents: Read and write". It is never written into this file or saved to disk.</small>
@@ -112,17 +125,22 @@
       <span class="spacer"></span>
       <button id="btn-preview">Preview JSON</button>
       <button id="btn-download">Download</button>
-      <button class="primary" id="btn-push" disabled>Push to GitHub</button>
     </div>
-    <label>Commit message<input id="msg" value="Update videos" /></label>
+    <div class="toolbar">
+      <button id="btn-save" hidden>Save locally</button>
+      <button id="btn-site">Open site preview</button>
+      <span class="spacer"></span>
+      <button class="primary" id="btn-push" disabled>Review &amp; push to GitHub</button>
+    </div>
     <div id="preview" hidden><pre id="preview-pre"></pre></div>
-    <p class="note">The list is shown newest first. The site also shows the last entry in the file first, so new videos are added to the end of the file.</p>
+    <p class="note" id="auto-note"></p>
+    <p class="note">Workflow: add, edit, or delete videos, check them with <b>Open site preview</b>, then <b>Review &amp; push</b>. The list is shown newest first; new videos are added to the end of the file, which the site shows first.</p>
   </div>
 
   <div class="toolbar"><input type="search" id="q" placeholder="Search code, genre, category, cast, URL…" aria-label="Search" /></div>
   <div class="tablewrap">
     <table>
-      <thead><tr><th>#</th><th>Code</th><th>Genre</th><th>Category</th><th>Cast</th><th>Duration</th><th>Type</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>Cover</th><th>Code</th><th>Genre</th><th>Category</th><th>Cast</th><th>Duration</th><th>Type</th><th></th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
     <div id="empty" class="empty" hidden></div>
@@ -132,22 +150,40 @@
 <dialog id="dlg">
   <form id="form" method="dialog" novalidate>
     <h2 id="dlg-title">Add video</h2>
+    <p class="note">All fields are required.</p>
     <div class="grid">
-      <label>Code *<input id="f-code" autocomplete="off" required /></label>
-      <label>Type
-        <select id="f-type"><option value="">Video file (auto)</option><option value="embed">Embed</option></select>
+      <label>Code *<input id="f-code" autocomplete="off" /></label>
+      <label>Type *
+        <select id="f-type"><option value="">Video file</option><option value="embed">Embed</option></select>
       </label>
       <label class="full">URL *<input id="f-url" type="url" autocomplete="off" placeholder="https://…" /></label>
-      <label class="full">Cover image URL<input id="f-cover" type="url" autocomplete="off" placeholder="https://…" /><small>Required for embeds. For video files it is used as the player poster.</small></label>
-      <label>Genre<input id="f-genre" autocomplete="off" placeholder="Drama" /><small>Groups videos into sections on the home page.</small></label>
-      <label>Duration<input id="f-duration" autocomplete="off" placeholder="12:34 or 754" /></label>
-      <label class="full">Categories * <input id="f-category" autocomplete="off" placeholder="Romance, Comedy" /><small>Separate with commas.</small></label>
-      <label class="full">Cast<input id="f-cast" autocomplete="off" placeholder="Name One, Name Two" /><small>Separate with commas.</small></label>
+      <label class="full">Cover image URL *<input id="f-cover" type="url" autocomplete="off" placeholder="https://…" /></label>
+      <label>Genre *<input id="f-genre" list="genre-list" autocomplete="off" placeholder="Pick or type" /><datalist id="genre-list"></datalist></label>
+      <label>Duration *<input id="f-duration" autocomplete="off" placeholder="12:34 or 754" /></label>
+      <div class="full"><label for="f-newcat">Categories * <small>Tap to select from existing categories, or type a new one.</small></label>
+        <div id="cat-picker" class="chips"></div>
+        <div class="addcat"><input id="f-newcat" autocomplete="off" placeholder="New category, then press Enter" /><button type="button" id="f-addcat">Add</button></div>
+      </div>
+      <label class="full">Cast *<input id="f-cast" autocomplete="off" placeholder="Name One, Name Two" /><small>Separate with commas.</small></label>
     </div>
     <ul id="f-errors" class="errors" hidden></ul>
     <div class="actions-row">
       <button type="button" id="f-cancel">Cancel</button>
       <button type="submit" class="primary" id="f-save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="review">
+  <form id="rv-form" method="dialog" novalidate>
+    <h2>Review changes</h2>
+    <p class="note" id="rv-sub"></p>
+    <div id="rv-diff" class="diff"></div>
+    <p class="note" id="rv-warn" hidden></p>
+    <label style="margin-top:14px">Commit message<input id="rv-msg" /></label>
+    <div class="actions-row">
+      <button type="button" id="rv-cancel">Cancel</button>
+      <button type="submit" class="primary" id="rv-confirm">Confirm push</button>
     </div>
   </form>
 </dialog>
@@ -162,7 +198,10 @@
   const KEY = 'sb99-admin-settings';
   const TOKEN_KEY = 'sb99-admin-token';
   const KNOWN = ['code', 'url', 'type', 'cover', 'genre', 'category', 'cast', 'duration'];
-  const state = { entries: [], wrapper: null, sha: null, dirty: false, loaded: false, editing: -1 };
+  const state = { entries: [], wrapper: null, sha: null, dirty: false, loaded: false, editing: -1, cats: [], pending: null, saving: false };
+  const auto = { on: false, file: '', timer: 0, running: false, again: false };
+  state.loaded = true;
+  let fileHandle = null;
 
   // ---------- helpers ----------
   const text = (v) => (typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '');
@@ -186,13 +225,14 @@
   // ---------- settings ----------
   const getSettings = () => ({
     owner: $('#s-owner').value.trim(), repo: $('#s-repo').value.trim(),
-    branch: $('#s-branch').value.trim() || 'main', path: $('#s-path').value.trim() || 'url.json',
+    branch: $('#s-branch').value.trim(), path: $('#s-path').value.trim(),
+    gallery: $('#s-gallery').value.trim(),
     token: $('#s-token').value.trim()
   });
   const saveSettings = () => {
-    const { owner, repo, branch, path, token } = getSettings();
+    const { owner, repo, branch, path, gallery, token } = getSettings();
     try {
-      localStorage.setItem(KEY, JSON.stringify({ owner, repo, branch, path }));
+      localStorage.setItem(KEY, JSON.stringify({ owner, repo, branch, path, gallery }));
       if ($('#s-remember').checked && token) sessionStorage.setItem(TOKEN_KEY, token);
       else sessionStorage.removeItem(TOKEN_KEY);
     } catch { /* storage unavailable */ }
@@ -204,12 +244,13 @@
       if (s.repo) $('#s-repo').value = s.repo;
       if (s.branch) $('#s-branch').value = s.branch;
       if (s.path) $('#s-path').value = s.path;
+      if (s.gallery) $('#s-gallery').value = s.gallery;
       const t = sessionStorage.getItem(TOKEN_KEY);
       if (t) { $('#s-token').value = t; $('#s-remember').checked = true; }
       if (!s.owner || !s.repo) $('#settings').open = true;
     } catch { $('#settings').open = true; }
   };
-  ['#s-owner', '#s-repo', '#s-branch', '#s-path', '#s-token', '#s-remember'].forEach((id) => $(id).addEventListener('change', saveSettings));
+  ['#s-owner', '#s-repo', '#s-branch', '#s-path', '#s-gallery', '#s-token', '#s-remember'].forEach((id) => $(id).addEventListener('change', saveSettings));
 
   // ---------- data ----------
   const parseData = (raw) => {
@@ -246,16 +287,23 @@
     return JSON.stringify(data, null, 2) + '\n';
   };
 
-  const validateEntry = (e, index) => {
+  const validateEntry = (e, index, strict) => {
     const errs = [];
     const code = text(e.code);
     if (!code) errs.push('Code is required.');
     else if (state.entries.some((o, i) => i !== index && text(o.code).toLowerCase() === code.toLowerCase())) errs.push('Code "' + code + '" is already used.');
     if (!isHttp(text(e.url))) errs.push('URL is required and must start with http:// or https://.');
-    if (list(e.category).length === 0) errs.push('At least one category is required.');
+    if (list(e.category).length === 0) errs.push('Select or add at least one category.');
     const embed = text(e.type).toLowerCase() === 'embed';
-    if (embed && !isHttp(text(e.cover))) errs.push('Embeds need a cover image URL.');
-    if (text(e.cover) && !isHttp(text(e.cover))) errs.push('Cover must be a valid http(s) URL.');
+    if (strict) {
+      if (!isHttp(text(e.cover))) errs.push('Cover image URL is required (http:// or https://).');
+      if (!text(e.genre)) errs.push('Genre is required.');
+      if (!text(e.duration)) errs.push('Duration is required.');
+      if (list(e.cast).length === 0) errs.push('Cast is required (at least one name).');
+    } else {
+      if (embed && !isHttp(text(e.cover))) errs.push('Embeds need a cover image URL.');
+      if (text(e.cover) && !isHttp(text(e.cover))) errs.push('Cover must be a valid http(s) URL.');
+    }
     if (text(e.duration) && !DURATION.test(text(e.duration))) errs.push('Duration must look like 12:34, 1:02:03, or a number of seconds.');
     return errs;
   };
@@ -264,9 +312,12 @@
   const setStatus = () => {
     const el = $('#status');
     el.className = 'badge ' + (!state.loaded ? '' : state.dirty ? 'dirty' : 'clean');
-    el.textContent = !state.loaded ? 'Not loaded' : state.dirty ? 'Unsaved changes' : 'Up to date';
+    el.textContent = state.saving ? 'Saving…' : !state.loaded ? 'Not loaded' : state.dirty ? 'Unsaved changes' : state.entries.length === 0 ? 'Empty list' : 'Saved';
+    $('#btn-save').classList.toggle('primary', state.dirty);
+    $('#btn-save').hidden = auto.on;
+    $('#auto-note').textContent = auto.on ? 'Auto-save is on: every change is written to ' + auto.file + ' automatically.' : 'Auto-save is off. Run server.py instead of http.server to turn it on, or use Save locally.';
     $('#count').textContent = state.entries.length + (state.entries.length === 1 ? ' video' : ' videos');
-    $('#btn-push').disabled = !state.loaded || !state.dirty;
+    $('#btn-push').disabled = !state.loaded;
   };
 
   const cell = (tr, value, cls) => { const td = document.createElement('td'); td.textContent = value; if (cls) td.className = cls; tr.append(td); return td; };
@@ -281,7 +332,16 @@
       if (q && !hay.includes(q)) continue;
       shown++;
       const tr = document.createElement('tr');
-      cell(tr, i + 1, 'muted'); cell(tr, text(e.code) || '(no code)', 'code'); cell(tr, text(e.genre) || '—', 'muted');
+      cell(tr, i + 1, 'muted');
+      const tt = document.createElement('td'); tt.className = 'thumb';
+      const ph = (label) => Object.assign(document.createElement('div'), { className: 'ph', textContent: label });
+      if (isHttp(text(e.cover))) {
+        const img = new Image(); img.loading = 'lazy'; img.alt = ''; img.referrerPolicy = 'no-referrer';
+        img.addEventListener('error', () => tt.replaceChildren(ph('Broken')));
+        img.src = text(e.cover); tt.append(img);
+      } else tt.append(ph('No cover'));
+      tr.append(tt);
+      cell(tr, text(e.code) || '(no code)', 'code'); cell(tr, text(e.genre) || '—', 'muted');
       cell(tr, csv(list(e.category)) || '—'); cell(tr, csv(list(e.cast)) || '—', 'muted');
       cell(tr, text(e.duration) || '—', 'muted'); cell(tr, text(e.type) === 'embed' ? 'Embed' : 'Video', 'muted');
       const td = document.createElement('td'); td.className = 'actions';
@@ -291,12 +351,28 @@
     }
     const empty = $('#empty');
     empty.hidden = shown > 0;
-    empty.textContent = !state.loaded ? 'Nothing loaded yet. Use "Load local url.json", "Open file…", or "Pull from GitHub".' : state.entries.length === 0 ? 'No videos yet. Click "+ Add video".' : 'No videos match your search.';
+    empty.textContent = state.entries.length === 0 ? 'The list is empty. Click "+ Add video" to start, or load an existing list with "Load local url.json", "Open file…", or "Pull from GitHub".' : 'No videos match your search.';
     setStatus();
     if (!$('#preview').hidden) $('#preview-pre').textContent = serialize();
   };
 
-  const markDirty = () => { state.dirty = true; render(); };
+  // ---------- auto-save (needs server.py) ----------
+  const autoSave = async () => {
+    if (auto.running) { auto.again = true; return; }
+    auto.running = true; state.saving = true; setStatus();
+    try {
+      const res = await fetch('__admin/save', { method: 'POST', headers: { 'X-Admin': '1', 'Content-Type': 'application/json' }, body: serialize() });
+      if (!res.ok) throw new Error(((await res.json().catch(() => ({}))).error) || 'HTTP ' + res.status);
+      if (!auto.again) state.dirty = false;
+    } catch (err) { toast('Auto-save failed: ' + err.message, 'err'); }
+    finally {
+      auto.running = false; state.saving = false;
+      if (auto.again) { auto.again = false; autoSave(); } else render();
+    }
+  };
+  const queueSave = () => { if (!auto.on) return; clearTimeout(auto.timer); auto.timer = setTimeout(autoSave, 300); };
+
+  const markDirty = () => { state.dirty = true; render(); queueSave(); };
 
   // ---------- form ----------
   const dlg = $('#dlg');
@@ -307,19 +383,22 @@
     $('#f-code').value = text(e.code); $('#f-url').value = text(e.url);
     $('#f-type').value = text(e.type).toLowerCase() === 'embed' ? 'embed' : '';
     $('#f-cover').value = text(e.cover); $('#f-genre').value = text(e.genre);
-    $('#f-duration').value = text(e.duration); $('#f-category').value = csv(list(e.category)); $('#f-cast').value = csv(list(e.cast));
+    $('#f-duration').value = text(e.duration); $('#f-cast').value = csv(list(e.cast));
+    state.cats = list(e.category); $('#f-newcat').value = '';
+    $('#genre-list').replaceChildren(...[...new Set(state.entries.map((o) => text(o.genre)).filter(Boolean))].sort().map((g) => Object.assign(document.createElement('option'), { value: g })));
+    renderCats();
     $('#f-errors').hidden = true;
     dlg.showModal(); $('#f-code').focus();
   };
   const readForm = () => ({
     ...(state.editing >= 0 ? state.entries[state.editing] : {}),
     code: $('#f-code').value, url: $('#f-url').value, type: $('#f-type').value, cover: $('#f-cover').value,
-    genre: $('#f-genre').value, duration: $('#f-duration').value, category: $('#f-category').value, cast: $('#f-cast').value
+    genre: $('#f-genre').value, duration: $('#f-duration').value, category: state.cats, cast: $('#f-cast').value
   });
   $('#form').addEventListener('submit', (ev) => {
     ev.preventDefault();
     const entry = readForm();
-    const errs = validateEntry(entry, state.editing);
+    const errs = validateEntry(entry, state.editing, true);
     const box = $('#f-errors');
     if (errs.length) { box.replaceChildren(...errs.map((m) => Object.assign(document.createElement('li'), { textContent: m }))); box.hidden = false; return; }
     const cleaned = clean(entry);
@@ -328,6 +407,41 @@
     toast(state.editing >= 0 ? 'Video updated.' : 'Video added.', 'ok');
   });
   $('#f-cancel').addEventListener('click', () => dlg.close());
+
+  // ---------- category picker ----------
+  const allCats = () => {
+    const map = new Map();
+    state.entries.forEach((e) => list(e.category).forEach((c) => {
+      const k = c.toLowerCase(); if (!map.has(k)) map.set(k, { key: k, label: c, count: 0 }); map.get(k).count++;
+    }));
+    state.cats.forEach((c) => { const k = c.toLowerCase(); if (!map.has(k)) map.set(k, { key: k, label: c, count: 0 }); });
+    return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+  };
+  const renderCats = () => {
+    const box = $('#cat-picker'); box.replaceChildren();
+    allCats().forEach((c) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.key = c.key; b.dataset.label = c.label;
+      b.setAttribute('aria-pressed', String(state.cats.some((s) => s.toLowerCase() === c.key)));
+      b.textContent = c.label + (c.count ? ' (' + c.count + ')' : ' · new'); box.append(b);
+    });
+    if (!box.children.length) box.textContent = 'No categories yet. Type one below.';
+  };
+  const addCat = (raw) => {
+    raw.split(',').map((x) => x.trim()).filter(Boolean).forEach((name) => {
+      const found = allCats().find((c) => c.key === name.toLowerCase());
+      const label = found ? found.label : name;
+      if (!state.cats.some((s) => s.toLowerCase() === label.toLowerCase())) state.cats.push(label);
+    });
+    $('#f-newcat').value = ''; renderCats();
+  };
+  $('#cat-picker').addEventListener('click', (ev) => {
+    const b = ev.target.closest('.chip'); if (!b) return;
+    const i = state.cats.findIndex((s) => s.toLowerCase() === b.dataset.key);
+    if (i >= 0) state.cats.splice(i, 1); else state.cats.push(b.dataset.label);
+    renderCats();
+  });
+  $('#f-addcat').addEventListener('click', () => addCat($('#f-newcat').value));
+  $('#f-newcat').addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ',') { ev.preventDefault(); addCat($('#f-newcat').value); } });
 
   $('#rows').addEventListener('click', (ev) => {
     const b = ev.target.closest('button'); if (!b) return;
@@ -356,9 +470,27 @@
     const f = ev.target.files[0]; ev.target.value = ''; if (!f || !confirmDiscard()) return;
     try { parseData(await f.text()); toast('Loaded ' + f.name + '.', 'ok'); } catch (err) { toast('Invalid JSON: ' + err.message, 'err'); }
   });
-  $('#btn-download').addEventListener('click', () => {
+  const download = () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([serialize()], { type: 'application/json' })); a.download = 'url.json'; a.click(); URL.revokeObjectURL(a.href);
+  };
+  $('#btn-download').addEventListener('click', download);
+  $('#btn-save').addEventListener('click', async () => {
+    if (!state.loaded) { toast('Nothing to save yet.', 'err'); return; }
+    if (!window.showSaveFilePicker) {
+      download(); state.dirty = false; render();
+      toast('This browser cannot write files directly, so url.json was downloaded. Replace the old one in your project folder, then open the site preview.', 'ok'); return;
+    }
+    try {
+      if (!fileHandle) fileHandle = await window.showSaveFilePicker({ suggestedName: 'url.json', types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+      const w = await fileHandle.createWritable(); await w.write(serialize()); await w.close();
+      state.dirty = false; render(); toast('Saved to ' + fileHandle.name + '. Click "Open site preview" to check the site.', 'ok');
+    } catch (err) { if (err.name !== 'AbortError') { fileHandle = null; toast('Could not save: ' + err.message, 'err'); } }
+  });
+  $('#btn-site').addEventListener('click', () => {
+    if (!getSettings().gallery) { $('#settings').open = true; $('#s-gallery').focus(); toast('Enter your gallery page file name in GitHub settings first.', 'err'); return; }
+    if (state.dirty && !auto.on) toast('You have unsaved changes. Click "Save locally" first so the preview shows them.', 'err');
+    window.open(getSettings().gallery, '_blank', 'noopener');
   });
   $('#btn-preview').addEventListener('click', () => {
     const box = $('#preview'); box.hidden = !box.hidden;
@@ -385,41 +517,87 @@
     err.status = res.status; throw err;
   };
   const repoPath = ({ owner, repo, path }) => '/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo) + '/contents/' + path.split('/').map(encodeURIComponent).join('/');
-  const needRepo = (s) => { if (!s.owner || !s.repo) { $('#settings').open = true; toast('Fill in the owner and repository first.', 'err'); return false; } return true; };
+  const needRepo = (s) => { if (!s.owner || !s.repo || !s.branch || !s.path) { $('#settings').open = true; toast('Fill in the owner, repository, branch, and file path in GitHub settings first.', 'err'); return false; } return true; };
 
   const busy = (btn, on, label) => { btn.disabled = on; if (label) btn.textContent = on ? label : btn.dataset.label; };
   ['#btn-pull', '#btn-push'].forEach((id) => ($(id).dataset.label = $(id).textContent));
+
+  const fetchRemote = async (s) => {
+    const url = repoPath(s) + '?ref=' + encodeURIComponent(s.branch);
+    const meta = await (await gh(url)).json();
+    const raw = meta.content && meta.encoding === 'base64' ? fromB64(meta.content)
+      : await (await gh(url, { headers: { Accept: 'application/vnd.github.raw+json' } })).text();
+    return { sha: meta.sha, raw };
+  };
 
   $('#btn-pull').addEventListener('click', async () => {
     const s = getSettings(); if (!needRepo(s) || !confirmDiscard()) return;
     const btn = $('#btn-pull'); busy(btn, true, 'Pulling…');
     try {
-      const meta = await (await gh(repoPath(s) + '?ref=' + encodeURIComponent(s.branch))).json();
-      const raw = meta.content && meta.encoding === 'base64' ? fromB64(meta.content)
-        : await (await gh(repoPath(s) + '?ref=' + encodeURIComponent(s.branch), { headers: { Accept: 'application/vnd.github.raw+json' } })).text();
-      parseData(raw); state.sha = meta.sha; setStatus(); toast('Pulled ' + state.entries.length + ' videos from GitHub.', 'ok');
+      const remote = await fetchRemote(s);
+      parseData(remote.raw); state.sha = remote.sha; state.dirty = true; render(); queueSave();
+      toast('Pulled ' + state.entries.length + ' videos from GitHub.' + (auto.on ? '' : ' Click "Save locally" to write them to your local url.json.'), 'ok');
     } catch (err) { toast(err.message, 'err'); } finally { busy(btn, false, 'Pulling…'); }
   });
+
+  const entriesOf = (raw) => {
+    const d = JSON.parse(raw);
+    const arr = Array.isArray(d) ? d : d && typeof d === 'object' ? d[Object.keys(d).find((k) => Array.isArray(d[k]))] || [] : [];
+    return arr.filter((o) => o && typeof o === 'object').map(clean);
+  };
+  const keyOf = (e, i) => (text(e.code) ? text(e.code).toLowerCase() : '#' + i);
+  const diffEntries = (remote, local) => {
+    const r = new Map(remote.map((e, i) => [keyOf(e, i), e])); const l = new Map(local.map((e, i) => [keyOf(e, i), e]));
+    const added = [], edited = [], removed = [];
+    l.forEach((e, k) => { if (!r.has(k)) added.push(e.code); else if (JSON.stringify(r.get(k)) !== JSON.stringify(e)) edited.push(e.code); });
+    r.forEach((e, k) => { if (!l.has(k)) removed.push(e.code || k); });
+    return { added, edited, removed };
+  };
+  const diffGroup = (title, cls, items) => {
+    const wrap = document.createDocumentFragment(); if (!items.length) return wrap;
+    wrap.append(Object.assign(document.createElement('h3'), { className: cls, textContent: title + ' (' + items.length + ')' }));
+    const ul = document.createElement('ul');
+    items.slice(0, 30).forEach((c) => ul.append(Object.assign(document.createElement('li'), { textContent: c })));
+    if (items.length > 30) ul.append(Object.assign(document.createElement('li'), { textContent: '… and ' + (items.length - 30) + ' more' }));
+    wrap.append(ul); return wrap;
+  };
 
   $('#btn-push').addEventListener('click', async () => {
     const s = getSettings(); if (!needRepo(s)) return;
     if (!s.token) { $('#settings').open = true; $('#s-token').focus(); toast('Enter your GitHub token first.', 'err'); return; }
     const problems = [];
-    state.entries.forEach((e, i) => validateEntry(e, i).forEach((m) => problems.push('#' + (i + 1) + ' ' + (text(e.code) || '(no code)') + ': ' + m)));
+    state.entries.forEach((e, i) => validateEntry(e, i, false).forEach((m) => problems.push('#' + (i + 1) + ' ' + (text(e.code) || '(no code)') + ': ' + m)));
     if (problems.length) { toast('Fix these first: ' + problems.slice(0, 3).join(' | ') + (problems.length > 3 ? ' …' : ''), 'err'); return; }
-    const btn = $('#btn-push'); busy(btn, true, 'Pushing…');
+    const btn = $('#btn-push'); busy(btn, true, 'Checking…');
     try {
-      let remoteSha = null;
-      try { remoteSha = (await (await gh(repoPath(s) + '?ref=' + encodeURIComponent(s.branch))).json()).sha; }
-      catch (err) { if (err.status !== 404) throw err; }
-      if (remoteSha && state.sha && remoteSha !== state.sha && !confirm('This file was changed on GitHub after you loaded it. Overwrite those changes?')) return;
-      if (remoteSha && !state.sha && !confirm('You have not pulled the current file from GitHub. Overwrite it with this list?')) return;
-      const body = { message: $('#msg').value.trim() || 'Update videos', content: toB64(serialize()), branch: s.branch };
-      if (remoteSha) body.sha = remoteSha;
+      let remote = null;
+      try { remote = await fetchRemote(s); } catch (err) { if (err.status !== 404) throw err; }
+      const d = diffEntries(remote ? entriesOf(remote.raw) : [], state.entries.map(clean));
+      const total = d.added.length + d.edited.length + d.removed.length;
+      if (remote && total === 0) { toast('Nothing to push. GitHub already matches your list.', 'ok'); return; }
+      state.pending = { sha: remote ? remote.sha : null };
+      $('#rv-sub').textContent = (remote ? 'Compared with ' + s.branch + ':' + s.path + ' on GitHub.' : 'This file does not exist on GitHub yet and will be created.') + ' After the push the site will have ' + state.entries.length + ' videos.';
+      $('#rv-diff').replaceChildren(diffGroup('Added', 'add', d.added), diffGroup('Edited', 'edit', d.edited), diffGroup('Removed', 'del', d.removed));
+      const warn = $('#rv-warn'); const notes = [];
+      if (state.dirty) notes.push('These changes are not saved locally yet, so the site preview does not show them.');
+      if (remote && state.sha && remote.sha !== state.sha) notes.push('The file on GitHub changed after you pulled it. The lists above are compared with its current version.');
+      warn.textContent = notes.join(' '); warn.hidden = notes.length === 0;
+      const parts = [d.added.length && 'add ' + d.added.length, d.edited.length && 'edit ' + d.edited.length, d.removed.length && 'remove ' + d.removed.length].filter(Boolean);
+      $('#rv-msg').value = parts.length ? parts.join(', ').replace(/^./, (c) => c.toUpperCase()) + ' video(s)' : 'Update videos';
+      $('#review').showModal();
+    } catch (err) { toast(err.message, 'err'); } finally { busy(btn, false, 'Checking…'); setStatus(); }
+  });
+  $('#rv-cancel').addEventListener('click', () => $('#review').close());
+  $('#rv-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const s = getSettings(); const btn = $('#rv-confirm'); btn.dataset.label = btn.textContent; busy(btn, true, 'Pushing…');
+    try {
+      const body = { message: $('#rv-msg').value.trim() || 'Update videos', content: toB64(serialize()), branch: s.branch };
+      if (state.pending && state.pending.sha) body.sha = state.pending.sha;
       const out = await (await gh(repoPath(s), { method: 'PUT', body: JSON.stringify(body) })).json();
-      state.sha = out.content.sha; state.dirty = false; render();
+      state.sha = out.content.sha; $('#review').close();
       toast('', 'ok', 'Pushed. <a href="' + out.commit.html_url + '" target="_blank" rel="noopener">View commit</a>. GitHub Pages updates in 1–2 minutes.');
-    } catch (err) { toast(err.message, 'err'); } finally { busy(btn, false, 'Pushing…'); setStatus(); }
+    } catch (err) { toast(err.message, 'err'); } finally { busy(btn, false, 'Pushing…'); }
   });
 
   window.addEventListener('beforeunload', (ev) => { if (state.dirty) { ev.preventDefault(); ev.returnValue = ''; } });
@@ -427,6 +605,7 @@
   // ---------- start ----------
   restoreSettings();
   render();
+  fetch('__admin/ping', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : Promise.reject())).then((j) => { auto.on = !!j.ok; auto.file = j.file || 'url.json'; render(); }).catch(() => {});
   fetch('url.json', { cache: 'no-store' }).then((r) => (r.ok ? r.text() : Promise.reject())).then(parseData).catch(() => {});
 })();
 </script>
