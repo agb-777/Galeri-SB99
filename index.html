@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="Gallery SB99: browse and watch videos by title, cast, and category." />
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#ececea" />
 <title>Gallery SB99</title>
@@ -1388,6 +1389,10 @@
     pointer-events: none;
   }
 
+  .duration::before {
+    content: attr(data-duration);
+  }
+
   .rec-thumb .duration {
     right: 5px;
     bottom: 5px;
@@ -1399,6 +1404,7 @@
 <body>
 
 <header id="site-nav" class="site-nav">
+  <h1 class="sr-only">Gallery SB99</h1>
   <button id="nav-toggle" class="nav-btn nav-toggle" type="button"
           aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
     <svg class="icon-burger" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1469,7 +1475,6 @@
 <div id="progress" class="progress" aria-hidden="true" hidden></div>
 
 <div id="scroller" class="scroller">
-  <h1 class="sr-only">Gallery SB99</h1>
   <p id="search-status" class="search-status" role="status" hidden></p>
   <main id="gallery" aria-label="Video gallery" aria-busy="false"></main>
 
@@ -1704,7 +1709,8 @@
 
     const badge = document.createElement('span');
     badge.className = 'duration';
-    badge.textContent = entry.duration;
+    badge.dataset.duration = entry.duration;
+    badge.setAttribute('aria-hidden', 'true');
     return [badge];
   };
 
@@ -1901,11 +1907,11 @@
     cover.className = 'tile-cover';
     cover.append(media, ...createDuration(entry), createPlayIcon());
 
-    const title = document.createElement('figcaption');
+    const title = document.createElement('div');
     title.className = 'tile-title';
     title.textContent = entry.title;
 
-    const element = document.createElement('figure');
+    const element = document.createElement('div');
     element.className = 'tile';
     element.tabIndex = 0;
     element.setAttribute('role', 'button');
