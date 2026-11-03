@@ -1443,8 +1443,29 @@
     white-space: nowrap;
   }
 
-  .genre-more::after {
-    content: " \2192";
+  .genre-more,
+  .genre-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .genre-more .ico,
+  .genre-back .ico {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.4;
+    transition: transform .2s var(--ease);
+  }
+
+  @media (hover: hover) {
+    .genre-more:hover .ico {
+      transform: translateX(2px);
+    }
+
+    .genre-back:hover .ico {
+      transform: translateX(-2px);
+    }
   }
 
   .genre-more:hover {
@@ -1570,7 +1591,7 @@
 <div id="scroller" class="scroller">
   <p id="search-status" class="search-status" role="status" hidden></p>
   <div id="genre-head" class="genre-head" hidden>
-    <a class="genre-back" href="./" data-home>&larr; All genres</a>
+    <a class="genre-back" href="./" data-home><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>All genres</a>
     <h2 id="genre-head-title" class="genre-head-title"></h2>
     <span id="genre-head-count" class="genre-head-count"></span>
   </div>
@@ -2249,6 +2270,7 @@
       more.href = buildUrl(1, null, '', key);
       more.dataset.genre = key;
       more.textContent = 'View all (' + group.entries.length + ')';
+      more.insertAdjacentHTML('beforeend', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>');
       head.append(more);
     }
 
