@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#ececea" />
-<title>Galeri SB99</title>
+<title>Gallery SB99</title>
 <script>
   (function () {
     var theme = 'light';
@@ -19,7 +19,7 @@
 <link rel="icon" href="data:," />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=Bricolage+Grotesque:wght@700;800&amp;family=Sedgwick+Ave+Display&amp;display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=Bricolage+Grotesque:wght@700;800&amp;display=swap" />
 <style>
   :root {
     color-scheme: light;
@@ -41,7 +41,6 @@
 
     --font: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --font-display: "Bricolage Grotesque", var(--font);
-    --font-graffiti: "Sedgwick Ave Display", "Permanent Marker", "Marker Felt", "Segoe Print", cursive;
   }
 
   :root[data-theme="dark"] {
@@ -145,10 +144,10 @@
   .brand {
     flex: none;
     color: var(--ink);
-    font-family: var(--font-graffiti);
-    font-size: 32px;
-    font-weight: 400;
-    letter-spacing: .01em;
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -.03em;
     line-height: 1;
     text-decoration: none;
     white-space: nowrap;
@@ -356,7 +355,7 @@
     }
 
     .brand {
-      font-size: 28px;
+      font-size: 22px;
     }
 
     .search {
@@ -943,7 +942,7 @@
   /* Brand + nav */
   .brand {
     display: inline-block;
-    transition: transform .3s var(--ease);
+    transition: opacity .2s ease;
   }
 
   .search-box {
@@ -1012,7 +1011,7 @@
 
   @media (hover: hover) {
     .brand:hover {
-      transform: rotate(-2.5deg) scale(1.03);
+      opacity: .75;
     }
 
     .tile:hover .tile-cover :is(video, img),
@@ -1107,68 +1106,7 @@
     }
   }
 
-  /* ===== Street layer: graffiti language beyond the logo ===== */
-  :root {
-    --stroke: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6.5C16 2.5 28 9 46 5S80 3 98 6' fill='none' stroke='%23000' stroke-width='3.2' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
-    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  /* Wall texture: fine grain, like paint on concrete */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background-image: var(--grain);
-    opacity: .06;
-    pointer-events: none;
-  }
-
-  :root[data-theme="dark"] body::before {
-    opacity: .1;
-    filter: invert(1);
-  }
-
-  /* Marker underline: active nav link + current page */
-  .nav-link[aria-current="page"]::after,
-  .page-btn[aria-current="page"]::after {
-    height: 9px;
-    background: var(--ink);
-    -webkit-mask: var(--stroke) center / 100% 100% no-repeat;
-    mask: var(--stroke) center / 100% 100% no-repeat;
-  }
-
-  .nav-link[aria-current="page"]::after {
-    bottom: -15px;
-    left: -4px;
-    right: -4px;
-  }
-
-  .page-btn[aria-current="page"]::after {
-    bottom: 0;
-  }
-
-  /* Hand-lettered headings */
-  .recommendations-title {
-    font-family: var(--font-graffiti);
-    font-size: 24px;
-    font-weight: 400;
-    letter-spacing: .02em;
-  }
-
-  .footer-text {
-    font-family: var(--font-graffiti);
-    font-size: 17px;
-    letter-spacing: .03em;
-  }
-
-  .search-status {
-    font-family: var(--font-graffiti);
-    font-size: 20px;
-    letter-spacing: .02em;
-  }
-
-  /* Posters on a wall: hard offset shadow, lifted on hover */
+  /* ===== Soft elevation ===== */
   .tile-cover,
   .rec-thumb {
     transition: transform .25s var(--ease), box-shadow .25s var(--ease);
@@ -1176,33 +1114,24 @@
 
   @media (hover: hover) {
     .tile:hover .tile-cover {
-      transform: translate(-3px, -3px) rotate(-.4deg);
-      box-shadow: 6px 6px 0 var(--ink);
-    }
-
-    .tile:nth-child(even):hover .tile-cover {
-      transform: translate(-3px, -3px) rotate(.4deg);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -14px rgb(0 0 0 / .4);
     }
 
     .rec:hover .rec-thumb {
-      transform: translate(-2px, -2px);
-      box-shadow: 4px 4px 0 var(--ink);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px -12px rgb(0 0 0 / .4);
     }
   }
 
-  /* Player framed like a pasted poster */
+  .recommendations-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -.015em;
+  }
+
   .watch-player {
-    box-shadow: 8px 8px 0 var(--ink);
-  }
-
-  @media (max-width: 600px) {
-    .watch-player {
-      box-shadow: 5px 5px 0 var(--ink);
-    }
-
-    .recommendations-title {
-      font-size: 22px;
-    }
+    box-shadow: 0 20px 40px -26px rgb(0 0 0 / .5);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1399,7 +1328,7 @@
 
   @media (hover: hover) {
     .nav-link:hover .ico {
-      transform: translateY(-2px) rotate(-6deg);
+      transform: translateY(-1px);
     }
   }
 
@@ -1471,7 +1400,7 @@
 
 <header id="site-nav" class="site-nav">
   <button id="nav-toggle" class="nav-btn nav-toggle" type="button"
-          aria-label="Buka menu" aria-expanded="false" aria-controls="nav-menu">
+          aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
     <svg class="icon-burger" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" />
@@ -1482,15 +1411,15 @@
     </svg>
   </button>
 
-  <a class="brand" href="./" data-home aria-label="Galeri SB99 - beranda">Galeri SB99</a>
+  <a class="brand" href="./" data-home aria-label="Gallery SB99 - home">Gallery SB99</a>
 
-  <nav id="nav-menu" class="nav-menu" aria-label="Menu utama">
-    <a class="nav-link" href="./" data-home aria-current="page"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7" /><path d="M6 10v9h4v-5h4v5h4v-9" /></svg>Beranda</a>
-    <a class="nav-link" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.8a4.3 4.3 0 0 1 7.5 2.7c0 5.4-7.5 10-7.5 10z" /></svg>Dukung Saya</a>
+  <nav id="nav-menu" class="nav-menu" aria-label="Main menu">
+    <a class="nav-link" href="./" data-home aria-current="page"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7" /><path d="M6 10v9h4v-5h4v5h4v-9" /></svg>Home</a>
+    <a class="nav-link" href="#"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.8a4.3 4.3 0 0 1 7.5 2.7c0 5.4-7.5 10-7.5 10z" /></svg>Support Me</a>
   </nav>
 
   <form id="search-form" class="search" role="search">
-    <button id="search-toggle" class="nav-btn search-toggle" type="button" aria-label="Buka pencarian">
+    <button id="search-toggle" class="nav-btn search-toggle" type="button" aria-label="Open search">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
@@ -1498,16 +1427,16 @@
     </button>
 
     <div class="search-box">
-      <button class="search-submit" type="submit" aria-label="Cari">
+      <button class="search-submit" type="submit" aria-label="Search">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
         </svg>
       </button>
       <input id="search-input" class="search-input" type="search" name="q"
-             placeholder="Cari judul, pemeran, kategori" aria-label="Cari video"
+             placeholder="Search title, cast, category" aria-label="Search videos"
              autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
-      <button id="search-clear" class="search-clear" type="button" aria-label="Hapus pencarian" hidden>
+      <button id="search-clear" class="search-clear" type="button" aria-label="Clear search" hidden>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 6l12 12" /><path d="M18 6L6 18" />
@@ -1515,7 +1444,7 @@
       </button>
     </div>
 
-    <button id="search-close" class="nav-btn search-close" type="button" aria-label="Tutup pencarian">
+    <button id="search-close" class="nav-btn search-close" type="button" aria-label="Close search">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M6 6l12 12" /><path d="M18 6L6 18" />
@@ -1524,7 +1453,7 @@
   </form>
 
   <button id="theme-toggle" class="nav-btn theme-toggle" type="button"
-          aria-label="Ganti ke tema gelap" title="Ganti tema">
+          aria-label="Switch to dark theme" title="Toggle theme">
     <svg class="icon-moon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M20.5 14.2A8.5 8.5 0 1 1 9.8 3.5a6.8 6.8 0 0 0 10.7 10.7z" />
@@ -1540,17 +1469,17 @@
 <div id="progress" class="progress" aria-hidden="true" hidden></div>
 
 <div id="scroller" class="scroller">
-  <h1 class="sr-only">Galeri SB99</h1>
+  <h1 class="sr-only">Gallery SB99</h1>
   <p id="search-status" class="search-status" role="status" hidden></p>
-  <main id="gallery" aria-label="Galeri video" aria-busy="false"></main>
+  <main id="gallery" aria-label="Video gallery" aria-busy="false"></main>
 
-  <nav id="pagination" class="pagination" aria-label="Halaman" hidden>
+  <nav id="pagination" class="pagination" aria-label="Pagination" hidden>
     <div id="page-list" class="page-list"></div>
   </nav>
 
   <p id="message" class="message" role="alert" hidden></p>
 
-  <section class="watch" aria-label="Pemutar video">
+  <section class="watch" aria-label="Video player">
     <div id="watch-main" class="watch-main">
       <div id="watch-player" class="watch-player">
         <video id="watch-video" controls controlsList="nodownload" playsinline preload="auto"></video>
@@ -1560,14 +1489,14 @@
               <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-dasharray="90 40" />
             </svg>
             <p id="player-loading-text" class="player-loading-text"></p>
-            <button id="player-retry" class="player-retry" type="button" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7" /><path d="M20 4v7h-7" /></svg>Muat ulang</button>
+            <button id="player-retry" class="player-retry" type="button" hidden><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7" /><path d="M20 4v7h-7" /></svg>Reload</button>
           </div>
         </div>
       </div>
       <h2 id="watch-title" class="watch-title" tabindex="-1"></h2>
 
       <button id="info-toggle" class="info-toggle" type="button" aria-expanded="true" aria-controls="watch-info" hidden>
-        <span class="info-toggle-label">Sembunyikan info</span>
+        <span class="info-toggle-label">Hide info</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 15l6-6 6 6" />
@@ -1576,31 +1505,31 @@
       <div id="watch-info" class="watch-info"><div class="watch-info-inner">
       <dl id="watch-meta" class="watch-meta">
         <div id="watch-cast-row" class="watch-meta-row" hidden>
-          <dt><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6" /></svg>Pemeran</dt>
+          <dt><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6" /></svg>Cast</dt>
           <dd id="watch-cast"></dd>
         </div>
         <div id="watch-category-row" class="watch-meta-row" hidden>
-          <dt><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7a1 1 0 0 1 .7.3l7.6 7.6a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0l-7.6-7.6a1 1 0 0 1-.3-.7z" /><circle cx="8.2" cy="8.2" r="1.3" /></svg>Kategori</dt>
+          <dt><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7a1 1 0 0 1 .7.3l7.6 7.6a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0l-7.6-7.6a1 1 0 0 1-.3-.7z" /><circle cx="8.2" cy="8.2" r="1.3" /></svg>Category</dt>
           <dd id="watch-category"></dd>
         </div>
       </dl>
       </div></div>
     </div>
 
-    <aside id="recommendations" class="recommendations" aria-label="Video terkait" hidden>
-      <h3 class="recommendations-title">Video terkait</h3>
+    <aside id="recommendations" class="recommendations" aria-label="Related videos" hidden>
+      <h3 class="recommendations-title">Related videos</h3>
       <ul id="recommendation-list" class="recommendation-list"></ul>
     </aside>
 
-    <section id="recommendations-more" class="recommendations-more" aria-label="Video lainnya" hidden>
-      <h3 class="recommendations-title">Video lainnya</h3>
+    <section id="recommendations-more" class="recommendations-more" aria-label="More videos" hidden>
+      <h3 class="recommendations-title">More videos</h3>
       <ul id="recommendation-more-list" class="recommendation-grid"></ul>
     </section>
   </section>
 </div>
 
 <footer class="site-footer">
-  <p class="footer-text">Dibuat dengan <span role="img" aria-label="cinta">&#10084;&#65039;</span> dan <span role="img" aria-label="kopi">&#9749;</span></p>
+  <p class="footer-text">Made with <span role="img" aria-label="love">&#10084;&#65039;</span> and <span role="img" aria-label="coffee">&#9749;</span></p>
 </footer>
 
 <script>
@@ -1633,23 +1562,23 @@
 
   const MESSAGES = Object.freeze({
     fetchFailed:
-      'Gagal memuat <code>url.json</code>.<br>' +
-      'Kalau file ini dibuka langsung lewat <code>file://</code> (klik dua kali), ' +
-      'browser memblokir <code>fetch()</code>. Jalankan lewat localhost:<br><br>' +
+      'Failed to load <code>url.json</code>.<br>' +
+      'If this file is opened directly via <code>file://</code> (double-click), ' +
+      'the browser blocks <code>fetch()</code>. Run it through localhost:<br><br>' +
       '<code>python3 -m http.server 8000</code><br>' +
-      'lalu buka <code>http://localhost:8000</code>',
+      'then open <code>http://localhost:8000</code>',
     invalidJson:
-      '<code>url.json</code> bukan JSON yang valid. Periksa koma, tanda kutip, atau kurung yang kurang.',
+      '<code>url.json</code> is not valid JSON. Check for missing commas, quotes, or brackets.',
     noVideos:
-      '<code>url.json</code> tidak berisi video yang valid.<br>' +
-      'Isinya harus berupa daftar objek. Wajib ada: <code>url</code>, <code>title</code>, ' +
+      '<code>url.json</code> contains no valid videos.<br>' +
+      'It must be a list of objects. Required: <code>url</code>, <code>title</code>, ' +
       '<code>category</code>. ' +
-      'Embed juga butuh <code>cover</code>:<br><br>' +
-      '<code>{ "url": "https://example.com/video.mp4", "title": "Judul", ' +
+      'Embeds also need <code>cover</code>:<br><br>' +
+      '<code>{ "url": "https://example.com/video.mp4", "title": "Title", ' +
       '"category": ["Drama"] }</code>',
     allFailed:
-      'Semua video di halaman ini gagal dimuat. Periksa <code>url.json</code> &mdash; setiap URL harus ' +
-      'langsung mengarah ke file video (bukan halaman web) dan bisa diakses publik.'
+      'All videos on this page failed to load. Check <code>url.json</code> &mdash; every URL must ' +
+      'point directly to a video file (not a web page) and be publicly accessible.'
   });
 
   const dom = {
@@ -1980,7 +1909,7 @@
     element.className = 'tile';
     element.tabIndex = 0;
     element.setAttribute('role', 'button');
-    element.setAttribute('aria-label', 'Putar video: ' + entry.title);
+    element.setAttribute('aria-label', 'Play video: ' + entry.title);
     element.append(cover, title);
 
     const item = { element, index, entry };
@@ -2074,17 +2003,17 @@
     if (totalPages <= 1) return;
 
     const controls = [
-      createPageControl({ page: page - 1, text: 'Sebelumnya', label: 'Halaman sebelumnya', disabled: page === 1 })
+      createPageControl({ page: page - 1, text: 'Previous', label: 'Previous page', disabled: page === 1 })
     ];
 
     for (const entry of buildPageList(page, totalPages)) {
       controls.push(entry === null
         ? createPageGap()
-        : createPageControl({ page: entry, text: String(entry), label: 'Halaman ' + entry, current: entry === page }));
+        : createPageControl({ page: entry, text: String(entry), label: 'Page ' + entry, current: entry === page }));
     }
 
     controls.push(
-      createPageControl({ page: page + 1, text: 'Berikutnya', label: 'Halaman berikutnya', disabled: page === totalPages })
+      createPageControl({ page: page + 1, text: 'Next', label: 'Next page', disabled: page === totalPages })
     );
 
     dom.pageList.replaceChildren(...controls);
@@ -2099,11 +2028,11 @@
 
     if (count === 0) {
       dom.searchStatus.textContent =
-        'Tidak ada video untuk “' + query + '”. Coba judul, nama pemeran, atau kategori.';
+        'No videos found for “' + query + '”. Try a title, cast name, or category.';
       return;
     }
 
-    dom.searchStatus.textContent = count + ' video ditemukan untuk “' + query + '”';
+    dom.searchStatus.textContent = count + (count === 1 ? ' video' : ' videos') + ' found for “' + query + '”';
   };
 
   const setTitle = (label = '') => {
@@ -2143,9 +2072,9 @@
   };
 
   const LOADING_STAGES = Object.freeze([
-    [0, 'Menghubungkan ke server…'],
-    [5000, 'Server agak lama merespons. Tunggu sebentar ya…'],
-    [15000, 'Masih menunggu server. Kalau tidak muncul, coba muat ulang.']
+    [0, 'Connecting to the server…'],
+    [5000, 'The server is slow to respond. Please wait a moment…'],
+    [15000, 'Still waiting for the server. If nothing appears, try reloading.']
   ]);
 
   let loadingTimers = [];
@@ -2177,7 +2106,7 @@
     loadingTimers.forEach(clearTimeout);
     loadingTimers = [];
     dom.playerLoading.hidden = false;
-    dom.playerLoadingText.textContent = 'Video gagal dimuat. Periksa koneksi lu atau coba muat ulang.';
+    dom.playerLoadingText.textContent = 'The video failed to load. Check your connection or try again.';
     dom.playerRetry.hidden = false;
   };
 
@@ -2201,7 +2130,7 @@
       try {
         if (frame.contentWindow.location.href === 'about:blank') return;
       } catch {
-        // cross-origin: halaman embed sungguhan sudah dimuat
+        // cross-origin: the real embed page has loaded
       }
 
       clearLoading();
@@ -2356,7 +2285,7 @@
     dom.watchInfo.classList.toggle('is-collapsed', !open);
     dom.watchInfo.inert = !open;
     dom.infoToggle.setAttribute('aria-expanded', String(open));
-    dom.infoToggle.querySelector('.info-toggle-label').textContent = open ? 'Sembunyikan info' : 'Tampilkan info';
+    dom.infoToggle.querySelector('.info-toggle-label').textContent = open ? 'Hide info' : 'Show info';
     if (!save) return;
 
     try {
@@ -2457,8 +2386,8 @@
 
     const page = clamp(requestedPage, 1, state.totalPages);
     const titleParts = [
-      query && 'Cari: ' + query,
-      page > 1 && 'Halaman ' + page
+      query && 'Search: ' + query,
+      page > 1 && 'Page ' + page
     ];
 
     normalizeUrl(buildUrl(page, null, query));
@@ -2561,7 +2490,7 @@
 
   const syncThemeControls = () => {
     const theme = currentTheme();
-    dom.themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Ganti ke tema terang' : 'Ganti ke tema gelap');
+    dom.themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
     dom.themeColorMeta.content = THEME_COLORS[theme];
   };
 
@@ -2584,7 +2513,7 @@
   const setMenuOpen = (open) => {
     dom.nav.classList.toggle('is-open', open);
     dom.navToggle.setAttribute('aria-expanded', String(open));
-    dom.navToggle.setAttribute('aria-label', open ? 'Tutup menu' : 'Buka menu');
+    dom.navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
   };
 
   const handleNavClick = (event) => {
