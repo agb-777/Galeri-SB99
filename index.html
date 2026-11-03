@@ -1212,6 +1212,25 @@
     }
   }
 
+  .info-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    margin: 10px 0 0;
+    padding: 5px 12px 6px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-muted);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   .info-toggle:hover {
     border-color: var(--ink);
     color: var(--ink);
@@ -1261,7 +1280,7 @@
       top: 14px;
       right: auto;
       bottom: 14px;
-      left: -12px;
+      left: -8px;
       width: 3px;
       height: auto;
       -webkit-mask: none;
@@ -1371,6 +1390,7 @@
 
   .nav-link {
     gap: 8px;
+    white-space: nowrap;
   }
 
   .nav-link .ico {
@@ -1403,6 +1423,21 @@
     .nav-link .ico {
       transition: none;
       transform: none !important;
+    }
+  }
+
+  /* ===== Touch targets ===== */
+  .search-submit,
+  .search-clear {
+    width: 34px;
+    height: 34px;
+  }
+
+  @media (pointer: coarse) {
+    .meta-link {
+      min-height: 36px;
+      padding-top: 7px;
+      padding-bottom: 8px;
     }
   }
 
@@ -1544,6 +1579,10 @@
           <dt><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6" /></svg>Pemeran</dt>
           <dd id="watch-cast"></dd>
         </div>
+        <div id="watch-category-row" class="watch-meta-row" hidden>
+          <dt><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7a1 1 0 0 1 .7.3l7.6 7.6a1 1 0 0 1 0 1.4l-7.7 7.7a1 1 0 0 1-1.4 0l-7.6-7.6a1 1 0 0 1-.3-.7z" /><circle cx="8.2" cy="8.2" r="1.3" /></svg>Kategori</dt>
+          <dd id="watch-category"></dd>
+        </div>
       </dl>
       </div></div>
     </div>
@@ -1641,6 +1680,8 @@
     infoToggle: document.getElementById('info-toggle'),
     watchCastRow: document.getElementById('watch-cast-row'),
     watchCast: document.getElementById('watch-cast'),
+    watchCategoryRow: document.getElementById('watch-category-row'),
+    watchCategory: document.getElementById('watch-category'),
     recommendations: document.getElementById('recommendations'),
     recommendationList: document.getElementById('recommendation-list'),
     recommendationMore: document.getElementById('recommendations-more'),
@@ -2156,7 +2197,15 @@
     frame.allow = EMBED_ALLOW;
     frame.allowFullscreen = true;
     frame.referrerPolicy = 'strict-origin-when-cross-origin';
-    frame.addEventListener('load', clearLoading, { once: true });
+    frame.addEventListener('load', () => {
+      try {
+        if (frame.contentWindow.location.href === 'about:blank') return;
+      } catch {
+        // cross-origin: halaman embed sungguhan sudah dimuat
+      }
+
+      clearLoading();
+    });
     frame.src = entry.url;
     return frame;
   };
@@ -2327,10 +2376,13 @@
 
   const renderWatchDetails = (entry) => {
     dom.watchTitle.textContent = entry.title;
-    dom.infoToggle.hidden = entry.cast.length === 0;
-    dom.watchInfo.hidden = entry.cast.length === 0;
+    const hasInfo = entry.cast.length > 0 || entry.categories.length > 0;
+    dom.infoToggle.hidden = !hasInfo;
+    dom.watchInfo.hidden = !hasInfo;
     dom.watchCastRow.hidden = entry.cast.length === 0;
     dom.watchCast.replaceChildren(...joinWithCommas(entry.cast.map(createMetaLink)));
+    dom.watchCategoryRow.hidden = entry.categories.length === 0;
+    dom.watchCategory.replaceChildren(...joinWithCommas(entry.categories.map(createMetaLink)));
   };
 
   const showWatch = (number, query) => {
