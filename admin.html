@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Video Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&amp;family=Schibsted+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f4f4f2; --panel: #fff; --ink: #141414; --muted: #6b6b68; --line: #deded9;
+    --accent: #141414; --on-accent: #fff; --danger: #c0392b; --ok: #1f7a4d; --warn: #9a6700;
+    --font: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --display: "Bricolage Grotesque", var(--font);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e0e0e; --panel: #171717; --ink: #f2f2f0; --muted: #a0a09b; --line: #2e2e2b;
+      --accent: #f2f2f0; --on-accent: #111; --danger: #ff7b6b; --ok: #5fd39a; --warn: #e3b341;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 80px; }
+  header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-bottom: 20px; }
+  h1 { margin: 0; font: 800 26px/1.1 var(--display); letter-spacing: -.03em; }
+  .badge { padding: 3px 10px 4px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 13px; }
+  .badge.dirty { border-color: var(--warn); color: var(--warn); }
+  .badge.clean { border-color: var(--ok); color: var(--ok); }
+  .spacer { flex: 1; }
+
+  button, .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 7px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: 600 14px var(--font); cursor: pointer; text-decoration: none; }
+  button:hover:not(:disabled), .btn:hover { border-color: var(--ink); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+  button.danger { color: var(--danger); }
+  button.small { min-height: 32px; padding: 4px 10px; font-size: 13px; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  details.card, .card { margin-bottom: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  details.card > summary { cursor: pointer; font-weight: 700; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 14px; }
+  label { display: block; font-size: 13px; font-weight: 600; }
+  label small { display: block; margin-top: 4px; color: var(--muted); font-weight: 400; }
+  input, select, textarea { width: 100%; margin-top: 4px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: 400 15px var(--font); }
+  input:focus, select:focus, textarea:focus { border-color: var(--ink); outline: none; }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-weight: 400; }
+  .check input { width: auto; margin: 0; }
+  .note { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .toolbar input[type=search] { flex: 1 1 220px; margin: 0; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  table { width: 100%; border-collapse: collapse; min-width: 760px; }
+  th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 14px; }
+  th { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; }
+  tr:last-child td { border-bottom: 0; }
+  td.code { font-weight: 700; white-space: nowrap; }
+  td.muted { color: var(--muted); }
+  td.actions { white-space: nowrap; text-align: right; }
+  .empty { padding: 40px 16px; color: var(--muted); text-align: center; }
+  .errors { margin: 10px 0 0; padding-left: 18px; color: var(--danger); font-size: 14px; }
+
+  dialog { width: min(640px, calc(100vw - 24px)); max-height: calc(100vh - 24px); padding: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--ink); }
+  dialog::backdrop { background: rgb(0 0 0 / .5); }
+  dialog form { padding: 20px; }
+  dialog h2 { margin: 0 0 4px; font: 800 20px var(--display); letter-spacing: -.02em; }
+  .actions-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  .full { grid-column: 1 / -1; }
+  pre { max-height: 320px; margin: 12px 0 0; padding: 12px; overflow: auto; border-radius: 8px; background: var(--bg); font: 12.5px/1.5 ui-monospace, Menlo, Consolas, monospace; }
+  #toast { position: fixed; right: 16px; bottom: 16px; z-index: 50; max-width: min(460px, calc(100vw - 32px)); padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); box-shadow: 0 16px 40px -16px rgb(0 0 0 / .5); font-size: 14px; }
+  #toast.ok { border-color: var(--ok); } #toast.err { border-color: var(--danger); }
+  #toast a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Video Admin</h1>
+    <span id="status" class="badge">Not loaded</span>
+    <span class="spacer"></span>
+    <span class="badge" id="count">0 videos</span>
+  </header>
+
+  <details class="card" id="settings">
+    <summary>GitHub settings</summary>
+    <div class="grid">
+      <label>Owner<input id="s-owner" autocomplete="off" placeholder="your-username" /></label>
+      <label>Repository<input id="s-repo" autocomplete="off" placeholder="my-gallery" /></label>
+      <label>Branch<input id="s-branch" autocomplete="off" value="main" /></label>
+      <label>File path<input id="s-path" autocomplete="off" value="url.json" /></label>
+      <label class="full">Personal access token
+        <input id="s-token" type="password" autocomplete="off" placeholder="github_pat_..." />
+        <small>Use a fine-grained token limited to this one repo with "Contents: Read and write". It is never written into this file or saved to disk.</small>
+      </label>
+    </div>
+    <label class="check"><input id="s-remember" type="checkbox" /> Remember the token for this browser tab only (cleared when the tab closes)</label>
+  </details>
+
+  <div class="card">
+    <div class="toolbar">
+      <button class="primary" id="btn-add">+ Add video</button>
+      <button id="btn-pull">Pull from GitHub</button>
+      <button id="btn-local">Load local url.json</button>
+      <button id="btn-file">Open file…</button>
+      <input id="file" type="file" accept=".json,application/json" hidden />
+      <span class="spacer"></span>
+      <button id="btn-preview">Preview JSON</button>
+      <button id="btn-download">Download</button>
+      <button class="primary" id="btn-push" disabled>Push to GitHub</button>
+    </div>
+    <label>Commit message<input id="msg" value="Update videos" /></label>
+    <div id="preview" hidden><pre id="preview-pre"></pre></div>
+    <p class="note">The list is shown newest first. The site also shows the last entry in the file first, so new videos are added to the end of the file.</p>
+  </div>
+
+  <div class="toolbar"><input type="search" id="q" placeholder="Search code, genre, category, cast, URL…" aria-label="Search" /></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>#</th><th>Code</th><th>Genre</th><th>Category</th><th>Cast</th><th>Duration</th><th>Type</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="empty" class="empty" hidden></div>
+  </div>
+</div>
+
+<dialog id="dlg">
+  <form id="form" method="dialog" novalidate>
+    <h2 id="dlg-title">Add video</h2>
+    <div class="grid">
+      <label>Code *<input id="f-code" autocomplete="off" required /></label>
+      <label>Type
+        <select id="f-type"><option value="">Video file (auto)</option><option value="embed">Embed</option></select>
+      </label>
+      <label class="full">URL *<input id="f-url" type="url" autocomplete="off" placeholder="https://…" /></label>
+      <label class="full">Cover image URL<input id="f-cover" type="url" autocomplete="off" placeholder="https://…" /><small>Required for embeds. For video files it is used as the player poster.</small></label>
+      <label>Genre<input id="f-genre" autocomplete="off" placeholder="Drama" /><small>Groups videos into sections on the home page.</small></label>
+      <label>Duration<input id="f-duration" autocomplete="off" placeholder="12:34 or 754" /></label>
+      <label class="full">Categories * <input id="f-category" autocomplete="off" placeholder="Romance, Comedy" /><small>Separate with commas.</small></label>
+      <label class="full">Cast<input id="f-cast" autocomplete="off" placeholder="Name One, Name Two" /><small>Separate with commas.</small></label>
+    </div>
+    <ul id="f-errors" class="errors" hidden></ul>
+    <div class="actions-row">
+      <button type="button" id="f-cancel">Cancel</button>
+      <button type="submit" class="primary" id="f-save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const $ = (sel) => document.querySelector(sel);
+  const KEY = 'sb99-admin-settings';
+  const TOKEN_KEY = 'sb99-admin-token';
+  const KNOWN = ['code', 'url', 'type', 'cover', 'genre', 'category', 'cast', 'duration'];
+  const state = { entries: [], wrapper: null, sha: null, dirty: false, loaded: false, editing: -1 };
+
+  // ---------- helpers ----------
+  const text = (v) => (typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '');
+  const list = (v) => (Array.isArray(v) ? v : typeof v === 'string' ? v.split(',') : []).map(text).filter(Boolean);
+  const csv = (arr) => arr.join(', ');
+  const isHttp = (u) => /^https?:\/\/\S+$/i.test(u);
+  const DURATION = /^\d+$|^\d{1,3}(:\d{1,2}){1,2}$/;
+  const toB64 = (str) => { let bin = ''; new TextEncoder().encode(str).forEach((b) => (bin += String.fromCharCode(b))); return btoa(bin); };
+  const fromB64 = (b64) => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\s/g, '')), (c) => c.charCodeAt(0)));
+
+  let toastTimer = 0;
+  const toast = (msg, kind, html) => {
+    const el = $('#toast');
+    el.className = kind || '';
+    if (html) el.innerHTML = html; else el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (el.hidden = true), kind === 'err' ? 9000 : 5000);
+  };
+
+  // ---------- settings ----------
+  const getSettings = () => ({
+    owner: $('#s-owner').value.trim(), repo: $('#s-repo').value.trim(),
+    branch: $('#s-branch').value.trim() || 'main', path: $('#s-path').value.trim() || 'url.json',
+    token: $('#s-token').value.trim()
+  });
+  const saveSettings = () => {
+    const { owner, repo, branch, path, token } = getSettings();
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ owner, repo, branch, path }));
+      if ($('#s-remember').checked && token) sessionStorage.setItem(TOKEN_KEY, token);
+      else sessionStorage.removeItem(TOKEN_KEY);
+    } catch { /* storage unavailable */ }
+  };
+  const restoreSettings = () => {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY) || '{}');
+      if (s.owner) $('#s-owner').value = s.owner;
+      if (s.repo) $('#s-repo').value = s.repo;
+      if (s.branch) $('#s-branch').value = s.branch;
+      if (s.path) $('#s-path').value = s.path;
+      const t = sessionStorage.getItem(TOKEN_KEY);
+      if (t) { $('#s-token').value = t; $('#s-remember').checked = true; }
+      if (!s.owner || !s.repo) $('#settings').open = true;
+    } catch { $('#settings').open = true; }
+  };
+  ['#s-owner', '#s-repo', '#s-branch', '#s-path', '#s-token', '#s-remember'].forEach((id) => $(id).addEventListener('change', saveSettings));
+
+  // ---------- data ----------
+  const parseData = (raw) => {
+    const data = JSON.parse(raw);
+    let arr = data; state.wrapper = null;
+    if (!Array.isArray(data) && data && typeof data === 'object') {
+      const key = Object.keys(data).find((k) => Array.isArray(data[k]));
+      if (!key) throw new Error('No list of videos found in this JSON.');
+      state.wrapper = { key, root: data }; arr = data[key];
+    }
+    if (!Array.isArray(arr)) throw new Error('url.json must be a list of videos.');
+    state.entries = arr.filter((o) => o && typeof o === 'object');
+    state.dirty = false; state.loaded = true;
+    render();
+  };
+
+  const clean = (entry) => {
+    const out = {};
+    const type = text(entry.type).toLowerCase() === 'embed' ? 'embed' : '';
+    out.code = text(entry.code); out.url = text(entry.url);
+    if (type) out.type = type;
+    if (text(entry.cover)) out.cover = text(entry.cover);
+    if (text(entry.genre)) out.genre = text(entry.genre);
+    out.category = list(entry.category);
+    const cast = list(entry.cast); if (cast.length) out.cast = cast;
+    if (text(entry.duration)) out.duration = /^\d+$/.test(text(entry.duration)) ? Number(text(entry.duration)) : text(entry.duration);
+    Object.keys(entry).forEach((k) => { if (!KNOWN.includes(k) && k !== 'title') out[k] = entry[k]; }); // keep unknown fields
+    return out;
+  };
+
+  const serialize = () => {
+    const arr = state.entries.map(clean);
+    const data = state.wrapper ? { ...state.wrapper.root, [state.wrapper.key]: arr } : arr;
+    return JSON.stringify(data, null, 2) + '\n';
+  };
+
+  const validateEntry = (e, index) => {
+    const errs = [];
+    const code = text(e.code);
+    if (!code) errs.push('Code is required.');
+    else if (state.entries.some((o, i) => i !== index && text(o.code).toLowerCase() === code.toLowerCase())) errs.push('Code "' + code + '" is already used.');
+    if (!isHttp(text(e.url))) errs.push('URL is required and must start with http:// or https://.');
+    if (list(e.category).length === 0) errs.push('At least one category is required.');
+    const embed = text(e.type).toLowerCase() === 'embed';
+    if (embed && !isHttp(text(e.cover))) errs.push('Embeds need a cover image URL.');
+    if (text(e.cover) && !isHttp(text(e.cover))) errs.push('Cover must be a valid http(s) URL.');
+    if (text(e.duration) && !DURATION.test(text(e.duration))) errs.push('Duration must look like 12:34, 1:02:03, or a number of seconds.');
+    return errs;
+  };
+
+  // ---------- render ----------
+  const setStatus = () => {
+    const el = $('#status');
+    el.className = 'badge ' + (!state.loaded ? '' : state.dirty ? 'dirty' : 'clean');
+    el.textContent = !state.loaded ? 'Not loaded' : state.dirty ? 'Unsaved changes' : 'Up to date';
+    $('#count').textContent = state.entries.length + (state.entries.length === 1 ? ' video' : ' videos');
+    $('#btn-push').disabled = !state.loaded || !state.dirty;
+  };
+
+  const cell = (tr, value, cls) => { const td = document.createElement('td'); td.textContent = value; if (cls) td.className = cls; tr.append(td); return td; };
+
+  const render = () => {
+    const q = $('#q').value.trim().toLowerCase();
+    const rows = $('#rows'); rows.replaceChildren();
+    let shown = 0;
+    for (let i = state.entries.length - 1; i >= 0; i--) {
+      const e = state.entries[i];
+      const hay = [e.code, e.genre, e.url, ...list(e.category), ...list(e.cast)].map(text).join(' ').toLowerCase();
+      if (q && !hay.includes(q)) continue;
+      shown++;
+      const tr = document.createElement('tr');
+      cell(tr, i + 1, 'muted'); cell(tr, text(e.code) || '(no code)', 'code'); cell(tr, text(e.genre) || '—', 'muted');
+      cell(tr, csv(list(e.category)) || '—'); cell(tr, csv(list(e.cast)) || '—', 'muted');
+      cell(tr, text(e.duration) || '—', 'muted'); cell(tr, text(e.type) === 'embed' ? 'Embed' : 'Video', 'muted');
+      const td = document.createElement('td'); td.className = 'actions';
+      const edit = document.createElement('button'); edit.className = 'small'; edit.textContent = 'Edit'; edit.dataset.edit = i; edit.setAttribute('aria-label', 'Edit ' + text(e.code));
+      const del = document.createElement('button'); del.className = 'small danger'; del.textContent = 'Delete'; del.dataset.del = i; del.setAttribute('aria-label', 'Delete ' + text(e.code));
+      td.append(edit, ' ', del); tr.append(td); rows.append(tr);
+    }
+    const empty = $('#empty');
+    empty.hidden = shown > 0;
+    empty.textContent = !state.loaded ? 'Nothing loaded yet. Use "Load local url.json", "Open file…", or "Pull from GitHub".' : state.entries.length === 0 ? 'No videos yet. Click "+ Add video".' : 'No videos match your search.';
+    setStatus();
+    if (!$('#preview').hidden) $('#preview-pre').textContent = serialize();
+  };
+
+  const markDirty = () => { state.dirty = true; render(); };
+
+  // ---------- form ----------
+  const dlg = $('#dlg');
+  const openForm = (index) => {
+    state.editing = index;
+    const e = index >= 0 ? state.entries[index] : {};
+    $('#dlg-title').textContent = index >= 0 ? 'Edit video' : 'Add video';
+    $('#f-code').value = text(e.code); $('#f-url').value = text(e.url);
+    $('#f-type').value = text(e.type).toLowerCase() === 'embed' ? 'embed' : '';
+    $('#f-cover').value = text(e.cover); $('#f-genre').value = text(e.genre);
+    $('#f-duration').value = text(e.duration); $('#f-category').value = csv(list(e.category)); $('#f-cast').value = csv(list(e.cast));
+    $('#f-errors').hidden = true;
+    dlg.showModal(); $('#f-code').focus();
+  };
+  const readForm = () => ({
+    ...(state.editing >= 0 ? state.entries[state.editing] : {}),
+    code: $('#f-code').value, url: $('#f-url').value, type: $('#f-type').value, cover: $('#f-cover').value,
+    genre: $('#f-genre').value, duration: $('#f-duration').value, category: $('#f-category').value, cast: $('#f-cast').value
+  });
+  $('#form').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const entry = readForm();
+    const errs = validateEntry(entry, state.editing);
+    const box = $('#f-errors');
+    if (errs.length) { box.replaceChildren(...errs.map((m) => Object.assign(document.createElement('li'), { textContent: m }))); box.hidden = false; return; }
+    const cleaned = clean(entry);
+    if (state.editing >= 0) state.entries[state.editing] = cleaned; else state.entries.push(cleaned);
+    state.loaded = true; dlg.close(); markDirty();
+    toast(state.editing >= 0 ? 'Video updated.' : 'Video added.', 'ok');
+  });
+  $('#f-cancel').addEventListener('click', () => dlg.close());
+
+  $('#rows').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button'); if (!b) return;
+    if (b.dataset.edit !== undefined) openForm(Number(b.dataset.edit));
+    else if (b.dataset.del !== undefined) {
+      const i = Number(b.dataset.del);
+      if (confirm('Delete "' + text(state.entries[i].code) + '"? You can still undo by reloading before you push.')) { state.entries.splice(i, 1); markDirty(); toast('Video deleted.', 'ok'); }
+    }
+  });
+  $('#btn-add').addEventListener('click', () => openForm(-1));
+  $('#q').addEventListener('input', render);
+
+  // ---------- load / download ----------
+  const confirmDiscard = () => !state.dirty || confirm('You have unsaved changes. Discard them?');
+
+  $('#btn-local').addEventListener('click', async () => {
+    if (!confirmDiscard()) return;
+    try {
+      const res = await fetch('url.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      parseData(await res.text()); toast('Loaded local url.json.', 'ok');
+    } catch (err) { toast('Could not load local url.json (' + err.message + '). Run this page through localhost, or use "Open file…".', 'err'); }
+  });
+  $('#btn-file').addEventListener('click', () => $('#file').click());
+  $('#file').addEventListener('change', async (ev) => {
+    const f = ev.target.files[0]; ev.target.value = ''; if (!f || !confirmDiscard()) return;
+    try { parseData(await f.text()); toast('Loaded ' + f.name + '.', 'ok'); } catch (err) { toast('Invalid JSON: ' + err.message, 'err'); }
+  });
+  $('#btn-download').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([serialize()], { type: 'application/json' })); a.download = 'url.json'; a.click(); URL.revokeObjectURL(a.href);
+  });
+  $('#btn-preview').addEventListener('click', () => {
+    const box = $('#preview'); box.hidden = !box.hidden;
+    if (!box.hidden) $('#preview-pre').textContent = serialize();
+  });
+
+  // ---------- GitHub ----------
+  const gh = async (path, opts = {}) => {
+    const { token } = getSettings();
+    const res = await fetch('https://api.github.com' + path, {
+      ...opts,
+      headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(token ? { Authorization: 'Bearer ' + token } : {}), ...(opts.headers || {}) }
+    });
+    if (res.ok) return res;
+    let detail = ''; try { detail = (await res.json()).message || ''; } catch { /* ignore */ }
+    const map = {
+      401: 'The token is invalid or expired.',
+      403: 'Permission denied. The token needs "Contents: Read and write" on this repository (or you hit a rate limit).',
+      404: 'Repository, branch, or file not found. For private repos this also means the token has no access.',
+      409: 'Conflict: the file changed on GitHub. Pull again, then redo your change.',
+      422: 'GitHub rejected the request. Check the branch name and file path.'
+    };
+    const err = new Error(map[res.status] || detail || 'GitHub error ' + res.status);
+    err.status = res.status; throw err;
+  };
+  const repoPath = ({ owner, repo, path }) => '/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repo) + '/contents/' + path.split('/').map(encodeURIComponent).join('/');
+  const needRepo = (s) => { if (!s.owner || !s.repo) { $('#settings').open = true; toast('Fill in the owner and repository first.', 'err'); return false; } return true; };
+
+  const busy = (btn, on, label) => { btn.disabled = on; if (label) btn.textContent = on ? label : btn.dataset.label; };
+  ['#btn-pull', '#btn-push'].forEach((id) => ($(id).dataset.label = $(id).textContent));
+
+  $('#btn-pull').addEventListener('click', async () => {
+    const s = getSettings(); if (!needRepo(s) || !confirmDiscard()) return;
+    const btn = $('#btn-pull'); busy(btn, true, 'Pulling…');
+    try {
+      const meta = await (await gh(repoPath(s) + '?ref=' + encodeURIComponent(s.branch))).json();
+      const raw = meta.content && meta.encoding === 'base64' ? fromB64(meta.content)
+        : await (await gh(repoPath(s) + '?ref=' + encodeURIComponent(s.branch), { headers: { Accept: 'application/vnd.github.raw+json' } })).text();
+      parseData(raw); state.sha = meta.sha; setStatus(); toast('Pulled ' + state.entries.length + ' videos from GitHub.', 'ok');
+    } catch (err) { toast(err.message, 'err'); } finally { busy(btn, false, 'Pulling…'); }
+  });
+
+  $('#btn-push').addEventListener('click', async () => {
+    const s = getSettings(); if (!needRepo(s)) return;
+    if (!s.token) { $('#settings').open = true; $('#s-token').focus(); toast('Enter your GitHub token first.', 'err'); return; }
+    const problems = [];
+    state.entries.forEach((e, i) => validateEntry(e, i).forEach((m) => problems.push('#' + (i + 1) + ' ' + (text(e.code) || '(no code)') + ': ' + m)));
+    if (problems.length) { toast('Fix these first: ' + problems.slice(0, 3).join(' | ') + (problems.length > 3 ? ' …' : ''), 'err'); return; }
+    const btn = $('#btn-push'); busy(btn, true, 'Pushing…');
+    try {
+      let remoteSha = null;
+      try { remoteSha = (await (await gh(repoPath(s) + '?ref=' + encodeURIComponent(s.branch))).json()).sha; }
+      catch (err) { if (err.status !== 404) throw err; }
+      if (remoteSha && state.sha && remoteSha !== state.sha && !confirm('This file was changed on GitHub after you loaded it. Overwrite those changes?')) return;
+      if (remoteSha && !state.sha && !confirm('You have not pulled the current file from GitHub. Overwrite it with this list?')) return;
+      const body = { message: $('#msg').value.trim() || 'Update videos', content: toB64(serialize()), branch: s.branch };
+      if (remoteSha) body.sha = remoteSha;
+      const out = await (await gh(repoPath(s), { method: 'PUT', body: JSON.stringify(body) })).json();
+      state.sha = out.content.sha; state.dirty = false; render();
+      toast('', 'ok', 'Pushed. <a href="' + out.commit.html_url + '" target="_blank" rel="noopener">View commit</a>. GitHub Pages updates in 1–2 minutes.');
+    } catch (err) { toast(err.message, 'err'); } finally { busy(btn, false, 'Pushing…'); setStatus(); }
+  });
+
+  window.addEventListener('beforeunload', (ev) => { if (state.dirty) { ev.preventDefault(); ev.returnValue = ''; } });
+
+  // ---------- start ----------
+  restoreSettings();
+  render();
+  fetch('url.json', { cache: 'no-store' }).then((r) => (r.ok ? r.text() : Promise.reject())).then(parseData).catch(() => {});
+})();
+</script>
+</body>
+</html>
