@@ -88,7 +88,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return self._json(200, {"ok": True, "file": FILE})
 
     def log_message(self, fmt, *args):
-        if "/__admin/" not in (args[0] if args else ""):
+        if "/__admin/" not in str(args[0] if args else ""):
             super().log_message(fmt, *args)
 
 
