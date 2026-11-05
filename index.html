@@ -17,7 +17,7 @@
     if (theme === 'dark') document.querySelector('meta[name="theme-color"]').content = '#0e0e0e';
   })();
 </script>
-<link rel="icon" href="data:," />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23131313'/%3E%3Ctext x='32' y='46' font-family='Arial,sans-serif' font-size='40' font-weight='800' text-anchor='middle' fill='%23ececea'%3EG%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&amp;family=Bricolage+Grotesque:wght@700;800&amp;display=swap" />
@@ -1688,6 +1688,55 @@
       display: none;
     }
   }
+
+  /* ===== Loading skeletons + row edge fades ===== */
+  .tile-skeleton {
+    flex: 0 0 min(300px, 78%);
+  }
+
+  .tile-skeleton::before {
+    content: "";
+    display: block;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius);
+    background: linear-gradient(100deg, var(--placeholder) 30%, var(--hover) 50%, var(--placeholder) 70%) 0 0 / 200% 100%;
+    animation: tile-shimmer 1.4s linear infinite;
+  }
+
+  .tile-skeleton::after {
+    content: "";
+    display: block;
+    width: 58%;
+    height: 14px;
+    margin-top: 12px;
+    border-radius: 4px;
+    background: var(--placeholder);
+  }
+
+  @keyframes tile-shimmer {
+    to { background-position: -200% 0; }
+  }
+
+  .tile-row[data-fade-r]:not([data-fade-l]) {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent);
+  }
+
+  .tile-row[data-fade-l]:not([data-fade-r]) {
+    -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent);
+    mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent);
+  }
+
+  .tile-row[data-fade-l][data-fade-r] {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile-skeleton::before {
+      animation: none;
+    }
+  }
 </style>
 </head>
 <body>
@@ -2224,6 +2273,7 @@
   const loadImage = (url) => new Promise((resolve) => {
     const image = new Image();
     image.alt = '';
+    image.decoding = 'async';
     image.draggable = false;
 
     const timeoutTimer = setTimeout(() => settle(null), CONFIG.videoTimeout);
@@ -2264,6 +2314,7 @@
     const title = document.createElement('div');
     title.className = 'tile-title';
     title.textContent = entry.title;
+    title.title = entry.title;
 
     const element = document.createElement('div');
     element.className = 'tile';
@@ -2410,6 +2461,7 @@
 
   const renderPage = async () => {
     const token = ++state.loadToken;
+    if (homeObserver) homeObserver.disconnect();
     const start = (state.page - 1) * state.perPage;
     const queue = state.results
       .slice(start, start + state.perPage)
@@ -2479,6 +2531,8 @@
       prev.hidden = next.hidden = max <= 2;
       prev.disabled = grid.scrollLeft <= 2;
       next.disabled = grid.scrollLeft >= max - 2;
+      grid.toggleAttribute('data-fade-l', max > 2 && grid.scrollLeft > 2);
+      grid.toggleAttribute('data-fade-r', max > 2 && grid.scrollLeft < max - 2);
     };
     const scrollBy = (direction) => {
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2543,12 +2597,26 @@
     return { section, grid };
   };
 
-  const renderHome = async () => {
+  let homeObserver = null;
+
+  const addSkeletons = (grid, count) => {
+    for (let i = 0; i < count; i += 1) {
+      const card = document.createElement('div');
+      card.className = 'tile-skeleton';
+      card.setAttribute('aria-hidden', 'true');
+      grid.append(card);
+    }
+  };
+
+  const renderHome = () => {
     const token = ++state.loadToken;
     const limit = CONFIG.rowLimit;
-    const queue = [];
+    const rows = new Map();
     let index = 0;
+    let pending = 0;
+    let firstDone = false;
 
+    if (homeObserver) homeObserver.disconnect();
     state.items = [];
     dom.message.hidden = true;
     dom.pagination.hidden = true;
@@ -2558,32 +2626,63 @@
 
     for (const group of buildGroups(state.results)) {
       const { section, grid } = createSection(group, limit);
+      const tasks = group.entries.slice(0, limit).map((entry) => ({ entry, index: index++ }));
+
+      addSkeletons(grid, Math.min(tasks.length, 5));
+      section.hidden = false;
       dom.gallery.append(section);
-      group.entries.slice(0, limit).forEach((entry) => queue.push({ entry, index: index++, section, grid }));
+      rows.set(section, { section, grid, tasks });
+      pending += 1;
     }
 
-    setLoading(queue.length > 0);
+    setLoading(pending > 0);
 
-    await runPool(queue, CONFIG.concurrency, async ({ entry, index: position, section, grid }) => {
+    const finishRow = () => {
+      pending -= 1;
+      if (!firstDone) { firstDone = true; setLoading(false); }
+      if (pending === 0 && state.items.length === 0) showMessage(MESSAGES.allFailed);
+    };
+
+    const loadRow = async ({ section, grid, tasks }) => {
+      await runPool(tasks, CONFIG.concurrency, async ({ entry, index: position }) => {
+        if (token !== state.loadToken) return;
+
+        const cover = await loadCover(entry);
+        if (!cover || token !== state.loadToken) return;
+
+        const item = createTile(cover, entry, position);
+        item.container = grid;
+        state.items.push(item);
+
+        const next = orderedItems().find((other) => other.container === grid && other.index > position);
+        const skeletons = grid.querySelectorAll('.tile-skeleton');
+        grid.insertBefore(item.element, next ? next.element : skeletons[0] || null);
+        if (skeletons.length > 0) skeletons[skeletons.length - 1].remove();
+        grid.update();
+      });
+
       if (token !== state.loadToken) return;
 
-      const cover = await loadCover(entry);
-      if (!cover || token !== state.loadToken) return;
+      grid.querySelectorAll('.tile-skeleton').forEach((node) => node.remove());
+      if (grid.querySelector('.tile')) grid.update();
+      else section.remove();
+      finishRow();
+    };
 
-      const item = createTile(cover, entry, position);
-      item.container = grid;
-      state.items.push(item);
+    if (!('IntersectionObserver' in window)) {
+      rows.forEach(loadRow);
+      return;
+    }
 
-      const next = orderedItems().find((other) => other.container === grid && other.index > position);
-      grid.insertBefore(item.element, next ? next.element : null);
-      section.hidden = false;
-      grid.update();
-    });
+    homeObserver = new IntersectionObserver((records) => {
+      records.forEach((record) => {
+        if (!record.isIntersecting) return;
+        homeObserver.unobserve(record.target);
+        loadRow(rows.get(record.target));
+      });
+    }, { root: dom.scroller, rootMargin: '600px 0px' });
 
-    if (token !== state.loadToken) return;
-
-    setLoading(false);
-    if (queue.length > 0 && state.items.length === 0) showMessage(MESSAGES.allFailed);
+    rows.forEach((row) => homeObserver.observe(row.section));
   };
 
   const LOADING_STAGES = Object.freeze([
@@ -3318,6 +3417,20 @@
     }
 
     state.hasGenres = state.entries.some((entry) => entry.genreKeys.length > 0);
+
+    const hosts = new Set();
+    state.entries.slice(0, 12).forEach((entry) => [entry.cover, entry.url].forEach((link) => {
+      try {
+        const origin = new URL(link).origin;
+        if (origin !== location.origin && hosts.size < 4 && !hosts.has(origin)) {
+          hosts.add(origin);
+          const hint = document.createElement('link');
+          hint.rel = 'preconnect';
+          hint.href = origin;
+          document.head.append(hint);
+        }
+      } catch { /* not a valid URL */ }
+    }));
     renderCategoryNav();
     applyRoute();
   };
