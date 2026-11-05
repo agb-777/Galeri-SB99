@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="description" content="Nge-JAV 🇯🇵: browse and watch videos by code, cast, and category." />
+<meta name="description" content="Galeri SB99: browse and watch videos by title, cast, and category." />
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content="#ececea" />
-<title>Nge-JAV 🇯🇵</title>
+<title>Galeri SB99</title>
 <script>
   (function () {
     var theme = 'light';
@@ -532,7 +532,7 @@
 
   .tile-cover {
     position: relative;
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--placeholder);
     border-radius: var(--radius);
@@ -558,7 +558,7 @@
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     background: #000;
     border-radius: inherit;
     pointer-events: none;
@@ -573,29 +573,6 @@
     pointer-events: none;
   }
 
-  .play {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    z-index: 1;
-    display: grid;
-    place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    background: var(--bg);
-    color: var(--ink);
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    transition: transform .2s ease;
-  }
-
-  .play svg {
-    width: 20px;
-    height: 20px;
-    margin-left: 2px;
-  }
-
   @media (hover: hover) {
     .tile:hover .tile-cover :is(video, img) {
       filter: brightness(.82);
@@ -604,14 +581,6 @@
     .tile:hover .tile-title {
       text-decoration: underline;
     }
-
-    .tile:hover .play {
-      transform: translate(-50%, -50%) scale(1.12);
-    }
-  }
-
-  .tile:active .play {
-    transform: translate(-50%, -50%) scale(.95);
   }
 
   @keyframes tile-in {
@@ -836,7 +805,7 @@
   .rec-thumb {
     flex: none;
     width: 168px;
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--placeholder);
     border-radius: var(--radius);
@@ -846,7 +815,7 @@
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     background: #000;
     pointer-events: none;
     transition: filter .2s ease;
@@ -1010,14 +979,6 @@
 
   .tile-title {
     letter-spacing: -.005em;
-  }
-
-  .play {
-    background: color-mix(in srgb, var(--bg) 86%, transparent);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    box-shadow: 0 6px 20px rgb(0 0 0 / .3);
-    transition: transform .3s var(--ease);
   }
 
   @media (hover: hover) {
@@ -1644,12 +1605,95 @@
       transition: none;
     }
   }
+
+  /* ===== Genre rows: one swipeable row per genre ===== */
+  .genre-section-head {
+    align-items: center;
+  }
+
+  .genre-tools {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .row-nav {
+    display: flex;
+    gap: 6px;
+  }
+
+  .row-btn {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color .15s ease, opacity .15s ease;
+  }
+
+  .row-btn[hidden] {
+    display: none;
+  }
+
+  .row-btn:hover:not(:disabled) {
+    border-color: var(--ink);
+  }
+
+  .row-btn:disabled {
+    opacity: .35;
+    cursor: default;
+  }
+
+  .row-btn:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  .row-btn .ico {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.4;
+  }
+
+  .tile-grid.tile-row {
+    display: flex;
+    gap: var(--gap);
+    width: auto;
+    margin: -6px calc(var(--gap) * -1) -10px;
+    padding: 6px var(--gap) 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: var(--gap);
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .tile-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tile-row > .tile {
+    flex: 0 0 min(300px, 78%);
+    scroll-snap-align: start;
+  }
+
+  @media (hover: none) {
+    .row-nav {
+      display: none;
+    }
+  }
 </style>
 </head>
 <body>
 
 <header id="site-nav" class="site-nav">
-  <h1 class="sr-only">Nge-JAV 🇯🇵</h1>
+  <h1 class="sr-only">Galeri SB99</h1>
   <button id="nav-toggle" class="nav-btn nav-toggle" type="button"
           aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
     <svg class="icon-burger" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1662,7 +1706,7 @@
     </svg>
   </button>
 
-  <a class="brand" href="./" data-home aria-label="Nge-JAV 🇯🇵 - home">Nge-JAV 🇯🇵</a>
+  <a class="brand" href="./" data-home aria-label="Galeri SB99 - home">Galeri SB99</a>
 
   <nav id="nav-menu" class="nav-menu" aria-label="Main menu">
     <a class="nav-link" href="./" data-home aria-current="page"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7" /><path d="M6 10v9h4v-5h4v5h4v-9" /></svg>Home</a>
@@ -1691,7 +1735,7 @@
         </svg>
       </button>
       <input id="search-input" class="search-input" type="search" name="q"
-             placeholder="Search code, cast, category" aria-label="Search videos"
+             placeholder="Search title, cast, category" aria-label="Search videos"
              autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" />
       <button id="search-clear" class="search-clear" type="button" aria-label="Clear search" hidden>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1801,10 +1845,12 @@
 
   const CONFIG = Object.freeze({
     // Change the site name here. It updates the browser tab, logo, and page heading.
-    siteTitle: 'Nge-JAV 🇯🇵',
+    siteTitle: 'Galeri SB99',
     // Optional: order of genre sections on the home page, top to bottom (e.g. ['Drama', 'Action']).
     // Genres not listed follow in the order they first appear in url.json; videos without a genre go last.
     genreOrder: [],
+    // Videos shown in each genre row on the home page (the rest are behind "View all").
+    rowLimit: 12,
     dataFile: 'url.json',
     perPageByColumns: [10, 12, 15, 20, 20, 24],
     recommendations: 20,
@@ -1839,10 +1885,10 @@
       '<code>url.json</code> is not valid JSON. Check for missing commas, quotes, or brackets.',
     noVideos:
       '<code>url.json</code> contains no valid videos.<br>' +
-      'It must be a list of objects. Required: <code>url</code>, <code>code</code>, ' +
+      'It must be a list of objects. Required: <code>url</code>, <code>title</code>, ' +
       '<code>category</code>. ' +
       'Embeds also need <code>cover</code>:<br><br>' +
-      '<code>{ "url": "https://example.com/video.mp4", "code": "ABC-123", ' +
+      '<code>{ "url": "https://example.com/video.mp4", "title": "Example", ' +
       '"category": ["Drama"] }</code>',
     allFailed:
       'All videos on this page failed to load. Check <code>url.json</code> &mdash; every URL must ' +
@@ -2003,7 +2049,7 @@
   const findMissingKeys = (raw, type, categories) => {
     const checks = {
       url: type !== null,
-      code: toText(raw.code) !== '',
+      title: (toText(raw.title) || toText(raw.code)) !== '',
       cover: type !== 'embed' || isHttpUrl(toText(raw.cover)),
       category: categories.length > 0
     };
@@ -2018,7 +2064,7 @@
     list.forEach((raw, index) => {
       const item = raw && typeof raw === 'object' ? raw : {};
       const categories = uniqueList(toList(item.category));
-      const genre = toText(item.genre).toLowerCase();
+      const genres = uniqueList(toList(item.genre));
       const url = toText(item.url);
       const type = isHttpUrl(url) ? detectType(url, toText(item.type).toLowerCase()) : null;
       const missing = findMissingKeys(item, type, categories);
@@ -2028,8 +2074,7 @@
         return;
       }
 
-      const code = toText(item.code);
-      const genreLabel = toText(item.genre);
+      const title = toText(item.title) || toText(item.code);
       const cast = toList(item.cast);
       const shownCategories = categories;
 
@@ -2037,16 +2082,16 @@
         number: entries.length + 1,
         type,
         url,
-        cover: type === 'embed' ? toText(item.cover) : '',
+        cover: isHttpUrl(toText(item.cover)) ? toText(item.cover) : '',
         poster: isHttpUrl(toText(item.cover)) ? toText(item.cover) : '',
-        code,
+        title,
         categories: shownCategories,
         categoryKeys: [...new Set(shownCategories.map((name) => name.trim().toLowerCase()))],
-        genre,
-        genreLabel,
+        genres,
+        genreKeys: [...new Set(genres.map((name) => name.trim().toLowerCase()))],
         duration: toDuration(item.duration),
         cast,
-        searchText: normalizeText([code, ...shownCategories, ...cast].join(' '))
+        searchText: normalizeText([title, ...shownCategories, ...genres, ...cast].join(' '))
       });
     });
 
@@ -2057,8 +2102,16 @@
 
   const OTHER_KEY = '_other';
 
-  const genreLabelFor = (key) =>
-    key === OTHER_KEY ? 'Other' : (state.entries.find((entry) => entry.genre === key) || {}).genreLabel || key;
+  const genreLabelFor = (key) => {
+    if (key === OTHER_KEY) return 'Other';
+
+    for (const entry of state.entries) {
+      const name = entry.genres.find((value) => value.trim().toLowerCase() === key);
+      if (name) return name;
+    }
+
+    return key;
+  };
 
   const categoryLabelFor = (key) => (state.categoryList.find((item) => item.key === key) || {}).label || key;
 
@@ -2077,7 +2130,7 @@
 
   const filterEntries = (query, genre, category) => {
     let pool = state.entries;
-    if (genre) pool = pool.filter((entry) => (genre === OTHER_KEY ? entry.genre === '' : entry.genre === genre));
+    if (genre) pool = pool.filter((entry) => (genre === OTHER_KEY ? entry.genreKeys.length === 0 : entry.genreKeys.includes(genre)));
     if (category) pool = pool.filter((entry) => entry.categoryKeys.includes(category));
     if (!query) return pool;
 
@@ -2193,35 +2246,30 @@
   };
 
   const loadCover = async (entry) => {
+    if (entry.cover) {
+      const image = await loadImage(entry.cover);
+      if (image) return image;
+    }
+
     if (entry.type === 'video') return loadVideo(entry);
 
-    return (await loadImage(entry.cover)) || createCoverFallback();
-  };
-
-  const createPlayIcon = () => {
-    const icon = document.createElement('span');
-    icon.className = 'play';
-    icon.setAttribute('aria-hidden', 'true');
-    icon.innerHTML =
-      '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">' +
-      '<path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
-    return icon;
+    return createCoverFallback();
   };
 
   const createTile = (media, entry, index) => {
     const cover = document.createElement('div');
     cover.className = 'tile-cover';
-    cover.append(media, ...createDuration(entry), createPlayIcon());
+    cover.append(media, ...createDuration(entry));
 
     const title = document.createElement('div');
     title.className = 'tile-title';
-    title.textContent = entry.code;
+    title.textContent = entry.title;
 
     const element = document.createElement('div');
     element.className = 'tile';
     element.tabIndex = 0;
     element.setAttribute('role', 'button');
-    element.setAttribute('aria-label', 'Play video: ' + entry.code);
+    element.setAttribute('aria-label', 'Play video: ' + entry.title);
     element.append(cover, title);
 
     const item = { element, index, entry };
@@ -2348,7 +2396,7 @@
 
     if (count === 0) {
       dom.searchStatus.textContent = query
-        ? 'No videos found for “' + query + '”. Try a code, cast name, or category.'
+        ? 'No videos found for “' + query + '”. Try a title, cast name, or category.'
         : state.category ? 'No videos found in this category.' : 'No videos found in this genre.';
       return;
     }
@@ -2397,13 +2445,17 @@
     const map = new Map();
 
     entries.forEach((entry) => {
-      if (!map.has(entry.genre)) {
-        map.set(entry.genre, { key: entry.genre, label: entry.genreLabel || 'Other', entries: [], first: Infinity });
-      }
+      const keys = entry.genreKeys.length > 0 ? entry.genreKeys : [''];
 
-      const group = map.get(entry.genre);
-      group.entries.push(entry);
-      group.first = Math.min(group.first, entry.number);
+      keys.forEach((key) => {
+        if (!map.has(key)) {
+          map.set(key, { key, label: key === '' ? 'Other' : genreLabelFor(key), entries: [], first: Infinity });
+        }
+
+        const group = map.get(key);
+        group.entries.push(entry);
+        group.first = Math.min(group.first, entry.number);
+      });
     });
 
     const order = CONFIG.genreOrder.map((name) => String(name).trim().toLowerCase());
@@ -2414,6 +2466,30 @@
         rank(a) - rank(b) ||
         (rank(a) === 0 ? order.indexOf(a.key) - order.indexOf(b.key) : a.first - b.first)
     );
+  };
+
+  const ROW_ICONS = {
+    '-1': '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>',
+    '1': '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>'
+  };
+
+  const bindRow = (grid, prev, next) => {
+    const update = () => {
+      const max = grid.scrollWidth - grid.clientWidth;
+      prev.hidden = next.hidden = max <= 2;
+      prev.disabled = grid.scrollLeft <= 2;
+      next.disabled = grid.scrollLeft >= max - 2;
+    };
+    const scrollBy = (direction) => {
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      grid.scrollBy({ left: direction * Math.max(240, grid.clientWidth * 0.85), behavior: reduced ? 'auto' : 'smooth' });
+    };
+
+    prev.addEventListener('click', () => scrollBy(-1));
+    next.addEventListener('click', () => scrollBy(1));
+    grid.addEventListener('scroll', update, { passive: true });
+    new ResizeObserver(update).observe(grid);
+    grid.update = update;
   };
 
   const createSection = (group, limit) => {
@@ -2428,7 +2504,24 @@
     const title = document.createElement('h2');
     title.className = 'genre-title';
     title.textContent = group.label;
-    head.append(title);
+
+    const tools = document.createElement('div');
+    tools.className = 'genre-tools';
+
+    const nav = document.createElement('div');
+    nav.className = 'row-nav';
+
+    const buttons = [-1, 1].map((direction) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'row-btn';
+      b.hidden = true;
+      b.setAttribute('aria-label', (direction < 0 ? 'Scroll left in ' : 'Scroll right in ') + group.label);
+      b.innerHTML = ROW_ICONS[String(direction)];
+      return b;
+    });
+    nav.append(...buttons);
+    tools.append(nav);
 
     if (group.entries.length > limit) {
       const key = group.key === '' ? OTHER_KEY : group.key;
@@ -2437,12 +2530,14 @@
       more.href = buildUrl(1, null, '', key);
       more.dataset.genre = key;
       more.textContent = 'View all (' + group.entries.length + ')';
-      more.insertAdjacentHTML('beforeend', '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>');
-      head.append(more);
+      tools.append(more);
     }
 
+    head.append(title, tools);
+
     const grid = document.createElement('div');
-    grid.className = 'tile-grid';
+    grid.className = 'tile-grid tile-row';
+    bindRow(grid, buttons[0], buttons[1]);
 
     section.append(head, grid);
     return { section, grid };
@@ -2450,7 +2545,7 @@
 
   const renderHome = async () => {
     const token = ++state.loadToken;
-    const limit = Math.max(4, state.columns * 2);
+    const limit = CONFIG.rowLimit;
     const queue = [];
     let index = 0;
 
@@ -2482,6 +2577,7 @@
       const next = orderedItems().find((other) => other.container === grid && other.index > position);
       grid.insertBefore(item.element, next ? next.element : null);
       section.hidden = false;
+      grid.update();
     });
 
     if (token !== state.loadToken) return;
@@ -2541,7 +2637,7 @@
 
   const createEmbedFrame = (entry) => {
     const frame = document.createElement('iframe');
-    frame.title = entry.code;
+    frame.title = entry.title;
     frame.allow = EMBED_ALLOW;
     frame.allowFullscreen = true;
     frame.referrerPolicy = 'strict-origin-when-cross-origin';
@@ -2610,7 +2706,7 @@
     );
     const sameGenre = others.filter(
       (other) =>
-        entry.genre !== '' && other.genre === entry.genre && !sameCast.includes(other) && !sameCategory.includes(other)
+        overlap(other.genres, entry.genres) > 0 && !sameCast.includes(other) && !sameCategory.includes(other)
     );
     const related = [...sameCast, ...sameCategory, ...sameGenre];
 
@@ -2625,16 +2721,18 @@
   };
 
   const createRecommendationCover = (entry) => {
-    if (entry.type === 'video') {
+    const fromVideo = () => {
       const video = createCoverVideo();
       video.src = coverSource(entry.url);
       return video;
-    }
+    };
+
+    if (!entry.cover) return entry.type === 'video' ? fromVideo() : createCoverFallback();
 
     const image = new Image();
     image.alt = '';
     image.draggable = false;
-    image.onerror = () => image.replaceWith(createCoverFallback());
+    image.onerror = () => image.replaceWith(entry.type === 'video' ? fromVideo() : createCoverFallback());
     image.src = entry.cover;
     return image;
   };
@@ -2646,7 +2744,7 @@
 
     const title = document.createElement('span');
     title.className = 'rec-title';
-    title.textContent = entry.code;
+    title.textContent = entry.title;
 
     const info = document.createElement('span');
     info.className = 'rec-info';
@@ -2668,11 +2766,11 @@
   const createMoreCard = (entry) => {
     const cover = document.createElement('div');
     cover.className = 'tile-cover';
-    cover.append(createRecommendationCover(entry), ...createDuration(entry), createPlayIcon());
+    cover.append(createRecommendationCover(entry), ...createDuration(entry));
 
     const title = document.createElement('span');
     title.className = 'tile-title';
-    title.textContent = entry.code;
+    title.textContent = entry.title;
 
     const link = document.createElement('a');
     link.className = 'tile';
@@ -2736,7 +2834,7 @@
   };
 
   const renderWatchDetails = (entry) => {
-    dom.watchTitle.textContent = entry.code;
+    dom.watchTitle.textContent = entry.title;
     const hasInfo = entry.cast.length > 0 || entry.categories.length > 0;
     dom.infoToggle.hidden = !hasInfo;
     dom.watchInfo.hidden = !hasInfo;
@@ -2760,7 +2858,7 @@
 
     renderWatchDetails(entry);
     renderRecommendations(entry);
-    setTitle(entry.code);
+    setTitle(entry.title);
 
     dom.scroller.scrollTo(0, 0);
     dom.watchTitle.focus({ preventScroll: true });
@@ -2779,10 +2877,8 @@
   };
 
   const syncPerPage = () => {
-    const previousColumns = state.columns;
     const perPage = measurePerPage();
-    const columnsChanged = state.sections && state.columns !== previousColumns;
-    if (perPage === state.perPage && !columnsChanged) return false;
+    if (perPage === state.perPage) return false;
 
     state.perPage = perPage;
     if (state.results !== null) {
@@ -3200,7 +3296,7 @@
     dom.brand.textContent = BASE_TITLE;
     dom.brand.setAttribute('aria-label', BASE_TITLE + ' - home');
     dom.siteHeading.textContent = BASE_TITLE;
-    dom.metaDescription.setAttribute('content', BASE_TITLE + ': browse and watch videos by code, cast, and category.');
+    dom.metaDescription.setAttribute('content', BASE_TITLE + ': browse and watch videos by title, cast, and category.');
   };
 
   const init = async () => {
@@ -3221,7 +3317,7 @@
       return;
     }
 
-    state.hasGenres = state.entries.some((entry) => entry.genre !== '');
+    state.hasGenres = state.entries.some((entry) => entry.genreKeys.length > 0);
     renderCategoryNav();
     applyRoute();
   };
