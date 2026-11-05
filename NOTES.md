@@ -1,5 +1,5 @@
 ## Membuat Thumbnail
 
 ```
-ffmpeg -i input.jpg -vf "scale=480:-1:flags=lanczos" -c:v libwebp -quality 88 -compression_level 6 thumbnail.webp
+ffmpeg -i input.jpg -vf "scale=320:-1:flags=lanczos" -frames:v 1 -c:v libwebp -quality 45 -compression_level 6 -preset photo -an thumbnail.webp
 ```
